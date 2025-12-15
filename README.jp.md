@@ -72,6 +72,7 @@ npm run build
 
 ```
 DATABASE_URL=""
+JWT_SECRET=""
 ```
 
 これらを設定することで以下がが利用できます。

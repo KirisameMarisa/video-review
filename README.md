@@ -58,6 +58,7 @@ npm run build
 ## 🔧 Required .env Values
 ```
 DATABASE_URL=""
+JWT_SECRET=""
 ```
 
 ## 📄 License
