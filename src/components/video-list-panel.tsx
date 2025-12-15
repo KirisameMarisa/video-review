@@ -74,6 +74,14 @@ export default function VideoListPanel() {
         });
     }, [videos, videoFilterParam?.filterText]);
 
+    const headerHeight = useMemo(() => {
+        return headerRef.current ? headerRef.current.getBoundingClientRect().height : 0;
+    }, [headerRef.current]);
+
+    const treeHeight = useMemo(() => {
+        return Math.max(0, bounds.height - headerHeight);
+    }, [bounds.height, headerHeight]);
+
     useEffect(() => {
         if (!userId) {
             setUnReadVideoIds([]);
@@ -126,16 +134,15 @@ export default function VideoListPanel() {
     useLayoutEffect(() => {
         if (!elementRef.current || !headerRef.current) return;
         const rect = elementRef.current.getBoundingClientRect();
-        const headerRect = headerRef.current.getBoundingClientRect();
         if (!size?.width || !size?.height) {
             setBounds({
                 width: rect.width,
-                height: rect.height - headerRect.height,
+                height: rect.height - headerHeight,
             });
         } else {
             setBounds({
                 width: size.width,
-                height: size.height - headerRect.height,
+                height: size.height - headerHeight,
             });
         }
     }, [size?.width, size?.height]);
@@ -209,7 +216,7 @@ export default function VideoListPanel() {
                 openByDefault
                 rowHeight={28}
                 width={bounds.width}
-                height={bounds.height}
+                height={treeHeight}
                 paddingBottom={50}
                 onToggle={(id) => {
                     const api = treeRef.current;
@@ -372,11 +379,10 @@ function NodeRenderer({
                 paddingLeft:
                     (Number(style.paddingLeft) ?? 0) + extraLeftPadding,
             }}
-            className={`flex items-center gap-1 px-2 py-1 rounded cursor-pointer select-none truncate ${
-                isSelected
+            className={`flex items-center gap-1 px-2 py-1 rounded cursor-pointer select-none truncate ${isSelected
                     ? "bg-[#555] border-l-2 border-[#ff8800]"
                     : "hover:bg-[#222]"
-            }`}
+                }`}
             onClick={() => node.toggle()}
         >
             {/* アイコン（フォルダ or 動画） */}

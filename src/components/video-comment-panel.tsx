@@ -230,7 +230,7 @@ export default function VideoCommentPanel() {
                 </div>
             </div>
 
-            <div ref={containerRef} className="flex-1 overflow-y-auto p-3 space-y-3" style={{ maxHeight: "68vh" }}>
+            <div ref={containerRef} className="flex-1 overflow-y-auto p-3 space-y-3">
                 {filteredComments.map((comment, i) => {
                     const isNew = newComments.some(e => e.id === comment.id);
                     const isActive = activeComments.some(e => e.id === comment.id);
