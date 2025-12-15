@@ -1,0 +1,78 @@
+{
+    "video-title": {
+        "noSelection": "No video selected",
+        "revisionInfo": "Revision: {revision} ({uploadedAt})",
+        "noRevision": "No revision info",
+        "revisionOption": "rev_{revision} ({date})"
+    },
+    "video-upload": {
+        "title": "Upload Video",
+        "selectFile": "Select a video file",
+        "errorNoInput": "Please enter the title, folder, and file",
+        "folderKeyPlaceholder": "Folder key (e.g. projectA/scene01)",
+        "cancel": "Cancel",
+        "upload": "Upload",
+        "uploading": "Uploading..."
+    },
+    "video-search": {
+        "shortcutKey": "Ctrl + K",
+        "dateFilterOff": "Date filter off",
+        "dateRange": "Select date range",
+        "searchFilter": "Filter text"
+    },
+    "video-review": {
+        "noVideoSelected": "Please select a video"
+    },
+    "video-list-panel": {
+        "title": "Movie list"
+    },
+    "video-control-panel": {
+        "normal": "Normal",
+        "loop": "Loop playback",
+        "next": "Auto play next video"
+    },
+    "video-comment-panel": {
+        "title": "Comment",
+        "newBadge": "NEW",
+        "commentItemCopyLink": "Copy link",
+        "commentItemTask": "Convert to task",
+        "commentItemBug": "Convert to Bug",
+        "commentItemEdit": "Edit",
+        "commentItemRemove": "Remove"
+    },
+    "comment-confirmed": {
+        "commentUpdate": "Update Comment",
+        "commentAdd": "Add Comment",
+        "cancel": "Cancel",
+        "editIssueLink": "Edit issue link",
+        "editComment": "Edit comment"
+    },
+    "share-link": {
+        "title": "Share link",
+        "helperText": "Copy and share using Ctrl+C.",
+        "close": "Close"
+    },
+    "comment-search": {
+        "shortcutKey": "Ctrl + I",
+        "fetchRange": "fetch range",
+        "fetchAll": "fetch all",
+        "searchFilter": "Filter text"
+    },
+    "canvas-setting": {
+        "lineWidth": "Line width",
+        "color": "Color"
+    },
+    "login": {
+        "loginFailedMsg": "Login failed",
+        "loginDisplayName": "Display Name",
+        "loginEmail": "Email",
+        "ok": "Login",
+        "noJIRAAccount": "Click here if you don't have a JIRA account"
+    },
+    "setting": {
+        "title": "Setting",
+        "language": "Language Switch",
+        "languageOptionEn": "English",
+        "languageOptionJa": "Japanese"
+    }
+}

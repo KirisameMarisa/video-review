@@ -1,0 +1,78 @@
+{
+    "video-title": {
+        "noSelection": "未選択",
+        "revisionInfo": "Rev: {revision} ({uploadedAt})",
+        "noRevision": "リビジョン情報なし",
+        "revisionOption": "rev_{revision} ({date})"
+    },
+    "video-upload": {
+        "title": "動画アップロード",
+        "selectFile": "動画ファイルを選択",
+        "errorNoInput": "タイトル・フォルダ・ファイルを入力してください",
+        "folderKeyPlaceholder": "フォルダーキー（例: projectA/scene01）",
+        "cancel": "キャンセル",
+        "upload": "アップロード",
+        "uploading": "アップロード中..."
+    },
+    "video-search": {
+        "shortcutKey": "Ctrl + K",
+        "dateFilterOff": "日付フィルターOFF",
+        "dateRange": "日付範囲指定",
+        "searchFilter": "フィルター"
+    },
+    "video-review": {
+        "noVideoSelected": "動画を選択してください"
+    },
+    "video-list-panel": {
+        "title": "Movie リスト"
+    },
+    "video-control-panel": {
+        "normal": "通常再生",
+        "loop": "ループ再生",
+        "next": "次の動画を自動再生"
+    },
+    "video-comment-panel": {
+        "title": "コメント",
+        "newBadge": "NEW",
+        "commentItemCopyLink": "リンクコピー",
+        "commentItemTask": "タスク化",
+        "commentItemBug": "バグ化",
+        "commentItemEdit": "編集",
+        "commentItemRemove": "削除"
+    },
+    "comment-confirmed": {
+        "commentUpdate": "コメント更新",
+        "commentAdd": "コメント追加",
+        "cancel": "キャンセル",
+        "editIssueLink": "Issue リンク",
+        "editComment": "コメントを入力..."
+    },
+    "share-link": {
+        "title": "共有リンク",
+        "helperText": "Ctrl+Cでコピーして共有してね",
+        "close": "閉じる"
+    },
+    "comment-search": {
+        "shortcutKey": "Ctrl + I",
+        "fetchRange": "範囲取得",
+        "fetchAll": "全件取得",
+        "searchFilter": "フィルター"
+    },
+    "canvas-setting": {
+        "lineWidth": "太さ",
+        "color": "色"
+    },
+    "login": {
+        "loginFailedMsg": "ログイン失敗",
+        "loginDisplayName": "表示名",
+        "loginEmail": "メールアドレス",
+        "ok": "ログイン",
+        "noJIRAAccount": "JIRAアカウントをお持ちでない方はこちら"
+    },
+    "setting": {
+        "title": "設定",
+        "language": "言語切替",
+        "languageOptionEn": "英語 (English)",
+        "languageOptionJa": "日本語 (Japanese)"
+    }
+}

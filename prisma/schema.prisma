@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  displayName String
+  createdAt   DateTime @default(now())
+  readStatuses UserVideoReadStatus[]
+}
+
+model Video {
+  id              String   @id @default(uuid())
+  title           String
+  folderKey       String   // ツリー用に表示する場所 (例: projectA/scene01/hogehoge_movie)
+  scenePath       String?
+  revisions       VideoRevision[]
+  comments        VideoComment[]
+  latestUpdatedAt DateTime @default(now())
+}
+
+model VideoRevision {
+  id          String   @id @default(uuid())
+  videoId     String
+  video       Video    @relation(fields: [videoId], references: [id])
+  revision    Int
+  filePath    String   // 実ファイルへの相対パス (/videos/.../rev_3.mp4)
+  uploadedAt  DateTime @default(now())
+}
+
+model VideoComment {
+  id           String     @id @default(uuid())
+  video        Video      @relation(fields: [videoId], references: [id])
+  videoId      String
+  videoRevNum  Int     
+  userName     String
+  userEmail    String     　@default("")
+  comment      String
+  time         Float
+  issueId      String?
+  drawingPath  String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deleted      Boolean     @default(false)
+  thumbsUp     Int         @default(0)
+}
+
+model JiraAvatarCache {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  ownerId     String
+  avatarId    String
+  avatarUrl   String
+  cachedAt    DateTime @default(now())
+}
+
+model UserVideoReadStatus {
+  id                String   @id @default(uuid())
+  userId            String?
+  user              User?   @relation(fields: [userId], references: [id])
+
+  videoId           String
+  lastReadCommentId String?
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userId, videoId])
+}
