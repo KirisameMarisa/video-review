@@ -7,7 +7,7 @@ services:
         dockerfile: ./docker/web/Dockerfile
     container_name: videoreview-web
     ports:
-      - "3489:3000"
+      - "3489:3489"
     environment:
       DATABASE_URL: postgres://videoreview:videoreview@db:5432/videoreview
       NEXT_PUBLIC_VIDEO_REVIEW_TITLE: VideoReview

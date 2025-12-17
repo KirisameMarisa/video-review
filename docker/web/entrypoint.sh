@@ -1,4 +1,3 @@
-# ./docker/web/entrypoint.sh
 #!/bin/sh
 set -e
 
