@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  web:
+    build: 
+        context: ./
+        dockerfile: ./docker/web/Dockerfile
+    container_name: videoreview-web
+    ports:
+      - "3489:3489"
+    environment:
+      DATABASE_URL: postgres://videoreview:videoreview@db:5432/videoreview
+      NEXT_PUBLIC_VIDEO_REVIEW_TITLE: VideoReview
+      NEXT_PUBLIC_VIDEO_REVIEW_DESC: Lightweight video review tool
+      JWT_SECRET: local-dev-secret
+      RUN_MIGRATE: "true"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    container_name: videoreview-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: videoreview
+      POSTGRES_PASSWORD: videoreview
+      POSTGRES_DB: videoreview
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
