@@ -1,6 +1,38 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { apiError } from "@/lib/api-response";
 
+/**
+ * @swagger
+ * /api/videos/{id}/revisions:
+ *   get:
+ *     summary: Get revisions of a video
+ *     description: >
+ *       Returns all revisions for the specified video.
+ *       Revisions are ordered by revision number in descending order.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Video ID
+ *     responses:
+ *       200:
+ *         description: List of video revisions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/VideoRevision'
+ *       500:
+ *         description: Failed to fetch revisions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
+ */
 export async function GET(
     req: Request,
     context: { params: Promise<{ id: string }> }
@@ -15,7 +47,6 @@ export async function GET(
 
         return NextResponse.json(revisions);
     } catch (err) {
-        console.error("[GET /api/videos/:id/revisions]", err);
-        return NextResponse.json({ error: "Failed to fetch revisions" }, { status: 500 });
+        return apiError("Failed to fetch revisions", 500);
     }
 }

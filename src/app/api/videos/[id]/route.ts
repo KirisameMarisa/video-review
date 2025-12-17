@@ -1,6 +1,42 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { apiError } from "@/lib/api-response";
 
+/**
+ * @swagger
+ * /api/videos/{id}:
+ *   get:
+ *     summary: Get a video with its revisions
+ *     description: >
+ *       Returns a video and its revision history.
+ *       Revisions are ordered by revision number in descending order.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Video ID
+ *     responses:
+ *       200:
+ *         description: Video with revisions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Video'
+ *       404:
+ *         description: Video not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
+ *       500:
+ *         description: Failed to fetch video
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
+ */
 export async function GET(
     req: NextRequest,
     context: { params: Promise<{ id: string }> },
@@ -18,12 +54,11 @@ export async function GET(
         });
 
         if (!video) {
-            return NextResponse.json({ error: "Video not found" }, { status: 404 });
+            return apiError("Video not found", 404);
         }
 
         return NextResponse.json(video);
     } catch (err) {
-        console.error("[GET /api/videos/:id]", err);
-        return NextResponse.json({ error: "Failed to fetch video" }, { status: 500 });
+        return apiError("Failed to fetch video", 500);
     }
 }

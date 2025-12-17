@@ -28,13 +28,15 @@
       "@/components/*": ["./src/components/*"],
       "@/ui/*": ["./src/components/ui/*"],
       "@/lib/*": ["./src/lib/*"],
+      "@/openapi.json": ["./openapi.json"],
     }
   },
   "include": [
     "next-env.d.ts", 
     "**/*.ts", 
     "**/*.tsx", 
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "openapi.json"
   ],
   "exclude": ["node_modules"]
 }

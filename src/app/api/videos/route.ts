@@ -1,6 +1,53 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { apiError } from "@/lib/api-response";
 
+/**
+ * @swagger
+ * /api/videos:
+ *   get:
+ *     summary: Returns a list of videos
+ *     description: Returns a list of videos filtered by date range, folder key, and title.
+ *     parameters:
+ *       - in: query
+ *         name: from
+ *         schema:
+ *           type: number
+ *         description: Start date (milliseconds)
+ *       - in: query
+ *         name: to
+ *         schema:
+ *           type: number
+ *         description: End date (milliseconds)
+ *       - in: query
+ *         name: target
+ *         schema:
+ *           type: number
+ *         description: Fetch videos updated before this date (milliseconds)
+ *       - in: query
+ *         name: folderKey
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: title
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A list of videos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Video'
+ *       500:
+ *         description: Failed to fetch videos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
+ */
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const fromMs = searchParams.get("from");
@@ -51,7 +98,6 @@ export async function GET(req: Request) {
 
         return NextResponse.json(videos);
     } catch (err) {
-        console.error("[GET /api/videos]", err);
-        return NextResponse.json({ error: "Failed to fetch videos" }, { status: 500 });
+        return apiError("Failed to fetch videos", 500);
     }
 }

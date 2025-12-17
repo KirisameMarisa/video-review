@@ -48,3 +48,6 @@ todo.txt
 
 # login-bg
 public/img/login-bg/*
+
+# swagger.json
+public/swagger.json

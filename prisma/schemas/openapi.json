@@ -1,0 +1,255 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Prisma API",
+        "description": "",
+        "version": "1.0.0"
+    },
+    "paths": {},
+    "components": {
+        "schemas": {
+            "User": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "displayName": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "readStatuses": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UserVideoReadStatus"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "email",
+                    "displayName",
+                    "createdAt",
+                    "readStatuses"
+                ]
+            },
+            "Video": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "folderKey": {
+                        "type": "string"
+                    },
+                    "scenePath": {
+                        "type": "string"
+                    },
+                    "revisions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VideoRevision"
+                        }
+                    },
+                    "comments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VideoComment"
+                        }
+                    },
+                    "latestUpdatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "title",
+                    "folderKey",
+                    "revisions",
+                    "comments",
+                    "latestUpdatedAt"
+                ]
+            },
+            "VideoRevision": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "videoId": {
+                        "type": "string"
+                    },
+                    "video": {
+                        "$ref": "#/components/schemas/Video"
+                    },
+                    "revision": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "filePath": {
+                        "type": "string"
+                    },
+                    "uploadedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "videoId",
+                    "video",
+                    "revision",
+                    "filePath",
+                    "uploadedAt"
+                ]
+            },
+            "VideoComment": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "video": {
+                        "$ref": "#/components/schemas/Video"
+                    },
+                    "videoId": {
+                        "type": "string"
+                    },
+                    "videoRevNum": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "userName": {
+                        "type": "string"
+                    },
+                    "userEmail": {
+                        "type": "string"
+                    },
+                    "comment": {
+                        "type": "string"
+                    },
+                    "time": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "issueId": {
+                        "type": "string"
+                    },
+                    "drawingPath": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted": {
+                        "type": "boolean"
+                    },
+                    "thumbsUp": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "required": [
+                    "id",
+                    "video",
+                    "videoId",
+                    "videoRevNum",
+                    "userName",
+                    "userEmail",
+                    "comment",
+                    "time",
+                    "createdAt",
+                    "updatedAt",
+                    "deleted",
+                    "thumbsUp"
+                ]
+            },
+            "JiraAvatarCache": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "ownerId": {
+                        "type": "string"
+                    },
+                    "avatarId": {
+                        "type": "string"
+                    },
+                    "avatarUrl": {
+                        "type": "string"
+                    },
+                    "cachedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "email",
+                    "ownerId",
+                    "avatarId",
+                    "avatarUrl",
+                    "cachedAt"
+                ]
+            },
+            "UserVideoReadStatus": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "videoId": {
+                        "type": "string"
+                    },
+                    "lastReadCommentId": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "videoId",
+                    "updatedAt"
+                ]
+            }
+        },
+        "responses": {},
+        "parameters": {},
+        "examples": {},
+        "requestBodies": {},
+        "headers": {},
+        "securitySchemes": {},
+        "links": {},
+        "callbacks": {}
+    },
+    "tags": [],
+    "servers": []
+}

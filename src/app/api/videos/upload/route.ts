@@ -7,7 +7,55 @@ import fsPromises from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/prisma";
 import { Readable } from "stream";
+import { apiError } from "@/lib/api-response";
 
+/**
+ * @swagger
+ * /api/videos/upload:
+ *   post:
+ *     summary: Upload a video file
+ *     description: >
+ *       Uploads a video file and creates a new video revision.
+ *       If a video with the same title and folderKey already exists,
+ *       a new revision will be added.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *               - title
+ *               - folderKey
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Video file (mp4)
+ *               title:
+ *                 type: string
+ *                 description: Video title
+ *               folderKey:
+ *                 type: string
+ *                 description: Folder key to group videos
+ *               scenePath:
+ *                 type: string
+ *                 description: Optional scene path
+ *     responses:
+ *       200:
+ *         description: Video revision created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoRevision'
+ *       500:
+ *         description: Upload failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiErrorResponse'
+ */
 export async function POST(req: Request): Promise<Response> {
     return new Promise((resolve) => {
         const contentType = req.headers.get("content-type") || "";
@@ -24,8 +72,7 @@ export async function POST(req: Request): Promise<Response> {
         const fail = (err: any) => {
             if (responded) return;
             responded = true;
-            console.error("[UPLOAD ERROR]", err);
-            resolve(NextResponse.json({ error: "Upload failed" }, { status: 500 }));
+            return apiError("Upload failed", 500);
         };
 
         busboy.on("field", (name, val) => {

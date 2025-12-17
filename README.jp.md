@@ -53,6 +53,14 @@ npm run prisma:generate
 npm run dev
 ```
 
+### 5. 開発サーバーへアクセス
+
+- Web UI  
+  http://localhost:3489
+
+- API Documentation (Swagger)  
+  http://localhost:3489/docs
+
 ---
 
 ## 🛠 ビルド

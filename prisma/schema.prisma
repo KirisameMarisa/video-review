@@ -7,6 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator openapi {
+  provider = "prisma-openapi"
+  output   = "./schemas"
+  generateYaml = false
+  generateJson = true
+}
+
 model User {
   id          String   @id @default(uuid())
   email       String   @unique

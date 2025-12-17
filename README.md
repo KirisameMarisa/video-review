@@ -47,6 +47,14 @@ npm run prisma:generate
 npm run dev
 ```
 
+### 5. Access
+
+- Web UI  
+  http://localhost:3489
+
+- API Documentation (Swagger)  
+  http://localhost:3489/docs
+
 ## 🛠 Build
 
 Set the build output directory:
