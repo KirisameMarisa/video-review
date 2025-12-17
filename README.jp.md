@@ -27,33 +27,39 @@ VideoReview は、動画をアップロードしてコメントしたり、お�
 ---
 
 ## 🚀 開発環境のセットアップ
+Dockerとローカルの２つのセットアップをサポートしています
 
-### 1. 依存パッケージのインストール
 
-```
+## 🐳 環境構築：Docker
+前提：Docker、Docker Composeを事前にインストールしておいてください
+
+```bash
+# Install dependencies (for local development / editor support)
 npm install
+# Start containers
+docker compose up -d --build
 ```
 
-### 2. 環境変数ファイルの作成
+## 💻 環境構築：ローカルに構築（オンプレ）
+```bash
+# Install dependencies
+npm install
 
-```
 cp .example.env .env
-```
 
-### 3. Prisma のコード生成
+# Required .env Values
+DATABASE_URL="postgresql://user:password@localhost:5432/videoreview"
+JWT_SECRET="xxxxxxx"
 
-```
+# Generate Prisma Client
 npm run prisma:deploy
 npm run prisma:generate
-```
 
-### 4. 開発サーバーの起動
-
-```
+# Start the development server
 npm run dev
 ```
 
-### 5. 開発サーバーへアクセス
+### 開発サーバーへアクセス
 
 - Web UI  
   http://localhost:3489
@@ -62,6 +68,24 @@ npm run dev
   http://localhost:3489/docs
 
 ---
+
+### 任意 (VideoReviewの機能をフルで使いたい: JIRA / Slack)
+
+VideoReview をフル機能で使いたい場合、.env に JIRA / Slack の環境変数を設定します
+
+まだ .example.env から .env をコピーしていない場合は、以下を実行してください
+
+```bash
+cp .example.env .env
+```
+
+```bash
+JIRA_API_TOKEN="JIRA-Token"
+JIRA_PROJECT="GAMEDEV"
+JIRA_ASSIGNEE_USER="assignn@gmail.com"
+SLACK_API_TOKEN="xoxb-xxxxxToken"
+SLACK_POST_CH="C00XXXXXX"
+```
 
 ## 🛠 ビルド
 

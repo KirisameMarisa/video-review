@@ -27,29 +27,44 @@ It is designed to support feedback workflows in game development, video producti
   - Designed to be easy to operate as an internal tool.
 
 ## 🚀 Development Setup
+This project supports **two development setups**:
+- **Docker**
+- **Local / On‑premise (without Docker)**
 
-### 1. Install dependencies
-```
+## 🐳 Option A: Docker
+
+If you have Docker and Docker Compose installed, you can start everything with:
+
+```bash
+# Install dependencies (for local development / editor support)
 npm install
+# Start containers
+docker compose up -d --build
 ```
 
-### 2. Create environment configuration
-```
+## 💻 Option B: Local / On‑premise Setup (without Docker)
+
+Use this option if you want to run everything directly on your local machine.
+
+```bash
+# Install dependencies
+npm install
+
 cp .example.env .env
-```
 
-### 3. Generate Prisma Client
-```
+# Required .env Values
+DATABASE_URL="postgresql://user:password@localhost:5432/videoreview"
+JWT_SECRET="xxxxxxx"
+
+# Generate Prisma Client
 npm run prisma:deploy
 npm run prisma:generate
-```
 
-### 4. Start the development server
-```
+# Start the development server
 npm run dev
 ```
 
-### 5. Access
+### Access
 
 - Web UI  
   http://localhost:3489
@@ -57,18 +72,31 @@ npm run dev
 - API Documentation (Swagger)  
   http://localhost:3489/docs
 
+
+### Optional (Enable Full Features: JIRA / Slack)
+
+To use all features of video reviews, configure the following variables in `.env`:
+
+If you do not have a `.env` file yet, create one from `.example.env`.
+
+```bash
+cp .example.env .env
+```
+
+```bash
+JIRA_API_TOKEN="JIRA-Token"
+JIRA_PROJECT="GAMEDEV"
+JIRA_ASSIGNEE_USER="assignn@gmail.com"
+SLACK_API_TOKEN="xoxb-xxxxxToken"
+SLACK_POST_CH="C00XXXXXX"
+```
+
 ## 🛠 Build
 
 Set the build output directory:
-```
+```bash
 export VIDEO_REVIEW_BUILD_OUTPUT_DIR="dist"
 npm run build
-```
-
-## 🔧 Required .env Values
-```
-DATABASE_URL=""
-JWT_SECRET=""
 ```
 
 ## 📄 License
