@@ -51,10 +51,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
         return apiError("invalid path", 400);
     }
 
-    console.log("Fetching media for path segments:", pathSegments);
-
-    const filePath = path.join(...pathSegments);
-    const url = await VideoReviewStorage.fallbackURL(filePath);
+    const s3Key = pathSegments.join("/");
+    const url = await VideoReviewStorage.fallbackURL(s3Key);
 
     if (!url) {
         return apiError("file not found", 404);
