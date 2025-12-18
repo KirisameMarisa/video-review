@@ -1,9 +1,13 @@
 #!/bin/sh
 set -e
 
-if [ "$RUN_MIGRATE" = "true" ]; then
-  echo "Running prisma migrate deploy..."
-  npx prisma migrate deploy
-fi
+echo "Waiting for database..."
+until pg_isready -h db -p 5432; do
+  sleep 1
+done
 
-exec "$@"
+echo "Database is ready"
+npx prisma migrate deploy
+npx prisma generate
+
+npm run dev

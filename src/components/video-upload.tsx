@@ -33,14 +33,19 @@ export default function VideoUploadDialog({ open, onClose }: { open: boolean; on
         }
         const title = path.parse(file.name).name
 
-        setUploading(true);
-        setMessage("");
-        const data = await api.uploadVideo({ title, folderKey: selectedFolderKey, file })
-        if (!data.sucess) {
-            setMessage(data.msg);
+        try {
+            setUploading(true);
+            setMessage("");
+            const data = await api.uploadVideo({ title, folderKey: selectedFolderKey, file })
+            if (!data.sucess) {
+                setMessage(data.msg);
+            } else {
+                onClose();
+            }
+        } finally {
+            setFile(null);
+            setSelectedFolderKey("");
             setUploading(false);
-        } else {
-            onClose();
         }
     };
 

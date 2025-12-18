@@ -51,3 +51,4 @@ public/img/login-bg/*
 
 # swagger.json
 public/swagger.json
+prisma/schemas/**

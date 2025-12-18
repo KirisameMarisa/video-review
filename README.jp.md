@@ -34,7 +34,7 @@ Dockerとローカルの２つのセットアップをサポートしていま�
 前提：Docker、Docker Composeを事前にインストールしておいてください
 
 ```bash
-# Install dependencies (for local development / editor support)
+# Install dependencies
 npm install
 # Start containers
 docker compose up -d --build

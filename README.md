@@ -36,7 +36,7 @@ This project supports **two development setups**:
 If you have Docker and Docker Compose installed, you can start everything with:
 
 ```bash
-# Install dependencies (for local development / editor support)
+# Install dependencies
 npm install
 # Start containers
 docker compose up -d --build
