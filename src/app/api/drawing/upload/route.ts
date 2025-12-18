@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
+import fs from "fs";
+import fsPromises from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from 'uuid';
 import { apiError } from "@/lib/api-response";
+import { VideoReviewStorage } from "@/lib/storage";
 
 /**
  * @swagger
@@ -66,25 +68,31 @@ export async function POST(req: Request) {
         }
 
         // 保存先決定
-        let filename = "";
-        let filePath = "";
+        const tmpDir = path.join(process.cwd(), "uploads", "tmp");
+        fsPromises.mkdir(tmpDir, { recursive: true });
 
-        if (!savePath) {
-            const dir = path.join(process.cwd(), "uploads", "drawing");
-            await fs.mkdir(dir, { recursive: true });
-            filename = `${uuidv4()}.png`;
-            filePath = path.join(dir, filename);
-        } else {
-            filePath = path.join(process.cwd(), savePath.replace("/api", ""));
-            filename = path.parse(filePath).name + ".png";
+        const tmpFilePath = path.join(tmpDir, `${Date.now()}_${Math.random().toString(36).slice(2)}.png`);
+        const buffer = Buffer.from(await file.arrayBuffer());
+        await fsPromises.writeFile(tmpFilePath, buffer);
+
+        const storageKey = savePath ? savePath : `drawing/${uuidv4()}.png`;
+        await VideoReviewStorage.upload(
+            tmpFilePath,
+            storageKey,
+            "image/png"
+        );
+
+        console.log("Drawing image uploaded to storage key:", storageKey);
+        console.log("Temporary file path:", tmpFilePath);
+        console.log("File exists after upload:", fs.existsSync(tmpFilePath));
+        console.log("File size after upload:", fs.existsSync(tmpFilePath) ? fs.statSync(tmpFilePath).size : "N/A");
+
+        if(fs.existsSync(tmpFilePath)) {
+            fs.rmSync(tmpFilePath);
         }
 
-        // ファイル保存
-        const buffer = Buffer.from(await file.arrayBuffer());
-        await fs.writeFile(filePath, buffer);
-
         return NextResponse.json(
-            { filePath: `/api/uploads/drawing/${filename}` },
+            { filePath: storageKey },
             { status: 200 }
         );
 

@@ -8,7 +8,7 @@ import path from "path";
 import { prisma } from "@/lib/prisma";
 import { Readable } from "stream";
 import { apiError } from "@/lib/api-response";
-import { FileStorage, getVideoStorage } from "@/lib/storage";
+import { VideoReviewStorage } from "@/lib/storage";
 
 /**
  * @swagger
@@ -148,8 +148,7 @@ export async function POST(req: Request): Promise<Response> {
                     filenameOut
                 ).replace(/\\/g, "/");
 
-                const storage: FileStorage = getVideoStorage();
-                await storage.upload(
+                await VideoReviewStorage.upload(
                     tmpFilePath,
                     storageKey,
                     "video/mp4"
@@ -159,9 +158,13 @@ export async function POST(req: Request): Promise<Response> {
                     data: {
                         videoId: video.id,
                         revision: nextRev,
-                        filePath: `/api/uploads/videos/${folderKey}/${title}/${filenameOut}`,
+                        filePath: storageKey,
                     },
                 });
+
+                if(fs.existsSync(tmpFilePath)) {
+                    fs.rmSync(tmpFilePath);
+                }
 
                 responded = true;
                 resolve(NextResponse.json(revision));
