@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import fs from "fs";
 import path from "path";
 import { apiError } from "@/lib/api-response";
+import { VideoReviewStorage } from "@/lib/storage";
 
 /**
  * @swagger
@@ -71,20 +72,10 @@ export async function GET(req: Request) {
         return apiError("Video revision not found", 404);
     }
 
-    const filePath = videoRev.filePath.replace("/api", "");
-    const abs = path.join(process.cwd(), filePath);
+    const storageKey = videoRev.filePath;
+    const ext = path.extname(storageKey);
+    const filename = videoRev.video.title + "_Rev" + videoRev.revision + ext;
 
-    if (!fs.existsSync(abs)) {
-        return apiError("Video file is missing on server : " + abs, 500);
-    }
-
-    const stream = fs.createReadStream(abs);
-    const filename = videoRev.video.title + "_Rev" + videoRev.revision + path.extname(abs);
-
-    return new NextResponse(stream as any, {
-        headers: {
-            "Content-Type": "application/octet-stream",
-            "Content-Disposition": `attachment; filename="${filename}"`,
-        },
-    });
+    const stream = await VideoReviewStorage.download(filename, storageKey);
+    return stream;
 }

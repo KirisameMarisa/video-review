@@ -13,11 +13,14 @@ import { useDrawingStore } from "@/stores/drawing-store";
 import { useTranslations } from "next-intl";
 import { findFirstWithinEps } from "@/lib/utils";
 import { set } from "date-fns";
+import { fetchMediaUrl } from "@/lib/api";
 
 export default function VideoReview() {
     const t = useTranslations("video-review");
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const commentDrawingCache = useRef<Map<string, HTMLImageElement>>(new Map());
+    const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
 
     const {
         setCanvasRefElement,
@@ -84,7 +87,31 @@ export default function VideoReview() {
 
     useEffect(() => {
         playModeRef.current = playMode;
-    }, [playMode])
+    }, [playMode]);
+
+    useEffect(() => {
+        let canceled = false;
+        (async () => {
+            for (const c of comments) {
+                const path = c.drawingPath;
+                if (!path) continue;
+
+                if (commentDrawingCache.current.has(path)) continue;
+                const url = await fetchMediaUrl(path);
+                if (canceled) return;
+
+
+                const img = new Image();
+                img.src = url;
+
+                img.onload = () => {
+                    if (canceled) return;
+                    commentDrawingCache.current.set(path, img);
+                };
+                commentDrawingCache.current.set(path, img);
+            }
+        })();
+    }, [comments]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -97,16 +124,16 @@ export default function VideoReview() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         for (const comment of toDraw) {
             if (!comment.drawingPath) continue;
-            const img = new Image();
-            img.src = `${comment.drawingPath}`;
-            img.onload = () => {
-                ctx.save();
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                ctx.restore();
-            };
+
+            const img = commentDrawingCache.current.get(comment.drawingPath);
+            if(!img || !img.complete) continue;
+
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
         }
-    }, [activeComments, selectedComment]);
+    }, [activeComments, selectedComment, isPlaying]);
 
     useEffect(() => {
         if (selectedComment && selectedComment.time !== currentTime) {
@@ -116,7 +143,7 @@ export default function VideoReview() {
         const now = currentTime;
         const eps = 0.3;
         const activeIndex = findFirstWithinEps(commentTimeList, currentTime, eps);
-        if(activeIndex !== null) {
+        if (activeIndex !== null) {
             console.log("ActiveIndex:", activeIndex, currentTime);
             const active = commentTimeBasedMap.get(commentTimeList[activeIndex]) ?? [];
             setActiveComments(active);
@@ -145,6 +172,16 @@ export default function VideoReview() {
         if (!c || !v) return;
 
         fetchComments(selectedRevision?.videoId);
+
+        let canceled = false;
+        (async () => {
+            const url = await fetchMediaUrl(
+                selectedRevision.filePath
+            );
+            if (url && !canceled) {
+                setPlaybackUrl(url);
+            }
+        })();
 
         const onPlay = () => setIsPlaying(true);
         const onPause = () => setIsPlaying(false);
@@ -194,6 +231,7 @@ export default function VideoReview() {
         v.addEventListener("ended", onEnded);
 
         return () => {
+            canceled = true;
             v.removeEventListener("play", onPlay);
             v.removeEventListener("pause", onPause);
             v.removeEventListener("loadedmetadata", onMeta);
@@ -240,7 +278,7 @@ export default function VideoReview() {
                             <div className="relative inline-block">
                                 <video
                                     ref={videoRef}
-                                    src={selectedRevision.filePath}
+                                    src={playbackUrl ?? undefined}
                                     onClick={togglePlay}
                                     className="max-h-[80vh] max-w-full rounded cursor-pointer object-contain"
                                 />

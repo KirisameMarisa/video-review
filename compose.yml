@@ -13,7 +13,6 @@ services:
       NEXT_PUBLIC_VIDEO_REVIEW_TITLE: VideoReview
       NEXT_PUBLIC_VIDEO_REVIEW_DESC: Lightweight video review tool
       JWT_SECRET: local-dev-secret
-      RUN_MIGRATE: "true"
     volumes:
       - .:/app
     depends_on:
@@ -30,6 +29,22 @@ services:
       POSTGRES_DB: videoreview
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  localstack:
+      env_file:
+        - .env
+      image: localstack/localstack:latest
+      container_name: "videoreview-localstack"
+      depends_on:
+          - web
+      ports:
+          - "4566:4566"
+      environment:
+          # https://docs.localstack.cloud/references/configuration/
+          - DEBUG=${DEBUG:-0}
+          - LAMBDA_KEEPALIVE_MS=2592000000 # 30 days
+      volumes:
+          - ./docker/localstack:/etc/localstack/init/ready.d
 
 volumes:
   pgdata:

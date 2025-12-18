@@ -8,6 +8,7 @@ import path from "path";
 import { prisma } from "@/lib/prisma";
 import { Readable } from "stream";
 import { apiError } from "@/lib/api-response";
+import { VideoReviewStorage } from "@/lib/storage";
 
 /**
  * @swagger
@@ -139,22 +140,31 @@ export async function POST(req: Request): Promise<Response> {
                 });
 
                 const nextRev = (latestRev?.revision ?? 0) + 1;
-
-                const finalDir = path.join(process.cwd(), "uploads", "videos", folderKey, title);
-                await fsPromises.mkdir(finalDir, { recursive: true });
-
                 const filenameOut = `rev_${String(nextRev).padStart(3, "0")}.mp4`;
-                const finalPath = path.join(finalDir, filenameOut);
+                const storageKey = path.join(
+                    "videos",
+                    folderKey,
+                    title,
+                    filenameOut
+                ).replace(/\\/g, "/");
 
-                await fsPromises.rename(tmpFilePath, finalPath);
+                await VideoReviewStorage.upload(
+                    tmpFilePath,
+                    storageKey,
+                    "video/mp4"
+                );
 
                 const revision = await prisma.videoRevision.create({
                     data: {
                         videoId: video.id,
                         revision: nextRev,
-                        filePath: `/api/uploads/videos/${folderKey}/${title}/${filenameOut}`,
+                        filePath: storageKey,
                     },
                 });
+
+                if(fs.existsSync(tmpFilePath)) {
+                    fs.rmSync(tmpFilePath);
+                }
 
                 responded = true;
                 resolve(NextResponse.json(revision));

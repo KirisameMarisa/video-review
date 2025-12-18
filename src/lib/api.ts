@@ -298,3 +298,8 @@ export function downloadVideo(videoId: string, videoRevId: string): void {
     a.download = "";
     a.click();
 }
+
+export async function fetchMediaUrl(filePath: string): Promise<string> {
+    const res = await fetch(`/api/media/${encodeURI(filePath)}`);
+    return (await res.json()).url;
+}
