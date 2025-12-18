@@ -16,7 +16,7 @@ export default function CanvasControlPanel() {
     const [lineWidth, setLineWidth] = useState<number>(10);
     const [color, setColor] = useState<string>("#ff8800");
     const [mode, setMode] = useState<"pen" | "eraser">("pen");
-        
+
     const {
         needSave,
         canvasRefElement,
@@ -28,8 +28,8 @@ export default function CanvasControlPanel() {
         editingComment,
     } = useCommentEditStore();
 
-    const colorRef =  useRef(color);
-    const lineWidthRef =  useRef(lineWidth);
+    const colorRef = useRef(color);
+    const lineWidthRef = useRef(lineWidth);
     const editingRef = useRef(canvasEditing);
     const modeRef = useRef(mode);
 
@@ -61,27 +61,41 @@ export default function CanvasControlPanel() {
         const ctx = c.getContext("2d")!;
         let drawing = false;
 
-        const getPos = (e: MouseEvent, canvas: HTMLCanvasElement) => {
+        const getPos = (e: MouseEvent | TouchEvent, canvas: HTMLCanvasElement) => {
             const rect = canvas.getBoundingClientRect();
             const ratio = window.devicePixelRatio || 1;
-            const x = (e.clientX - rect.left) * (canvas.width / rect.width) / ratio;
-            const y = (e.clientY - rect.top) * (canvas.height / rect.height) / ratio;
-            return { x, y };
+            if (e instanceof TouchEvent) {
+                const touch = e.touches[0];
+                const x = (touch.clientX - rect.left);
+                const y = (touch.clientY - rect.top);
+                return { x, y };
+            } else /*if (e instanceof MouseEvent)*/ {
+                const x = (e.clientX - rect.left) * (canvas.width / rect.width) / ratio;
+                const y = (e.clientY - rect.top) * (canvas.height / rect.height) / ratio;
+                return { x, y };
+            }
         };
 
-        const start = (e: MouseEvent) => {
+        const start = (e: MouseEvent | TouchEvent) => {
             if (!editingRef.current) return;
+            if (e instanceof TouchEvent) {
+                e.preventDefault();
+            }
             const pos = getPos(e, canvasRefElement);
             drawing = true;
             ctx.beginPath();
             ctx.moveTo(pos.x, pos.y);
         };
 
-        const move = (e: MouseEvent) => {
+        const move = (e: MouseEvent | TouchEvent) => {
             setNeedSave(true);
 
             if (!editingRef.current || !drawing) return;
             const pos = getPos(e, canvasRefElement);
+            if (e instanceof TouchEvent) {
+                e.preventDefault();
+            }
+
             switch (modeRef.current) {
                 case "pen":
                     ctx.globalCompositeOperation = "source-over";
@@ -107,11 +121,20 @@ export default function CanvasControlPanel() {
         c.addEventListener("mouseup", end);
         c.addEventListener("mouseleave", end);
 
+        c.addEventListener("touchstart", start, { passive: false });
+        c.addEventListener("touchmove", move, { passive: false });
+        c.addEventListener("touchend", end);
+        c.addEventListener("touchcancel", end);
         return () => {
             c.removeEventListener("mousedown", start);
             c.removeEventListener("mousemove", move);
             c.removeEventListener("mouseup", end);
             c.removeEventListener("mouseleave", end);
+
+            c.removeEventListener("touchstart", start);
+            c.removeEventListener("touchmove", move);
+            c.removeEventListener("touchend", end);
+            c.removeEventListener("touchcancel", end);
         };
     }, [canvasRefElement]);
 
@@ -121,10 +144,10 @@ export default function CanvasControlPanel() {
 
     const handleNewCanvas = () => {
         const c = canvasRefElement;
-        if(!c) return;
+        if (!c) return;
 
         const ctx = c.getContext("2d")!;
-        if(!ctx) return;
+        if (!ctx) return;
 
         ctx.clearRect(0, 0, c.width, c.height);
     }
