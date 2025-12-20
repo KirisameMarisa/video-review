@@ -10,8 +10,6 @@ services:
       - "3489:3489"
     environment:
       DATABASE_URL: postgres://videoreview:videoreview@db:5432/videoreview
-      NEXT_PUBLIC_VIDEO_REVIEW_TITLE: VideoReview
-      NEXT_PUBLIC_VIDEO_REVIEW_DESC: Lightweight video review tool
       JWT_SECRET: local-dev-secret
     volumes:
       - .:/app
