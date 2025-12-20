@@ -43,10 +43,11 @@ import bcrypt from "bcrypt";
  *                   type: string
  *                 displayName:
  *                   type: string
- *                email:
- *                  type: string | null
- *                role:
- *                  type: string
+ *                 email:
+ *                   type: string
+ *                   nullable: true
+ *                 role:
+ *                   type: string
  *       400:
  *         description: Invalid request
  *         content:
@@ -66,6 +67,7 @@ import bcrypt from "bcrypt";
  *             schema:
  *               $ref: '#/components/schemas/ApiErrorResponse'
  */
+
 export async function POST(req: Request) {
     try {
         const { email, password } = await req.json();

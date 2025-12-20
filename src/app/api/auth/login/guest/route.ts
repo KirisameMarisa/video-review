@@ -39,10 +39,11 @@ import { JwtError, signToken } from "@/lib/jwt";
  *                   type: string
  *                 displayName:
  *                   type: string
- *                email:
- *                  type: string | null
- *                role:
- *                  type: string
+ *                 email:
+ *                   type: string
+ *                   nullable: true
+ *                 role:
+ *                   type: string
  *       400:
  *         description: Invalid request
  *         content:
