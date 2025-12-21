@@ -5,16 +5,20 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const email = readline.question("Admin email: ");
-const password = readline.question("Password: ", {hideEchoBack: true});
+const password = readline.question("Password: ", { hideEchoBack: true });
 const hash = await bcrypt.hash(password, 10);
 
-await prisma.identity.create({
+await prisma.user.create({
     data: {
-        provider: "password",
-        providerUid: email,
-        secretHash: hash,
-        user: {
-            connect: { email },
+        email,
+        displayName: "admin",
+        role: "admin",
+        identities: {
+            create: {
+                provider: "password",
+                providerUid: email,
+                secretHash: hash,
+            },
         },
     },
 });
