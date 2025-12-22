@@ -51,7 +51,7 @@ export async function uploadVideo(data: {
     url: string,
     session: UploadSession,
     file: File;
-}): Promise<{ sucess: boolean; msg: string }> {
+}): Promise<void> {
     const token = useAuthStore.getState().token;
 
     const formData = new FormData();
@@ -76,24 +76,66 @@ export async function uploadVideo(data: {
             },
         });
     }
+    return;
+}
 
-    if (!res) {
-        return { sucess: false, msg: `upload unkown error` };
-    }
+export async function uploadDrawingInit(data: {
+    drawingPath: string | null,
+}): Promise<{ url: string; session: UploadSession }> {
+    const token = useAuthStore.getState().token;
+    const formData = new FormData();
+    formData.append("path", data.drawingPath ?? "");
+    const res = await fetch("/api/drawing/upload/init", {
+        method: "POST",
+        body: formData,
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return res.json();
+}
 
-    if (res.status === 401) {
-        useAuthStore.getState().logout();
-        throw new Error("unauthorized");
-    }
+export async function uploadDrawingFinish(data: {
+    session_id: string,
+}): Promise<string> {
+    const token = useAuthStore.getState().token;
+    const res = await fetch(`/api/drawing/upload/finish?session_id=${data.session_id}`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    const { filePath } = await res.json();
+    return filePath;
+}
 
-    if (res.ok) {
-        const data = await res.json();
-        return {
-            sucess: true,
-            msg: `アップロード完了: rev_${data.revision.revision}`,
-        };
-    } else {
-        const err = await res.json();
-        return { sucess: false, msg: `エラー: ${err.error}` };
+export async function uploadDrawing(data : {
+    url: string,
+    session: UploadSession,
+    file: Blob;
+}): Promise<void> {
+    const token = useAuthStore.getState().token;
+
+    let res: Response | undefined;
+    if (data.session.storage === UploadStorageType.local) {
+        const formData = new FormData();
+        formData.append("file", data.file);
+        res = await fetch(data.url, {
+            method: "PUT",
+            body: formData,
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+    } else if (data.session.storage === UploadStorageType.s3) {
+        res = await fetch(data.url, {
+            method: "PUT",
+            body: data.file,
+            headers: {
+                "Content-Type": data.file.type,
+            },
+        });
     }
+    return;
 }

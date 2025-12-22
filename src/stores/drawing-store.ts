@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import * as api from '@/lib/api';
+import * as apiUpload from "@/lib/upload"
 
 interface DrawingState {
     canvasRefElement: HTMLCanvasElement | null,
@@ -28,9 +28,13 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
         return new Promise<string | null>((resolve) => {
             c.toBlob(async (blob) => {
                 if (!blob) return resolve(null);
+                
 
-                const drawingPath = await api.uploadDrawing(blob, path);
-                resolve(drawingPath);
+                const init = await apiUpload.uploadDrawingInit({drawingPath: path});
+                await apiUpload.uploadDrawing({ url: init.url, session: init.session, file: blob });
+                const filePath = await apiUpload.uploadDrawingFinish({ session_id: init.session.id });
+
+                resolve(filePath);
             }, "image/png");
         });
     },

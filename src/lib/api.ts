@@ -200,22 +200,6 @@ export async function fetchLatestRevision(
     return res.json();
 }
 
-export async function uploadDrawing(
-    blob: Blob,
-    drawingPath: string | null,
-): Promise<string> {
-    const formData = new FormData();
-    formData.append("file", blob);
-    formData.append("path", drawingPath ?? "");
-
-    const res = await fetch("/api/drawing/upload", {
-        method: "POST",
-        body: formData,
-    });
-    const { filePath } = await res.json();
-    return filePath;
-}
-
 export async function fetchLastUpdated(videoId: string): Promise<number> {
     const email = useAuthStore.getState().email;
     const res = await fetch(

@@ -93,7 +93,7 @@ export class S3Storage implements FileStorage {
                 Bucket: process.env.S3_BUCKET!,
                 Key: storageKey,
                 ContentType: contentType,
-                ...(process.env.S3_LOCALSTACK_ENDPOINT === ""
+                ...(process.env.S3_LOCALSTACK_ENDPOINT !== ""
                     ? {ChecksumCRC32: ''}
                     : {}
                 ),
