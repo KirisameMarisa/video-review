@@ -15,6 +15,12 @@ function getArg(name: string): string | undefined {
 let email = getArg("email");
 let password = getArg("pass");
 
+const exists = await prisma.user.findUnique({ where: { email } });
+if (exists) {
+    console.log("Admin already exists. Skip.");
+    process.exit(0);
+}
+
 if (!email) {
     email = readline.question("Admin email: ");
 }
