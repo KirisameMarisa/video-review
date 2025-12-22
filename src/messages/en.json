@@ -12,7 +12,8 @@
         "folderKeyPlaceholder": "Folder key (e.g. projectA/scene01)",
         "cancel": "Cancel",
         "upload": "Upload",
-        "uploading": "Uploading..."
+        "uploading": "Uploading...",
+        "errorUpload": "Video upload failed. Please contact the admin"
     },
     "video-search": {
         "shortcutKey": "Ctrl + K",

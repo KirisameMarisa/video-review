@@ -12,7 +12,8 @@
         "folderKeyPlaceholder": "フォルダーキー（例: projectA/scene01）",
         "cancel": "キャンセル",
         "upload": "アップロード",
-        "uploading": "アップロード中..."
+        "uploading": "アップロード中...",
+        "errorUpload": "動画のアップロードに失敗しました。管理者へ連絡してください"
     },
     "video-search": {
         "shortcutKey": "Ctrl + K",

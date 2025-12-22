@@ -8,6 +8,7 @@ import { Upload } from "lucide-react";
 import path from "path";
 import { useTranslations } from "next-intl";
 import { UploadSession } from "@prisma/client";
+import { DialogClose } from "@radix-ui/react-dialog";
 
 export default function VideoUploadDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
     type UploadStep = "input" | "uploading" | "done" | "error";
@@ -23,11 +24,6 @@ export default function VideoUploadDialog({ open, onClose }: { open: boolean; on
     useEffect(() => {
         (async () => {
             try {
-                setStep("input");
-                setMessage("");
-                setFile(null);
-                setSelectedFolderKey("");
-                setSession(null);
                 const keys = await api.getVideoFolderKeys();
                 setFolderKeys(keys);
             } finally {
@@ -35,6 +31,16 @@ export default function VideoUploadDialog({ open, onClose }: { open: boolean; on
             }
         })();
     }, []);
+
+    useEffect(() => {
+        if (open) {
+            setStep("input");
+            setMessage("");
+            setFile(null);
+            setSelectedFolderKey("");
+            setSession(null);
+        }
+    }, [open])
 
     const handleUpload = async () => {
         if (!selectedFolderKey || !file) {
@@ -80,7 +86,7 @@ export default function VideoUploadDialog({ open, onClose }: { open: boolean; on
 
                 if (cancelled) return;
 
-                if(res.status === "uploaded") {
+                if (res.status === "uploaded") {
                     await apiUpload.uploadVideoFinish({
                         session_id: session.id,
                     });
@@ -107,8 +113,9 @@ export default function VideoUploadDialog({ open, onClose }: { open: boolean; on
     }, [step, session]);
 
     return (
-        <Dialog open={open} onOpenChange={() => step === "done" && onClose()}>
+        <Dialog open={open} onOpenChange={() => step === "done" || onClose()}>
             <DialogContent className="bg-[#202020] text-white border border-[#333]">
+                <DialogClose hidden={true} />
                 <DialogHeader>
                     <DialogTitle className="text-[#ff8800]">{t("title")}</DialogTitle>
                 </DialogHeader>
@@ -170,3 +177,4 @@ export default function VideoUploadDialog({ open, onClose }: { open: boolean; on
         </Dialog>
     );
 }
+
