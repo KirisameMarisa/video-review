@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(req: Request) {
     try {
-        authorize(req, ["admin"]);
+        authorize(req, ["viewer", "admin", "guest"]);
     } catch (e) {
         if (e instanceof JwtError) {
             return apiError(e.message, e.status);

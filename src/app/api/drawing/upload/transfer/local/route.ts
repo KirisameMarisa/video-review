@@ -11,7 +11,7 @@ import { getSession } from "@/lib/upload-session";
 
 export async function PUT(req: Request): Promise<Response> {
     try {
-        authorize(req, ["admin"]);
+        authorize(req, ["viewer", "admin", "guest"]);
     } catch (e) {
         if (e instanceof JwtError) {
             return apiError(e.message, e.status);
