@@ -1,23 +1,33 @@
 import path from "path";
 import fs from "fs";
 import fsPromises from "fs/promises";
-import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand, HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client } from "@/lib/s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
 import { apiError } from "./api-response";
+import { UploadStorageType } from "@prisma/client";
 
 export interface FileStorage {
-    upload(tmpFilePath: string, storageKey: string, contentType: string): Promise<void>;
+    type(): string;
+    uploadURL(session_id: string, storageKey: string, contentType: string): Promise<string>;
     fallbackURL(storageKey: string): Promise<string>;
     download(filename: string, storageKey: string): Promise<NextResponse>;
+    hasObject(storageKey: string): Promise<boolean>;
 }
 
 export class LocalStorage implements FileStorage {
-    async upload(tmpFilePath: string, storageKey: string, contentType: string): Promise<void> {
-        const fullPath = path.join(process.cwd(), "uploads", storageKey);
-        await fsPromises.mkdir(path.dirname(fullPath), { recursive: true });
-        await fsPromises.rename(tmpFilePath, fullPath);
+    type(): string {
+        return UploadStorageType.local;
+    }
+
+    async hasObject(storageKey: string): Promise<boolean> {
+        const abs = path.join(process.cwd(), "uploads", storageKey);
+        return fs.existsSync(abs);
+    }
+
+    async uploadURL(session_id: string, storageKey: string, contentType: string): Promise<string> {
+        return `/api/videos/upload/transfer/local?session_id=${session_id}`
     }
 
     async fallbackURL(storageKey: string): Promise<string> {
@@ -48,15 +58,52 @@ export class LocalStorage implements FileStorage {
 }
 
 export class S3Storage implements FileStorage {
-    async upload(tmpFilePath: string, storageKey: string, contentType: string): Promise<void> {
-        await s3Client?.send(
+    type(): string {
+        return UploadStorageType.s3;
+    }
+
+    async hasObject(storageKey: string): Promise<boolean> {
+        if (!s3Client) return false;
+
+        try {
+            await s3Client.send(
+                new HeadObjectCommand({
+                    Bucket: process.env.S3_BUCKET!,
+                    Key: storageKey,
+                })
+            );
+            return true;
+        } catch (err: any) {
+            if (err?.$metadata?.httpStatusCode === 404) {
+                return false;
+            }
+            console.warn("S3 hasObject error:", err);
+            return false;
+        }
+    }
+
+    async uploadURL(session_id: string, storageKey: string, contentType: string): Promise<string> {
+        if (!s3Client) return Promise.reject(undefined);
+
+
+        
+        let url = await getSignedUrl(
+            s3Client,
             new PutObjectCommand({
                 Bucket: process.env.S3_BUCKET!,
                 Key: storageKey,
-                Body: fs.createReadStream(tmpFilePath),
                 ContentType: contentType,
-            })
+                ...(process.env.S3_LOCALSTACK_ENDPOINT === ""
+                    ? {ChecksumCRC32: ''}
+                    : {}
+                ),
+            }),
+            { expiresIn: 300 }
         );
+        if (url.includes("http://localstack")) {
+            url = url.replace("http://localstack", "http://localhost");
+        }
+        return url;
     }
 
     async fallbackURL(storageKey: string): Promise<string> {
@@ -82,10 +129,9 @@ export class S3Storage implements FileStorage {
         }
     }
 
-
     async download(filename: string, storageKey: string): Promise<NextResponse> {
         if (!s3Client) return Promise.reject(undefined);
-        
+
         let url = await getSignedUrl(
             s3Client,
             new GetObjectCommand({
@@ -99,6 +145,7 @@ export class S3Storage implements FileStorage {
         if (url.includes("http://localstack")) {
             url = url.replace("http://localstack", "http://localhost");
         }
+        console.log("download", url);
 
         return NextResponse.redirect(url, 302);
     }

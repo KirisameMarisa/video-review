@@ -12,6 +12,8 @@ function createS3Client(): S3Client | null {
                 endpoint: process.env.S3_LOCALSTACK_ENDPOINT,
                 forcePathStyle: true,
                 region: process.env.S3_REGION!,
+                requestChecksumCalculation: "WHEN_SUPPORTED",
+                responseChecksumValidation: "WHEN_SUPPORTED"
             });
         }
     }

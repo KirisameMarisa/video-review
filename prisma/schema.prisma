@@ -100,3 +100,19 @@ model UserVideoReadStatus {
 
   @@unique([userId, videoId])
 }
+
+model UploadSession {
+  id          String   @id @default(uuid())
+  storageKey String
+  storage    UploadStorageType
+  title      String
+  folderKey  String
+  scenePath  String?
+  nextRev    Int
+  createdAt  DateTime @default(now())
+}
+
+enum UploadStorageType {
+  local
+  s3
+}

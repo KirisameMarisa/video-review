@@ -172,43 +172,6 @@ export async function getVideoList(): Promise<Video[]> {
     return res.json();
 }
 
-export async function uploadVideo(data: {
-    title: string;
-    folderKey: string;
-    file: File;
-}): Promise<{ sucess: boolean; msg: string }> {
-    const token = useAuthStore.getState().token;
-
-    const formData = new FormData();
-    formData.append("title", data.title);
-    formData.append("folderKey", data.folderKey);
-    formData.append("file", data.file);
-
-    const res = await fetch("/api/videos/upload", {
-        method: "POST",
-        body: formData,
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-
-    if(res.status === 401) {
-        useAuthStore.getState().logout();
-        throw new Error("unauthorized");
-    }
-
-    if (res.ok) {
-        const data = await res.json();
-        return {
-            sucess: true,
-            msg: `アップロード完了: rev_${data.revision.revision}`,
-        };
-    } else {
-        const err = await res.json();
-        return { sucess: false, msg: `エラー: ${err.error}` };
-    }
-}
-
 export async function getVideoFromId(videoId: string): Promise<Video> {
     const res = await fetch(`/api/videos/${videoId}`);
     if (!res.ok) throw new Error("Failed to fetch video");
