@@ -4,8 +4,30 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const email = readline.question("Admin email: ");
-const password = readline.question("Password: ", { hideEchoBack: true });
+function getArg(name: string): string | undefined {
+    const index = process.argv.indexOf(`--${name}`);
+    if (index !== -1 && index + 1 < process.argv.length) {
+        return process.argv[index + 1];
+    }
+    return undefined;
+}
+
+let email = getArg("email");
+let password = getArg("pass");
+
+if (!email) {
+    email = readline.question("Admin email: ");
+}
+
+if (!password) {
+    password = readline.question("Password: ", { hideEchoBack: true });
+}
+
+if (!email || !password) {
+    console.error("email and password are required");
+    process.exit(1);
+}
+
 const hash = await bcrypt.hash(password, 10);
 
 await prisma.user.create({
@@ -22,4 +44,6 @@ await prisma.user.create({
         },
     },
 });
+
 console.log("Admin account created.");
+await prisma.$disconnect();
