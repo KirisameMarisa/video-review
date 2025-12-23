@@ -30,7 +30,8 @@
     "video-control-panel": {
         "normal": "通常再生",
         "loop": "ループ再生",
-        "next": "次の動画を自動再生"
+        "next": "次の動画を自動再生",
+        "playMode": "再生モード"
     },
     "video-comment-panel": {
         "title": "コメント",

@@ -30,7 +30,8 @@
     "video-control-panel": {
         "normal": "Normal",
         "loop": "Loop playback",
-        "next": "Auto play next video"
+        "next": "Auto play next video",
+        "playMode": "Play mode"
     },
     "video-comment-panel": {
         "title": "Comment",

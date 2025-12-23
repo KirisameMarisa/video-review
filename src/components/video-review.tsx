@@ -262,7 +262,7 @@ export default function VideoReview() {
             return;
         }
         v.playbackRate = playbackRate;
-    }, [playbackRate]);
+    }, [playbackRate, selectedRevision]);
 
     useEffect(() => {
         const v = videoRef.current;
@@ -274,7 +274,7 @@ export default function VideoReview() {
         } else {
             v.volume = 0.0;
         }
-    }, [volume, volumeEnabled]);
+    }, [volume, volumeEnabled, selectedRevision]);
 
     useEffect(() => {
         timelineTimeRef.current = timelineTime;

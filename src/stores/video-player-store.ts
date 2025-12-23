@@ -13,6 +13,7 @@ interface VideoPlayerState {
     setPlaybackRate: (rate: number) => void;
     setVolume: (vol: number) => void;
     setVolumeEnabled: (enabled: boolean) => void;
+    setMode(mode: EPlayMode): void;
     toggleMode: () => void;
     togglePlay: () => void;
 }
@@ -26,6 +27,7 @@ export const useVideoPlayerStore = create<VideoPlayerState>((set, get) => ({
 
     setIsPlaying: (r) => set({ isPlaying: r }),
     setPlaybackRate: (rate) => set({ playbackRate: rate }),
+    setMode: (mode) => set({ playMode: mode }),
     toggleMode: () => {
         const currMode = get().playMode;
         switch(currMode) {
