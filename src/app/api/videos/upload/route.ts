@@ -59,15 +59,6 @@ import { authorize, JwtError } from "@/lib/jwt";
  *               $ref: '#/components/schemas/ApiErrorResponse'
  */
 export async function POST(req: Request): Promise<Response> {
-    try {
-        authorize(req, ["admin"]);
-    } catch (e) {
-        if (e instanceof JwtError) {
-            return apiError(e.message, e.status);
-        }
-        return apiError("unauthorized", 401);
-    }
-
     return new Promise((resolve) => {
         const contentType = req.headers.get("content-type") || "";
         const busboy = Busboy({ headers: { "content-type": contentType } });
