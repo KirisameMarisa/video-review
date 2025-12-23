@@ -10,7 +10,9 @@ import {
     faAnglesRight,
     faLink,
     faDownload,
-    faGamepad
+    faGamepad,
+    faVolumeHigh,
+    faVolumeXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import {
     Select,
@@ -27,6 +29,8 @@ import { useVideoStore } from "@/stores/video-store";
 import { ShareLinkDialog } from "@/components/share-link";
 import { downloadVideo } from "@/lib/api";
 import { useTranslations } from "next-intl";
+import { Slider } from "@/ui/slider";
+import { Label } from "@radix-ui/react-label";
 
 export default function VideoControlPanel() {
     const t = useTranslations("video-control-panel");
@@ -35,6 +39,10 @@ export default function VideoControlPanel() {
     const {
         isPlaying,
         playMode,
+        volume,
+        volumeEnabled,
+        setVolume,
+        setVolumeEnabled,
         toggleMode,
         togglePlay,
         playbackRate,
@@ -61,7 +69,7 @@ export default function VideoControlPanel() {
                 variant="ghost"
                 size="icon"
                 onClick={togglePlay}
-                className="text-white hover:bg-[#2a2a2a] rounded-full w-8 h-8"
+                className="text-white hover:bg-[#d4d4d4] rounded-full w-8 h-8"
             >
                 <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} />
             </Button>
@@ -96,7 +104,7 @@ export default function VideoControlPanel() {
                 variant="ghost"
                 size="icon"
                 onClick={toggleMode}
-                className="text-white hover:bg-[#2a2a2a] rounded-full w-8 h-8"
+                className="text-white hover:bg-[#d4d4d4] rounded-full w-8 h-8"
             >
                 {playMode === "normal" ? (
                     <FontAwesomeIcon icon={faCirclePlay} />
@@ -117,6 +125,37 @@ export default function VideoControlPanel() {
 
             <span className="text-xs text-[#ccc]">
                 {t(playMode)}
+            </span>
+
+            {/* 音量バー */}
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                    setVolumeEnabled(!volumeEnabled);
+                }}
+                className="text-white hover:bg-[#d4d4d4] rounded-full w-8 h-8"
+            >
+                {volumeEnabled  ? (
+                    <FontAwesomeIcon icon={faVolumeHigh} />
+                ) : (
+                    <FontAwesomeIcon icon={faVolumeXmark} />
+                )}
+            </Button>
+            <span className="text-sm text-[#aaa] w-40">
+                <Slider
+                    min={0}
+                    max={1.0}
+                    step={0.01}
+                    value={[volume]}
+                    onValueChange={(v) => {
+                        setVolume(v[0]);
+                    }}
+                    onValueCommit={(v) => {
+                        setVolume(v[0]);
+                    }}
+                    className="w-full"
+                />
             </span>
 
             {/* 右端：リンクコピー */}
@@ -146,7 +185,7 @@ function ButtonShareLink({ url }: { url: string }) {
 }
 
 function DownloadVideo({ videoId, videoRevId }: { videoId: string | null, videoRevId: string | null }) {
-    if(!videoId || !videoRevId) {
+    if (!videoId || !videoRevId) {
         return <></>
     }
 
@@ -163,10 +202,10 @@ function DownloadVideo({ videoId, videoRevId }: { videoId: string | null, videoR
 }
 
 function OpenSceneButton({ scenePath }: { scenePath: string | null }) {
-    if(!scenePath) {
+    if (!scenePath) {
         return <></>
     }
-    
+
     return (
         <>
             <button

@@ -51,6 +51,8 @@ export default function VideoReview() {
         playMode,
         isPlaying,
         togglePlay,
+        volume,
+        volumeEnabled,
         setIsPlaying,
         playbackRate,
     } = useVideoPlayerStore();
@@ -261,6 +263,18 @@ export default function VideoReview() {
         }
         v.playbackRate = playbackRate;
     }, [playbackRate]);
+
+    useEffect(() => {
+        const v = videoRef.current;
+        if (!v) {
+            return;
+        }
+        if(volumeEnabled) {
+            v.volume = volume;
+        } else {
+            v.volume = 0.0;
+        }
+    }, [volume, volumeEnabled]);
 
     useEffect(() => {
         timelineTimeRef.current = timelineTime;

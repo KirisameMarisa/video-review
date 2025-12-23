@@ -4,17 +4,23 @@ export type EPlayMode = 'normal' | 'loop' | 'next';
 
 interface VideoPlayerState {
     isPlaying: boolean;
+    volume: number
+    volumeEnabled: boolean;
     playMode: EPlayMode,
     playbackRate: number;
 
     setIsPlaying: (r: boolean) => void;
     setPlaybackRate: (rate: number) => void;
+    setVolume: (vol: number) => void;
+    setVolumeEnabled: (enabled: boolean) => void;
     toggleMode: () => void;
     togglePlay: () => void;
 }
 
 export const useVideoPlayerStore = create<VideoPlayerState>((set, get) => ({
     isPlaying: false,
+    volume: 0.3,
+    volumeEnabled: true,
     playMode: 'normal',
     playbackRate: 1.0,
 
@@ -29,4 +35,6 @@ export const useVideoPlayerStore = create<VideoPlayerState>((set, get) => ({
         }
     },
     togglePlay: () => set((s) => ({ isPlaying: !s.isPlaying })),
+    setVolume: (vol) => set({ volume: vol }),
+    setVolumeEnabled: (enabled) => set({ volumeEnabled: enabled }),
 }));
