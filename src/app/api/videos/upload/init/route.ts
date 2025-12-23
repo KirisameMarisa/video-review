@@ -19,7 +19,7 @@ export async function POST(req: Request) {
         return apiError("unauthorized", 401);
     }
 
-    return new Promise((resolve) => {
+    return new Promise<Response>((resolve) => {
         const contentType = req.headers.get("content-type") || "";
         const busboy = Busboy({ headers: { "content-type": contentType } });
         const fields: { [key: string]: string } = {};
