@@ -4,10 +4,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useRouter } from "next/navigation";
 import * as auth from "@/lib/auth";
 import { useTranslations } from "next-intl";
-import { Checkbox } from "@/ui/checkbox";
 import { Tabs } from "@/ui/tabs";
 import { TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/ui/card";
 import { Label } from "@/ui/label";
 import { Input } from "@/ui/input";
 import { Button } from "@/ui/button";
@@ -20,7 +18,7 @@ export default function Login() {
     const cacheEmail = useAuthStore((e) => e.email);
     const { setAuth } = useAuthStore();
 
-    const [type, setType] = useState<auth.LoginType>("guest");
+    const [type, setType] = useState<auth.LoginType>(process.env.NEXT_PUBLIC_LOGIN_DEFAULT_TYPE as auth.LoginType ?? "guest");
     const [email, setEmail] = useState<string | null>(null);
     const [password, setPassword] = useState("");
     const [displayName, setDisplayName] = useState("");
@@ -53,7 +51,7 @@ export default function Login() {
                 backgroundPosition: "center",
             }}
         >
-            {/* 中央のパネル */}
+            {/* Login Panel */}
             <div style={{minHeight:"400px"}} className="w-100 p-8 rounded-xl bg-[#202020]/80 shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-sm border border-[#333]">
                 <h1 className="text-lg mb-6 font-semibold text-center text-[#ff8800]">
                     {process.env.NEXT_PUBLIC_VIDEO_REVIEW_TITLE}
