@@ -2,11 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faGear } from "@fortawesome/free-solid-svg-icons";
+import { faGear, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 import { Popover, PopoverTrigger, PopoverContent } from "@/ui/popover";
 import { useLocale } from "@/app/locale-provider";
 import { Switch } from "@/ui/switch";
 import { useTranslations } from "next-intl";
+import { useAuthStore } from "@/stores/auth-store";
 
 export function SettingPopover() {
     const t = useTranslations("setting");
@@ -31,12 +32,11 @@ export function SettingPopover() {
                 className="w-full bg-[#1f1f1f] border border-[#333] text-white"
             >
                 <div className="space-y-4 min-w-[360px]">
-                    {/* 設定タイトル */}
                     <div className="text-sm font-medium text-gray-200">
                         {t("title")}
                     </div>
 
-                    {/* 言語設定 */}
+                    {/* Language setting */}
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex flex-col flex-1 min-w-0">
                             <span className="text-sm text-gray-100">
@@ -57,6 +57,28 @@ export function SettingPopover() {
                                     setLocale(x ? "ja" : "en")
                                 }
                             />
+                        </div>
+                    </div>
+
+                    {/* Logout */}
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex flex-col flex-1 min-w-0">
+                            <span className="text-sm text-gray-100">
+                                {t("logout")}
+                            </span>
+                        </div>
+
+                        <div className="flex-shrink-0 w-12 flex justify-end">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                    useAuthStore.getState().logout();
+                                }}
+                                className="text-white hover:bg-[#d4d4d4] rounded-full w-8 h-8"
+                            >
+                                <FontAwesomeIcon icon={faRightFromBracket} />
+                            </Button>
                         </div>
                     </div>
                 </div>

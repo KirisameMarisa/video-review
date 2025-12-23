@@ -75,6 +75,7 @@
         "title": "設定",
         "language": "言語切替",
         "languageOptionEn": "英語 (English)",
-        "languageOptionJa": "日本語 (Japanese)"
+        "languageOptionJa": "日本語 (Japanese)",
+        "logout": "ログアウト"
     }
 }

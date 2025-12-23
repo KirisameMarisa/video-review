@@ -75,6 +75,7 @@
         "title": "Setting",
         "language": "Language Switch",
         "languageOptionEn": "English",
-        "languageOptionJa": "Japanese"
+        "languageOptionJa": "Japanese",
+        "logout": "Logout"
     }
 }
