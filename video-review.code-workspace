@@ -1,0 +1,40 @@
+{
+  "folders": [
+    {
+      "name": "root",
+      "path": "./"
+    },
+    {
+      "name": "api",
+      "path": "./src/app/api"
+    },
+    {
+      "name": "components",
+      "path": "./src/components"
+    },
+    {
+      "name": "lib",
+      "path": "./src/lib"
+    },
+    {
+      "name": "stores",
+      "path": "./src/stores"
+    },
+    {
+      "name": "messages",
+      "path": "./src/messages"
+    },
+  ],
+  "settings": {
+    "search.exclude": {
+      "**/.next": true,
+      "**/documents": true,
+      "**/public": true,
+      "**/uploads": true,
+    },
+  },
+  "extensions": {
+    "recommendations": [
+    ]
+  }
+}
