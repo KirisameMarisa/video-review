@@ -12,7 +12,7 @@ export interface FileStorage {
     type(): string;
     uploadURL(session_id: string, storageKey: string, contentType: string): Promise<string>;
     fallbackURL(storageKey: string): Promise<string>;
-    download(filename: string, storageKey: string): Promise<NextResponse>;
+    download(storageKey: string): Promise<NextResponse>;
     hasObject(storageKey: string): Promise<boolean>;
 }
 
@@ -27,6 +27,10 @@ export class LocalStorage implements FileStorage {
     }
 
     async uploadURL(session_id: string, storageKey: string, contentType: string): Promise<string> {
+        if(contentType === "image/png") {
+            return `/api/drawing/upload/transfer/local?session_id=${session_id}`
+        } 
+        // "video/mp4"
         return `/api/videos/upload/transfer/local?session_id=${session_id}`
     }
 
@@ -39,18 +43,16 @@ export class LocalStorage implements FileStorage {
         }
     }
 
-    async download(filename: string, storageKey: string): Promise<NextResponse> {
+    async download(storageKey: string): Promise<NextResponse> {
         return new Promise((resolve) => {
             const abs = path.join(process.cwd(), "uploads", storageKey); `/api/uploads/${storageKey}`;
             if (!fs.existsSync(abs)) {
                 return resolve(apiError("Video file is missing on server : " + abs, 500));
             }
-
             const stream = fs.createReadStream(abs);
             return resolve(new NextResponse(stream as any, {
                 headers: {
                     "Content-Type": "application/octet-stream",
-                    "Content-Disposition": `attachment; filename="${filename}"`,
                 },
             }));
         });
@@ -129,7 +131,7 @@ export class S3Storage implements FileStorage {
         }
     }
 
-    async download(filename: string, storageKey: string): Promise<NextResponse> {
+    async download(storageKey: string): Promise<NextResponse> {
         if (!s3Client) return Promise.reject(undefined);
 
         let url = await getSignedUrl(
@@ -137,7 +139,6 @@ export class S3Storage implements FileStorage {
             new GetObjectCommand({
                 Bucket: process.env.S3_BUCKET!,
                 Key: storageKey,
-                ResponseContentDisposition: `attachment; filename="${filename}"`,
             }),
             { expiresIn: 600 }
         );

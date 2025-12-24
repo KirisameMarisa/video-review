@@ -83,9 +83,6 @@ export async function GET(req: Request) {
     }
 
     const storageKey = videoRev.filePath;
-    const ext = path.extname(storageKey);
-    const filename = videoRev.video.title + "_Rev" + videoRev.revision + ext;
-
-    const stream = await VideoReviewStorage.download(filename, storageKey);
+    const stream = await VideoReviewStorage.download(storageKey);
     return stream;
 }
