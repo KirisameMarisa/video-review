@@ -2,6 +2,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { Video, VideoRevision, VideoComment } from "@prisma/client";
 import { Role } from "@/lib/role";
 import { use } from "react";
+import { useVideoStore } from "@/stores/video-store";
 
 export async function fetchVideos(
     from: Date | undefined,
@@ -151,12 +152,9 @@ export async function postSlack(comment: string, screenshot: Blob | null) {
         },
     });
 
-    if(res.status === 401) {
-        useAuthStore.getState().logout();
-        throw new Error("unauthorized");
+    if(res.status === 401 || !res.ok) {
+        return false;
     }
-
-    if (!res.ok) throw new Error("Failed to update slack");
 
     const json = await res.json();
     return json.success;
@@ -217,7 +215,7 @@ export async function fetchLatestCommentId(
         method: "GET",
         headers: { "Content-Type": "application/json" },
     });
-    if (!res.ok) throw new Error("Failed to usert read comment");
+    if (!res.ok) return null;
     const json = await res.json();
     return json.latestCommentId;
 }
@@ -228,7 +226,7 @@ export async function readVideoComment(userId: string, videoId: string) {
         return;
     }
 
-    const res = await fetch("/api/read-status", {
+    await fetch("/api/read-status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -237,7 +235,6 @@ export async function readVideoComment(userId: string, videoId: string) {
             lastReadCommentId,
         }),
     });
-    if (!res.ok) throw new Error("Failed to usert read comment");
 }
 
 export async function hasUnreadVideoComment(userId: string): Promise<string[]> {
@@ -271,10 +268,14 @@ export async function downloadVideo(videoId: string, videoRevId: string): Promis
     }
 
     const blob = await res.blob();
+    const video = useVideoStore.getState().videos.find(x => x.id === videoId);
+    const videoRev = useVideoStore.getState().revisions.find(x => x.id === videoRevId);
+    const filename = video?.title +  "_Rev" + videoRev?.revision + ".mp4";
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "";
+    a.download = filename;
     a.click();
 
     URL.revokeObjectURL(url);
