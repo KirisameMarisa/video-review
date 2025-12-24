@@ -14,9 +14,12 @@ import { useTranslations } from "next-intl";
 import { findFirstWithinEps } from "@/lib/utils";
 import { set } from "date-fns";
 import { fetchMediaUrl } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/auth-store";
 
 export default function VideoReview() {
     const t = useTranslations("video-review");
+    const router = useRouter();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const commentDrawingCache = useRef<Map<string, HTMLImageElement>>(new Map());
@@ -25,6 +28,8 @@ export default function VideoReview() {
     const {
         setCanvasRefElement,
         canvasEditing } = useDrawingStore();
+
+    const { token } = useAuthStore();
 
     const {
         videos,
@@ -86,6 +91,11 @@ export default function VideoReview() {
             v.currentTime = timelineTimeRef.current;
         }
     }
+
+    useEffect(() => {
+        if (!token)
+            router.replace("/video-review/login");
+    }, [token]);
 
     useEffect(() => {
         playModeRef.current = playMode;

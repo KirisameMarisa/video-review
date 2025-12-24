@@ -37,6 +37,7 @@ import { CommentFilterParam, CommentSearchPopover } from "@/components/comment-s
 import { readVideoComment } from "@/lib/api";
 import { useTranslations } from "next-intl";
 import { isViewer, Role } from "@/lib/role";
+import { slackToast } from "@/components/slack";
 
 export default function VideoCommentPanel() {
     const t = useTranslations("video-comment-panel");
@@ -67,7 +68,7 @@ export default function VideoCommentPanel() {
 
     const { canvasSave } = useDrawingStore();
 
-    const { setDisplayComments, comments, incrementThumbsUpCount, deleteComment, addComment, issueLinkedComment, postCommentToSlack } = useCommentStore();
+    const { setDisplayComments, comments, incrementThumbsUpCount, deleteComment, addComment, issueLinkedComment } = useCommentStore();
 
     const { selectedComment, setSelectComment, videoRefElement, currentTime, activeComments, setTimelineTime } = useVideoReviewStore();
 
@@ -140,8 +141,8 @@ export default function VideoCommentPanel() {
     }
 
     const handlePostCommentToSlack = async (id: string) => {
-        const screenshot = await captureFrame(videoRefElement)
-        await postCommentToSlack(id, screenshot);
+        const screenshot = await captureFrame(videoRefElement);
+        await slackToast(id, screenshot);
     }
 
     const createLink = () => {

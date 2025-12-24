@@ -20,7 +20,6 @@ interface CommentState {
     deleteComment: (id: string) => Promise<void>;
     incrementThumbsUpCount: (id: string) => Promise<void>;
     issueLinkedComment: (id: string, user: string, issueType: string, screenshot: Blob | null) => Promise<void>;
-    postCommentToSlack: (id: string, screenshot: Blob | null) => Promise<void>;
 }
 
 export const useCommentStore = create<CommentState>((set, get) => ({
@@ -88,22 +87,4 @@ export const useCommentStore = create<CommentState>((set, get) => ({
             comments: get().comments.map((c) => (c.id === id ? updated : c)),
         });
     },
-
-    postCommentToSlack: async (id: string, screenshot: Blob | null) => {
-        const comment = get().comments.find((c) => c.id === id);
-        if (!comment) return;
-        const video = useVideoStore.getState().selectedVideo;
-        if (!video) return;
-        const duration = useVideoReviewStore.getState().currentTime;
-
-        let text = ""
-        text += `${video.folderKey}/${video.title}\n`;
-        text += `${useAuthStore.getState().displayName}\n`;
-        text += `${comment.comment} \n`
-        text += `<${createVideoCommentLink(comment.videoId, comment)}|VideoReview LINK> \n`
-        if(video.scenePath){
-            text += `<${createOpenSceneLink(video.scenePath)}|Open Scene> \n`
-        }
-        await api.postSlack(text, screenshot);
-    }
 }));

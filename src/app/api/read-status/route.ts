@@ -51,10 +51,21 @@ import { apiError } from "@/lib/api-response";
  */
 export async function POST(req: Request) {
     try {
+
+
         const { userId, videoId, lastReadCommentId } = await req.json();
 
         if (!userId || !videoId || !lastReadCommentId) {
             return apiError("invalid request body", 400);
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true },
+        });
+
+        if (!user) {
+            return NextResponse.json({ ok: true });
         }
 
         await prisma.userVideoReadStatus.upsert({

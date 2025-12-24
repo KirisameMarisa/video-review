@@ -15,7 +15,6 @@ export default function VideoReviewPage() {
 
     const {
         verifyAuth,
-        token
     } = useAuthStore();
 
     const {
@@ -24,11 +23,6 @@ export default function VideoReviewPage() {
     } = useVideoStore();
 
     const { setSelectComment, setTimelineTime } = useVideoReviewStore();
-
-    useEffect(() => {
-        if (!token)
-            router.replace("/video-review/login");
-    }, [token]);
 
     useEffect(() => {
         (async () => {

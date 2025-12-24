@@ -134,32 +134,6 @@ export async function createJiraIssue(
     return json.issueKey;
 }
 
-export async function postSlack(comment: string, screenshot: Blob | null) {
-    const token = useAuthStore.getState().token;
-
-    if (screenshot === null) {
-        throw new Error("Failed to post slack, not found screenshot");
-    }
-
-    const form = new FormData();
-    form.append("comment", comment);
-    form.append("file", new File([screenshot], "screenshot.png"));
-    const res = await fetch("/api/slack/post", {
-        method: "POST",
-        body: form,
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-
-    if(res.status === 401 || !res.ok) {
-        return false;
-    }
-
-    const json = await res.json();
-    return json.success;
-}
-
 export async function getVideoList(): Promise<Video[]> {
     const res = await fetch("/api/videos", {
         method: "GET",
