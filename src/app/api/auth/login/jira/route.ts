@@ -90,7 +90,7 @@ export async function POST(req: Request) {
         // 3. Identity upsert
         await upsertJiraIdentity(
             userDB.id,
-            jiraInfo.jira.accountId
+            jiraInfo.jira.userKey
         );
 
         const role: Role = 'viewer';
@@ -139,7 +139,6 @@ async function authenticateWithJira(email: string) {
         displayName: user.displayName || email,
         jira: {
             userKey: user.key,
-            accountId: user.accountId,
         },
     };
 }

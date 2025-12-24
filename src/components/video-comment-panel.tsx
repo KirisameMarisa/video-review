@@ -281,11 +281,11 @@ export default function VideoCommentPanel() {
                                     <DropdownMenuContent className="bg-[#181818] text-white border-[#333]">
                                         <DropdownMenuShaderLinkItem url={createLink()} />
 
-                                        <DropdownMenuItem disabled={comment.issueId !== "" || isViewer(role)} className="gap-2" onClick={async () => await handleIssueLinkedComment(comment.id, process.env.NEXT_PUBLIC_JIRA_ISSUE_TYPE_TASK)}>
+                                        <DropdownMenuItem disabled={comment.issueId !== "" || !isViewer(role)} className="gap-2" onClick={async () => await handleIssueLinkedComment(comment.id, process.env.NEXT_PUBLIC_JIRA_ISSUE_TYPE_TASK)}>
                                             <FontAwesomeIcon icon={faListCheck} />
                                             {t("commentItemTask")}
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem disabled={comment.issueId !== "" || isViewer(role)} className="gap-2" onClick={async () => await handleIssueLinkedComment(comment.id, process.env.NEXT_PUBLIC_JIRA_ISSUE_TYPE_BUG)}>
+                                        <DropdownMenuItem disabled={comment.issueId !== "" || !isViewer(role)} className="gap-2" onClick={async () => await handleIssueLinkedComment(comment.id, process.env.NEXT_PUBLIC_JIRA_ISSUE_TYPE_BUG)}>
                                             <FontAwesomeIcon icon={faBug} />
                                             {t("commentItemBug")}
                                         </DropdownMenuItem>
