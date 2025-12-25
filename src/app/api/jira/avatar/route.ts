@@ -81,8 +81,6 @@ export async function GET(req: Request) {
         const base = process.env.NEXT_PUBLIC_JIRA_BASE_URL;
         const token = process.env.JIRA_API_TOKEN;
 
-        console.log("aaaaaaa", base, token)
-
         if (!base || !token) {
             return apiError("jira configuration is missing", 500);
         }
