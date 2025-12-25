@@ -81,6 +81,8 @@ export async function GET(req: Request) {
         const base = process.env.NEXT_PUBLIC_JIRA_BASE_URL;
         const token = process.env.JIRA_API_TOKEN;
 
+        console.log("aaaaaaa", base, token)
+
         if (!base || !token) {
             return apiError("jira configuration is missing", 500);
         }
@@ -106,7 +108,7 @@ export async function GET(req: Request) {
             info.system?.find((a: any) => a.isSelected);
 
         // 404
-        if (!latest) {
+        if (!latest || !latest.owner) {
             return apiError("no avatar found", 404);
         }
 
