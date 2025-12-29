@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { authorize, JwtError } from "@/server/auth/token";
-import { VideoReviewStorage } from "@/server/storage";
+import { authorize, JwtError } from "@/server/lib/auth/token";
+import { VideoReviewStorage } from "@/server/lib/storage";
 import { createSession } from "@/lib/upload-session";
 import { UploadStorageType } from "@prisma/client";
 import { ContentfulStatusCode } from "hono/utils/http-status";

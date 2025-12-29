@@ -1,4 +1,4 @@
-import { JwtError, signToken } from "@/server/auth/token";
+import { JwtError, signToken } from "@/server/lib/auth/token";
 import { Role } from "@/lib/role";
 import { Context, Hono } from "hono";
 import bcrypt from "bcrypt";

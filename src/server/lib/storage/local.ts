@@ -4,7 +4,7 @@ import { UploadStorageType } from "@prisma/client";
 import { NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
-import { FileStorage } from "@/server/storage";
+import { FileStorage } from "@/server/lib/storage";
 
 import "server-only"
 

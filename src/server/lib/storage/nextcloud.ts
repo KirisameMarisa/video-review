@@ -1,7 +1,7 @@
 import { UploadStorageType } from "@prisma/client";
 import { NextResponse } from "next/server";
-import { FileStorage } from "@/server/storage";
-import { nextCloudClient } from "@/server/storage/integrations/nextcloud";
+import { FileStorage } from "@/server/lib/storage";
+import { nextCloudClient } from "@/server/lib/storage/integrations/nextcloud";
 
 import "server-only"
 

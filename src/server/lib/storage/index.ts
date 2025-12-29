@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { LocalStorage } from "@/server/storage/local";
-import { NextCloudStorage } from "@/server/storage/nextcloud";
-import { S3Storage } from "@/server/storage/s3";
+import { LocalStorage } from "@/server/lib/storage/local";
+import { NextCloudStorage } from "@/server/lib/storage/nextcloud";
+import { S3Storage } from "@/server/lib/storage/s3";
 
 import "server-only"
 

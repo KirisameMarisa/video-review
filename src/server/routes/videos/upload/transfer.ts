@@ -1,11 +1,11 @@
 import { Hono } from "hono";
-import { authorize, JwtError } from "@/server/auth/token";
+import { authorize, JwtError } from "@/server/lib/auth/token";
 import { getSession } from "@/lib/upload-session";
 import { ContentfulStatusCode } from "hono/utils/http-status";
-import { receiveMultipart } from "@/server/utils/receive-multipart";
+import { receiveMultipart } from "@/server/lib/utils/receive-multipart";
 import fs from "fs";
 import path from "path";
-import { nextCloudClient } from "@/server/storage/integrations/nextcloud";
+import { nextCloudClient } from "@/server/lib/storage/integrations/nextcloud";
 
 export const transferRouter = new Hono();
 

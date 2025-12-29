@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { nextCloudClient } from "@/server/storage/integrations/nextcloud";
+import { nextCloudClient } from "@/server/lib/storage/integrations/nextcloud";
 
 export const nextCloudRouter = new Hono();
 

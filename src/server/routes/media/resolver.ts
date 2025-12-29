@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { VideoReviewStorage } from "@/server/storage";
+import { VideoReviewStorage } from "@/server/lib/storage";
 
 export const resolverRouter = new Hono();
 

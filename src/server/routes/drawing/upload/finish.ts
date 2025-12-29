@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { authorize, JwtError } from "@/server/auth/token";
+import { authorize, JwtError } from "@/server/lib/auth/token";
 import { deleteSession, getSession } from "@/lib/upload-session";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 
