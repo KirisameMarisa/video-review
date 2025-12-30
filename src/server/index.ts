@@ -19,6 +19,8 @@ import { videoByIdRouter } from "@/routes/videos/[id]";
 import { foldersRouter } from "@/routes/videos/folders";
 import { downloadRouter } from "@/routes/media/download";
 import { uploadStatusRouter } from "./routes/upload-status";
+import { openapiSpec } from "@/server/routes/openapi/spec";
+import { swagger } from "@/server/routes/openapi/swagger";
 
 export const app = new Hono().basePath("/api");
 
@@ -49,5 +51,9 @@ app.route("/videos/:id", videoByIdRouter);
 app.route('/videos/folders', foldersRouter);
 app.route('/videos/download', downloadRouter);
 app.route("/drawing/upload", oldDrawingUploadRouter);
+
+// OpenAPI and Swagger UI
+app.route("/", openapiSpec);
+app.route("/swagger", swagger);
 
 console.log('Hono server is set up for Next.js API routes.', app);
