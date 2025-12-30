@@ -10,7 +10,7 @@ import React, {
 import { Tree, NodeRendererProps, TreeApi, NodeApi } from "react-arborist";
 
 import { Folder, Film } from "lucide-react";
-import { Video } from "@prisma/client";
+import { Video } from "@/lib/db-types";
 import { useVideoStore } from "@/stores/video-store";
 import { useRouter } from "next/navigation";
 import VideoUploadDialog from "@/components/video-upload";
@@ -21,7 +21,7 @@ import {
     VideoSearchPopover,
 } from "@/components/video-search";
 import dayjs from "dayjs";
-import { hasUnreadVideoComment } from "@/lib/api";
+import { hasUnreadVideoComment } from "@/lib/fetch-wrapper";
 import { useAuthStore } from "@/stores/auth-store";
 import { useTranslations } from "next-intl";
 import { Separator } from "@/ui/separator";

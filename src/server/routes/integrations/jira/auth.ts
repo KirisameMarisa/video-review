@@ -1,5 +1,5 @@
-import { JwtError, signToken } from "@/server/lib/auth/token";
-import { prisma } from "@/lib/prisma";
+import { JwtError, signToken } from "@/server/lib/token";
+import { prisma } from "@/server/lib/db";
 import { Role } from "@/lib/role";
 import { Context } from "hono";
 import { ContentfulStatusCode } from "hono/utils/http-status";

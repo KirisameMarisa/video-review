@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { authorize, JwtError } from "@/server/lib/auth/token";
-import { getSession } from "@/lib/upload-session";
+import { authorize, JwtError } from "@/server/lib/token";
+import { getSession } from "@/server/lib/upload-session";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { receiveMultipart } from "@/server/lib/utils/receive-multipart";
 import fs from "fs";

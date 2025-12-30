@@ -1,4 +1,4 @@
-import { authorize, JwtError } from "@/server/lib/auth/token";
+import { authorize, JwtError } from "@/server/lib/token";
 import { Hono } from "hono";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 

@@ -1,8 +1,8 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/lib/db";
 import { Hono } from "hono";
-import { authorize, JwtError } from "@/server/lib/auth/token";
+import { authorize, JwtError } from "@/server/lib/token";
 import { VideoReviewStorage } from "@/server/lib/storage";
-import { getSession } from "@/lib/upload-session";
+import { getSession } from "@/server/lib/upload-session";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 
 export const uploadStatusRouter = new Hono();

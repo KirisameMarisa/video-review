@@ -1,13 +1,13 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import * as api from "@/lib/api"
-import * as apiUpload from "@/lib/upload"
+import * as api from "@/lib/fetch-wrapper"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ui/dialog";
 import { Upload } from "lucide-react";
 import path from "path";
 import { useTranslations } from "next-intl";
-import { UploadSession } from "@prisma/client";
+import { UploadSession } from "@/lib/db-types";
+
 import { DialogClose } from "@radix-ui/react-dialog";
 
 export default function VideoUploadDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -53,7 +53,7 @@ export default function VideoUploadDialog({ open, onClose }: { open: boolean; on
         try {
             setMessage("");
 
-            const init = await apiUpload.uploadVideoInit({
+            const init = await api.uploadVideoInit({
                 title,
                 folderKey: selectedFolderKey,
             });
@@ -61,7 +61,7 @@ export default function VideoUploadDialog({ open, onClose }: { open: boolean; on
             setSession(init.session);
             setStep("uploading");
 
-            apiUpload.uploadVideo({
+            api.uploadVideo({
                 url: init.url,
                 session: init.session,
                 file,
@@ -80,14 +80,14 @@ export default function VideoUploadDialog({ open, onClose }: { open: boolean; on
 
         const timer = setInterval(async () => {
             try {
-                const res = await apiUpload.checkUploadStatus({
+                const res = await api.checkUploadStatus({
                     session_id: session.id,
                 });
 
                 if (cancelled) return;
 
                 if (res.status === "uploaded") {
-                    await apiUpload.uploadVideoFinish({
+                    await api.uploadVideoFinish({
                         session_id: session.id,
                     });
                 }

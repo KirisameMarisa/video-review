@@ -1,21 +1,5 @@
 import { useAuthStore } from "@/stores/auth-store";
-import { Video, VideoRevision, VideoComment } from "@prisma/client";
-import { Role } from "@/lib/role";
-import { use } from "react";
-import { useVideoStore } from "@/stores/video-store";
-
-export async function fetchVideos(
-    from: Date | undefined,
-    to: Date | undefined,
-) {
-    const params = new URLSearchParams();
-    if (from) params.set("from", from.getTime().toString());
-    if (to) params.set("to", to.getTime().toString());
-
-    const res = await fetch(`/api/v1/videos?${params.toString()}`);
-    if (!res.ok) throw new Error("Failed to fetch videos");
-    return await res.json();
-}
+import { VideoComment } from '@/lib/db-types';
 
 export async function fetchComments(videoId: string): Promise<VideoComment[]> {
     const res = await fetch(`/api/v1/comments?videoId=${videoId}`);
@@ -98,80 +82,6 @@ export async function getComment(commentId: string): Promise<VideoComment> {
     return res.json();
 }
 
-export async function createJiraIssue(
-    reporterEmail: string,
-    issueType: string,
-    summary: string,
-    description: string,
-    screenshot: Blob | null,
-) {
-    const token = useAuthStore.getState().token;
-    const form = new FormData();
-    form.append("summary", summary);
-    form.append("description", description);
-    form.append("issueType", issueType);
-    form.append("reporterEmail", reporterEmail);
-    if (screenshot) {
-        form.append("file", new File([screenshot], "screenshot.png"));
-    }
-
-    const res = await fetch("/api/v1/jira/create", {
-        method: "POST",
-        body: form,
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-
-    if(res.status === 401) {
-        useAuthStore.getState().logout();
-        throw new Error("unauthorized");
-    }
-
-    if (!res.ok) throw new Error("Failed to update comment");
-
-    const json = await res.json();
-    return json.issueKey;
-}
-
-export async function getVideoList(): Promise<Video[]> {
-    const res = await fetch("/api/v1/videos", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-    });
-
-    if (!res.ok) throw new Error("Failed to get video list");
-    return res.json();
-}
-
-export async function getVideoFromId(videoId: string): Promise<Video> {
-    const res = await fetch(`/api/v1/videos/${videoId}`);
-    if (!res.ok) throw new Error("Failed to fetch video");
-    return res.json();
-}
-
-export async function getVideoFolderKeys(): Promise<string[]> {
-    const res = await fetch(`/api/v1/videos/folders`);
-    if (!res.ok) throw new Error("Failed to fetch latest revision");
-    return res.json();
-}
-
-export async function getVideoRevisionList(
-    videoId: string,
-): Promise<VideoRevision[]> {
-    const res = await fetch(`/api/v1/videos/${videoId}/revisions`);
-    if (!res.ok) throw new Error("Failed to fetch all revisions");
-    return res.json();
-}
-
-export async function fetchLatestRevision(
-    videoId: string,
-): Promise<VideoRevision> {
-    const res = await fetch(`/api/v1/videos/${videoId}/latest`);
-    if (!res.ok) throw new Error("Failed to fetch latest revision");
-    return res.json();
-}
-
 export async function fetchLastUpdated(videoId: string): Promise<number> {
     const email = useAuthStore.getState().email;
     const res = await fetch(
@@ -219,43 +129,4 @@ export async function hasUnreadVideoComment(userId: string): Promise<string[]> {
     if (!res.ok) throw new Error("failed to get unread comment info");
     const json = await res.json();
     return json.unreadVideoIds;
-}
-
-export async function downloadVideo(videoId: string, videoRevId: string): Promise<void> {
-    const token = useAuthStore.getState().token;
-    const res = await fetch(
-        `/api/v1/media/download?videoId=${videoId}&videoRevId=${videoRevId}`,
-        {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-    );
-
-    if(res.status === 401) {
-        useAuthStore.getState().logout();
-        throw new Error("unauthorized");
-    }
-
-    if (!res.ok) {
-        throw new Error("download failed");
-    }
-
-    const blob = await res.blob();
-    const video = useVideoStore.getState().videos.find(x => x.id === videoId);
-    const videoRev = useVideoStore.getState().revisions.find(x => x.id === videoRevId);
-    const filename = video?.title +  "_Rev" + videoRev?.revision + ".mp4";
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-
-    URL.revokeObjectURL(url);
-}
-
-export async function fetchMediaUrl(filePath: string): Promise<string> {
-    const res = await fetch(`/api/v1/media/resolver/${encodeURI(filePath)}`);
-    return (await res.json()).url;
 }

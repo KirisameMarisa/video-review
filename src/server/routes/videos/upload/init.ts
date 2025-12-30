@@ -1,10 +1,10 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/lib/db";
 import { Hono } from "hono";
-import { authorize, JwtError } from "@/server/lib/auth/token";
+import { authorize, JwtError } from "@/server/lib/token";
 import { VideoReviewStorage } from "@/server/lib/storage";
 import path from "path";
-import { createSession } from "@/lib/upload-session";
-import { UploadStorageType } from "@prisma/client";
+import { createSession } from "@/server/lib/upload-session";
+import { UploadStorageType } from "@/lib/db-types";
 import Busboy from "busboy";
 import { Readable } from "stream";
 import { ContentfulStatusCode } from "hono/utils/http-status";

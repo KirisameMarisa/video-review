@@ -1,5 +1,18 @@
 import { useAuthStore } from "@/stores/auth-store";
-import { UploadSession, UploadStorageType, VideoRevision } from "@prisma/client";
+import { UploadSession, UploadStorageType, VideoRevision } from'@/lib/db-types';
+
+export async function checkUploadStatus(data: {
+    session_id: string,
+}): Promise<{ status: string }> {
+    const token = useAuthStore.getState().token;
+    const res = await fetch(`/api/v1/upload-status?session_id=${data.session_id}`, {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return res.json();
+}
 
 export async function uploadVideoInit(data: {
     title: string;
@@ -32,20 +45,6 @@ export async function uploadVideoFinish(data: {
     });
     return res.json();
 }
-
-export async function checkUploadStatus(data: {
-    session_id: string,
-}): Promise<{ status: string }> {
-    const token = useAuthStore.getState().token;
-    const res = await fetch(`/api/v1/upload-status?session_id=${data.session_id}`, {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-    return res.json();
-}
-
 
 export async function uploadVideo(data: {
     url: string,

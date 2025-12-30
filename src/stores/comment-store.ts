@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import * as api from "@/lib/api";
-import { VideoComment } from "@prisma/client";
+import * as api from "@/lib/fetch-wrapper";
+import { VideoComment } from "@/lib/db-types";
 import { createOpenSceneLink, createVideoCommentLink } from "@/lib/url";
 import { useAuthStore } from "@/stores/auth-store";
 import { useVideoStore } from "@/stores/video-store";

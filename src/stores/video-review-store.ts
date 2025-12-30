@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { VideoComment, VideoRevision } from "@prisma/client";
+import { VideoComment } from "@/lib/db-types";
 
 interface VideoReviewState {
     videoRefElement: HTMLVideoElement | null,

@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import * as api from "@/lib/api";
-import { VideoComment } from "@prisma/client";
+import * as api from "@/lib/fetch-wrapper";
+import { VideoComment } from "@/lib/db-types";
 import { useCommentStore } from "@/stores/comment-store";
 
 interface CommentEditState {

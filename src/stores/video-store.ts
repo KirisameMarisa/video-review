@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { Video, VideoRevision, VideoComment } from "@prisma/client";
-import * as api from '@/lib/api';
+import { Video, VideoRevision } from "@/lib/db-types";
+import * as api from '@/lib/fetch-wrapper';
 
 interface VideoState {
     videos: Video[];

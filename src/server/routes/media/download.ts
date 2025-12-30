@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { ContentfulStatusCode } from "hono/utils/http-status";
-import { authorize, JwtError } from "@/server/lib/auth/token";
+import { authorize, JwtError } from "@/server/lib/token";
 import { VideoReviewStorage } from "@/server/lib/storage";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/lib/db";
 
 export const downloadRouter = new Hono();
 

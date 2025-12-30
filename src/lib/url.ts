@@ -1,4 +1,4 @@
-import { VideoComment } from "@prisma/client";
+import { VideoComment } from '@/lib/db-types';
 
 export function getBaseUrl(req?: Request) {
     if (typeof window !== "undefined") return window.location.origin;

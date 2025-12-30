@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { PrismaTypes } from "@/lib/db-types";
+import { prisma } from "@/server/lib/db";
 import { Hono } from "hono";
 import { byIdRouter } from "@/routes/comments/[id]";
 import { lastUpdatedRouter } from "@/routes/comments/last-updated";
@@ -17,7 +17,7 @@ commentsRouter.get("/", async (c) => {
             return c.json({ error: "missing videoId" }, 400);
         }
 
-        const where: Prisma.VideoCommentWhereInput = {
+        const where: PrismaTypes.VideoCommentWhereInput = {
             videoId,
             deleted: false,
         };

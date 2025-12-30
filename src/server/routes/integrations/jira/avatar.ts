@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/lib/db";
 import { Hono } from "hono";
 import path from "path";
 import fs from "fs";

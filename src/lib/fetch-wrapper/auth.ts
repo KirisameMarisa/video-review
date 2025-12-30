@@ -1,4 +1,4 @@
-import { Role } from "./role";
+import { Role } from "../role";
 export type LoginType = "guest" | "jira" | "admin";
 
 export async function login(type: LoginType, payload: Record<string, any>):

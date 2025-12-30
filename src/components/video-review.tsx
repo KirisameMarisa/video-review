@@ -8,12 +8,10 @@ import { useCommentStore } from "@/stores/comment-store";
 import { useVideoStore } from "@/stores/video-store";
 import VideoTitle from "@/components/video-title";
 import CanvasControlPanel from "@/components/canvas-control-panel";
-import { VideoComment } from "@prisma/client";
+import { VideoComment } from "@/lib/db-types";
 import { useDrawingStore } from "@/stores/drawing-store";
 import { useTranslations } from "next-intl";
-import { findFirstWithinEps } from "@/lib/utils";
-import { set } from "date-fns";
-import { fetchMediaUrl } from "@/lib/api";
+import { fetchMediaUrl } from "@/lib/fetch-wrapper";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -332,4 +330,23 @@ export default function VideoReview() {
             </div>
         </>
     );
+}
+
+function findFirstWithinEps(arr: number[], target: number, eps: number): number | null {
+    let lo = 0, hi = arr.length - 1;
+
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (arr[mid] <= target) lo = mid + 1;
+        else hi = mid - 1;
+    }
+
+    const candidates = [hi, hi + 1];
+    for (const i of candidates) {
+        if (i >= 0 && i < arr.length) {
+            if (Math.abs(arr[i] - target) <= eps) return i;
+        }
+    }
+
+    return null;
 }

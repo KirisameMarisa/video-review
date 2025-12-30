@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useRouter } from "next/navigation";
-import * as auth from "@/lib/auth";
+import * as api from "@/lib/fetch-wrapper";
 import { useTranslations } from "next-intl";
 import { Tabs } from "@/ui/tabs";
 import { TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
@@ -18,7 +18,7 @@ export default function Login() {
     const cacheEmail = useAuthStore((e) => e.email);
     const { setAuth } = useAuthStore();
 
-    const [type, setType] = useState<auth.LoginType>(process.env.NEXT_PUBLIC_LOGIN_DEFAULT_TYPE as auth.LoginType ?? "guest");
+    const [type, setType] = useState<api.LoginType>(process.env.NEXT_PUBLIC_LOGIN_DEFAULT_TYPE as api.LoginType ?? "guest");
     const [email, setEmail] = useState<string | null>(null);
     const [password, setPassword] = useState("");
     const [displayName, setDisplayName] = useState("");
@@ -30,7 +30,7 @@ export default function Login() {
 
     const handleLogin = async () => {
         try {
-            const data = await auth.login(type, { email, displayName, password });
+            const data = await api.login(type, { email, displayName, password });
             setAuth(data.id, data.email, data.role, data.token, data.displayName);
             router.push("/video-review/review");
         } catch (e) {
@@ -56,7 +56,7 @@ export default function Login() {
                 <h1 className="text-lg mb-6 font-semibold text-center text-[#ff8800]">
                     {process.env.NEXT_PUBLIC_VIDEO_REVIEW_TITLE}
                 </h1>
-                <Tabs defaultValue={type} onValueChange={(val) => setType(val as auth.LoginType)}
+                <Tabs defaultValue={type} onValueChange={(val) => setType(val as api.LoginType)}
                     className={[
                         "px-4 py-1.5 text-sm rounded-full",
                         "data-[state=active]:bg-[#ff8800]",

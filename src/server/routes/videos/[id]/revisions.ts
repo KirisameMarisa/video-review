@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/lib/db";
 import { Hono } from "hono";
 
 export const revisionsRouter = new Hono();

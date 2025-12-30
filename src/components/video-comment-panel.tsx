@@ -25,7 +25,7 @@ import { createVideoCommentLink } from "@/lib/url";
 import { useCommentStore } from "@/stores/comment-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useVideoStore } from "@/stores/video-store";
-import { VideoComment } from "@prisma/client";
+import { VideoComment } from "@/lib/db-types";
 import { useCommentEditStore } from "@/stores/comment-edit-store";
 import CommentConfirmed from "@/components/comment-confirmed";
 import { useDrawingStore } from "@/stores/drawing-store";
@@ -34,7 +34,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
 import { CommentFilterParam, CommentSearchPopover } from "@/components/comment-search";
-import { readVideoComment } from "@/lib/api";
+import { readVideoComment } from "@/lib/fetch-wrapper";
 import { useTranslations } from "next-intl";
 import { isViewer, Role } from "@/lib/role";
 import { slackToast } from "@/components/slack";
@@ -252,7 +252,7 @@ export default function VideoCommentPanel() {
                                     {/* アバター */}
                                     <Avatar className="h-8 w-8">
                                         {isViewer(role) && comment.userEmail ? (
-                                            <AvatarImage src={`/api/v1/jira/avatar?email=${comment.userEmail}`} />
+                                            <AvatarImage src={`/api/v1/integrations/jira/avatar?email=${comment.userEmail}`} />
                                         ) : (
                                             <AvatarFallback>{comment.userName?.[0]?.toUpperCase()}</AvatarFallback>
                                         )}

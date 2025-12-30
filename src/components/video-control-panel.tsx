@@ -24,7 +24,7 @@ import { createVideoTimeLink, OpenScene } from "@/lib/url";
 import { EPlayMode, useVideoPlayerStore } from "@/stores/video-player-store";
 import { useVideoStore } from "@/stores/video-store";
 import { ShareLinkDialog } from "@/components/share-link";
-import { downloadVideo } from "@/lib/api";
+import { downloadVideo } from "@/lib/fetch-wrapper";
 import { useTranslations } from "next-intl";
 import { Slider } from "@/ui/slider";
 

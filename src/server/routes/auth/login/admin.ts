@@ -1,8 +1,8 @@
-import { JwtError, signToken } from "@/server/lib/auth/token";
+import { JwtError, signToken } from "@/server/lib/token";
 import { Role } from "@/lib/role";
 import { Context, Hono } from "hono";
 import bcrypt from "bcrypt";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/lib/db";
 
 export async function loginAsAdmin(c: Context) {
     try {

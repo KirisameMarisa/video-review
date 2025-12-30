@@ -1,6 +1,6 @@
 
 
-import { UploadStorageType } from "@prisma/client";
+import { UploadStorageType } from'@/lib/db-types';
 import { NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";

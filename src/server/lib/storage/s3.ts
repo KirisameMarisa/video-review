@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { GetObjectCommand, HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3Client } from "@/server/lib/storage/integrations/s3";
-import { UploadStorageType } from "@prisma/client";
+import { UploadStorageType } from'@/lib/db-types';
 import { FileStorage } from "@/server/lib/storage";
 
 import "server-only"

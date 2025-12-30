@@ -1,7 +1,7 @@
 "use client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import * as auth from "@/lib/auth";
+import * as api from "@/lib/fetch-wrapper";
 import { Role } from "@/lib/role";
 
 interface AuthState {
@@ -37,7 +37,7 @@ export const useAuthStore = create<AuthState>()(
                 if (!token) return null;
 
                 try {
-                    const { id } = await auth.authVerify(token);
+                    const { id } = await api.authVerify(token);
                     return id;
                 } catch {}
 

@@ -4,7 +4,7 @@ import { useVideoReviewStore } from "@/stores/video-review-store";
 import { useVideoStore } from "@/stores/video-store";
 import { useParams, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
-import * as api from '@/lib/api'
+import * as api from '@/lib/fetch-wrapper'
 import { useAuthStore } from "@/stores/auth-store";
 import { useRouter } from "next/navigation";
 

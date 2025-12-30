@@ -1,4 +1,4 @@
-import { JwtError, verifyToken } from "@/server/lib/auth/token";
+import { JwtError, verifyToken } from "@/server/lib/token";
 import { Hono } from "hono";
 
 

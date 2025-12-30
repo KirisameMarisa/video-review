@@ -5,6 +5,7 @@ import { useCommentStore } from "@/stores/comment-store";
 import { useVideoStore } from "@/stores/video-store";
 import { toast } from "sonner";
 import { createOpenSceneLink, createVideoCommentLink } from "@/lib/url";
+import * as api from "@/lib/fetch-wrapper";
 
 export async function slackToast(commentId: string, screenshot: Blob | null): Promise<boolean> {
     const token = useAuthStore.getState().token;
@@ -21,18 +22,8 @@ export async function slackToast(commentId: string, screenshot: Blob | null): Pr
     const slackText = createSlackTextFromContext(ctx)!;
     const toastData = createSlackToastFromContext(ctx)!;
 
-    const form = new FormData();
-    form.append("comment", slackText);
-    form.append("file", new File([screenshot], "screenshot.png"));
-    const res = await fetch("/api/v1/slack/post", {
-        method: "POST",
-        body: form,
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-
-    if (res.status === 401 || !res.ok) {
+    const ret = api.postToSlack(slackText, screenshot);
+    if(!ret) {
         return false;
     }
 

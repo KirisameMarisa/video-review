@@ -1,8 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
-import { prisma } from './prisma';
-import { UploadSession } from "@prisma/client";
+import { UploadSession } from '@/lib/db-types';
+import { prisma } from '@/server/lib/db';
 
-export type SessionParam = Omit<UploadSession, "id" | "createdAt">;
+type SessionParam = Omit<UploadSession, "id" | "createdAt">;
 
 export async function createSession(session: SessionParam): Promise<UploadSession> {
     const new_session = await prisma.uploadSession.create({

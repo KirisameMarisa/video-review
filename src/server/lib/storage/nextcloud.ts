@@ -1,4 +1,4 @@
-import { UploadStorageType } from "@prisma/client";
+import { UploadStorageType } from'@/lib/db-types';
 import { NextResponse } from "next/server";
 import { FileStorage } from "@/server/lib/storage";
 import { nextCloudClient } from "@/server/lib/storage/integrations/nextcloud";
