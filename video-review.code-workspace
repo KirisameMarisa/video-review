@@ -5,8 +5,8 @@
       "path": "./"
     },
     {
-      "name": "api",
-      "path": "./src/app/api"
+      "name": "server",
+      "path": "./src/server"
     },
     {
       "name": "components",
