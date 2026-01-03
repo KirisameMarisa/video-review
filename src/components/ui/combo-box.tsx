@@ -1,76 +1,67 @@
 "use client";
-
-import clsx from 'clsx';
 import React from 'react';
-import Select, { components, MenuPlacement } from 'react-select';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { Popover } from '@radix-ui/react-popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/ui/command';
+import { PopoverContent, PopoverTrigger } from '@/ui/popover';
+import { Button } from '@/ui/button';
+import { cn } from '@/lib/utils';
 
-interface ComboBoxProps {
-    label: string;
-    options: string[];
-    value: string;
+interface ComboBoxProps extends React.ComponentProps<"div"> {
+    options: { value: string, label: string }[];
+    placeholder?: string;
+    value: string | undefined;
     setValue: (value: string) => void;
-    require?: boolean;
-    menuPlacement?: MenuPlacement;
 }
 
 export default function ComboBox({
-    label,
     options,
     value,
     setValue,
-    require = false,
-    menuPlacement = 'bottom',
+    placeholder,
+    className,
+    ...props
 }: ComboBoxProps) {
-    const selectOptions = options.map((opt) => ({ label: opt, value: opt }));
-    const selectedOption = selectOptions.find((opt) => opt.value === value) || null;
+    const [open, setOpen] = React.useState(false);
+
+    if (!options) return <> </>
 
     return (
-        <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold text-gray-300">{label}</label>
-            <Select
-                options={selectOptions}
-                value={selectedOption}
-                onChange={(selected) => {
-                    if (selected) setValue(selected.value);
-                }}
-                className={clsx(
-                    "text-sm",
-                    require && "border border-red-500"
-                )}
-                classNamePrefix="react-select"
-                styles={{
-                    control: (base) => ({
-                        ...base,
-                        backgroundColor: '#27272a',
-                        borderColor: '#3f3f46',
-                        color: 'white',
-                    }),
-                    singleValue: (base) => ({
-                        ...base,
-                        color: 'white',
-                    }),
-                    input: (base) => ({
-                        ...base,
-                        color: 'white',
-                    }),
-                    menu: (base) => ({
-                        ...base,
-                        backgroundColor: '#27272a',
-                        zIndex: 100,
-                    }),
-                    option: (base, { isFocused, isSelected }) => ({
-                        ...base,
-                        backgroundColor: isSelected
-                            ? '#3b82f6'
-                            : isFocused
-                            ? '#52525b'
-                            : undefined,
-                        color: isSelected ? 'white' : 'white',
-                    }),
-                }}
-                menuPlacement={menuPlacement}
-                isSearchable={true}
-            />
-        </div>
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button className={`${className} text-[#ddd]`} variant="outline" role="combobox" aria-expanded={open} >
+                    {value
+                        ? options.find((option) => option.value === value)?.label
+                        : placeholder ?? ""}
+                    <ChevronsUpDown className="opacity-50" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0 border-[#222]">
+                <Command className={`${className} text-[#999]`}>
+                    <CommandInput placeholder={placeholder ?? ""} className='mb-0.5' />
+                    <CommandList >
+                        <CommandEmpty>Not found.</CommandEmpty>
+                        <CommandGroup >
+                            {options.map((option) => (
+                                <CommandItem
+                                    className={`${className} text-[#999]`}
+                                    key={option.value}
+                                    value={option.value}
+                                    onSelect={(currentValue) => {
+                                        setValue(currentValue === value ? "" : currentValue)
+                                        setOpen(false)
+                                    }}
+                                >
+                                    {option.label}
+                                    <Check
+                                        className={cn("text-[#fff]", "ml-auto", value === option.value ? "opacity-100" : "opacity-0")}
+                                    />
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
     );
 }

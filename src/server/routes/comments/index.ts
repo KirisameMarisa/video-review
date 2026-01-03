@@ -3,6 +3,7 @@ import { prisma } from "@/server/lib/db";
 import { OpenAPIHono as Hono } from "@hono/zod-openapi";
 import { byIdRouter } from "@/routes/comments/[id]";
 import { lastUpdatedRouter } from "@/routes/comments/last-updated";
+import { usersRouter } from "@/routes/comments/users";
 
 export const commentsRouter = new Hono();
 
@@ -11,32 +12,89 @@ commentsRouter.openapi({
     summary: "Get comments",
     description: "Retrieves comments for a specific video.",
     path: "/",
+    parameters: [
+        {
+            name: "videoId",
+            in: "query",
+            required: false,
+            schema: { type: "string" },
+            description: "",
+        },
+        {
+            name: "since",
+            in: "query",
+            required: false,
+            schema: { type: "string", format: "date-time" },
+            description: "",
+        },
+        {
+            name: "user",
+            in: "query",
+            required: false,
+            schema: { type: "string" },
+            description: "",
+        },
+        {
+            name: "hasDrawing",
+            in: "query",
+            required: false,
+            schema: { type: "boolean" },
+            description: "",
+        },
+        {
+            name: "revFrom",
+            in: "query",
+            required: false,
+            schema: { type: "string" },
+            description: "",
+        },
+        {
+            name: "revTo",
+            in: "query",
+            required: false,
+            schema: { type: "string" },
+            description: "",
+        },
+    ],
     responses: {
         200: {
             description: "Comments retrieved successfully",
-        },
-        400: {
-            description: "Invalid parameters",
-        },
+        }
     },
 }, async (c) => {
     try {
         const { searchParams } = new URL(c.req.url);
         const videoId = searchParams.get("videoId");
         const since = searchParams.get("since");
-
-        // 400
-        if (!videoId) {
-            return c.json({ error: "missing videoId" }, 400);
-        }
-
+        const user = searchParams.get("user");
+        const hasDrawing = searchParams.get("hasDrawing");
+        const revFrom = searchParams.get("revFrom");
+        const revTo = searchParams.get("revTo");
+        
         const where: PrismaTypes.VideoCommentWhereInput = {
-            videoId,
             deleted: false,
         };
 
+        if (videoId) {
+           where.videoId = videoId;
+        }
+
+        if (revFrom || revTo) {
+            where.videoRevNum = {};
+            if (revFrom) where.videoRevNum.gte = parseInt(revFrom);
+            if (revTo) where.videoRevNum.lte = parseInt(revTo);
+        }
+
         if (since) {
             where.updatedAt = { gt: new Date(since) };
+        }
+   
+        if(user){
+            where.userName = user;
+        }
+
+        if (hasDrawing === "true") {
+            where.drawingPath = { not: null };
         }
 
         const comments = await prisma.videoComment.findMany({
@@ -127,5 +185,7 @@ commentsRouter.patch("/", async (c) => {
     }
 });
 
-commentsRouter.route("/:id", byIdRouter);
 commentsRouter.route("/last-updated", lastUpdatedRouter);
+commentsRouter.route("/users", usersRouter);
+commentsRouter.route("/:id", byIdRouter);
+

@@ -16,10 +16,17 @@
         "errorUpload": "Video upload failed. Please contact the admin"
     },
     "video-search": {
+        "title": "Video Search",
         "shortcutKey": "Ctrl + K",
-        "dateFilterOff": "Date filter off",
+        "hasComment": "with comment",
         "dateRange": "Select date range",
-        "searchFilter": "Filter text"
+        "hasIssue": "with issue ticket",
+        "filterIssue": "Filter issue",
+        "hasDrawing": "with drawing",
+        "userFilter": "Filter User comment",
+        "searchFilter": "Filter text",
+        "ok": "Search",
+        "cancel": "Cancel"
     },
     "video-review": {
         "noVideoSelected": "Please select a video"

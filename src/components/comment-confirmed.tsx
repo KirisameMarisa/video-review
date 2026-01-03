@@ -12,9 +12,9 @@ export type ECommentConfirmedType = "commentUpdate" | "commentAdd";
 
 export default function CommentConfirmed(props: {
     confirmedLabel: ECommentConfirmedType;
-    onConfirmed: (comment: string, issueId: string) => void;
+    onConfirmed: (comment: string, issueId: string | null) => void;
     onCancel: () => void;
-    issueId: string;
+    issueId: string | null;
     comment: string;
 }) {
     const t = useTranslations("comment-confirmed");
@@ -25,7 +25,7 @@ export default function CommentConfirmed(props: {
 
     const handleConfirmed = () => {
         props.onConfirmed(comment, issueId);
-        setIssueId("");
+        setIssueId(null);
         setComment("");
     };
 
@@ -52,7 +52,7 @@ export default function CommentConfirmed(props: {
                 className={
                     `bg-zinc-800 p-2 rounded text-white w-full mb-2 transition ${isGuest(role) ? "bg-zinc-900 text-zinc-500 border border-zinc-700 cursor-not-allowed opacity-70" : ""}`
                 }
-                value={issueId}
+                value={issueId ?? ""}
                 onChange={(e) => setIssueId(e.target.value)}
                 onFocus={() => setIsPlaying(false)}
                 placeholder={t("editIssueLink")}

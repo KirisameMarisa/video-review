@@ -1,37 +1,30 @@
 import VideoCommentPanel from "@/components/video-comment-panel";
 import VideoListPanel from "@/components/video-list-panel";
-import { SettingPopover } from "@/components/setting";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function VideoReviewLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  return (
-    <div
-      className="grid w-screen h-screen"
-      style={{
-        gridTemplateColumns: "20% 60% 20%",
-        background: "#181818",
-        color: "#eee",
-        fontFamily: "sans-serif",
-      }}
-    >
-      {/* 左 */}
-      <div className="flex flex-col h-full min-h-0 border-r border-[#333]">
-        <VideoListPanel />
-        <SettingPopover />
-      </div>
-
-      {/* 中央 */}
-      <div className="flex flex-col h-full min-h-0 border-r border-[#333]">
-        {children}
-      </div>
-
-      {/* 右 */}
-      <div className="flex flex-col h-full min-h-0 border-l border-[#333]">
-        <VideoCommentPanel />
-      </div>
-    </div>
-  );
+    return (
+        <div
+            className="w-screen h-screen"
+            style={{ background: "#181818", color: "#eee", fontFamily: "sans-serif" }}
+        >
+            <div>
+                <SidebarProvider>
+                    <VideoListPanel />
+                    <div className="w-screen h-screen grid" style={{gridTemplateColumns: "80% 20%"}}>
+                        <div className="flex flex-col  min-h-0 w-full h-full border-r border-[#333]">
+                            {children}
+                        </div>
+                        <div className="flex flex-col min-h-0 w-full h-full border-l border-[#333]">
+                            <VideoCommentPanel />
+                        </div>
+                    </div>
+                </SidebarProvider>
+            </div>
+        </div>
+    );
 }

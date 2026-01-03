@@ -1,160 +1,183 @@
-import { Button } from "@/components/ui/button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faGear } from "@fortawesome/free-solid-svg-icons";
-import { useEffect, useRef, useState } from "react";
-import { DateRange } from "react-day-picker";
-import { Calendar } from "@/ui/calendar";
-import { Switch } from "@/ui/switch";
-import { Popover, PopoverTrigger, PopoverContent } from "@/ui/popover";
+import React, { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/ui/dialog";
+import { fetcCommentUsers, fetchVideos } from "@/lib/fetch-wrapper";
+import { ControlRow } from "@/ui/control-row";
+import ComboBox from "@/ui/combo-box";
+import { Checkbox } from "@/ui/checkbox";
+import CalendarPopover from "@/ui/calendar-popover";
+import { useVideoSearchStore } from "@/stores/video-search-store";
+import { Button } from "./ui/button";
+import { useVideoStore } from "@/stores/video-store";
+import { BrushCleaning } from "lucide-react";
 
-export type EDateSearchMode = "dateFilterOff" | "dateRange";
-
-export type VideoFilterParam = {
-    searchMode: EDateSearchMode | undefined;
-    dateRange: DateRange | undefined;
-    filterText: string;
-}
-
-export function VideoSearchPopover({
-    videoFilterParam,
-    updateVideoFilter
-}: {
-    videoFilterParam: VideoFilterParam | undefined,
-    updateVideoFilter: (param: VideoFilterParam) => void;
-}) {
+export function VideoSearchDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
     const t = useTranslations("video-search");
-    const inputRef = useRef<HTMLInputElement>(null);
-    const [open, setOpen] = useState(false);
-    const [searchMode, setSearchMode] = useState<EDateSearchMode | undefined>(undefined);
-    const [filterText, setFilterText] = useState<string>("");
-    const [dateRange, setDateRange] = useState<DateRange | undefined>();
+    const { fetchVideos } = useVideoStore();
+    const [commentUsers, setCommentUsers] = useState<{ label: string, value: string }[]>([]);
+
+    const {
+        user,
+        dateRange,
+        filterIssue,
+        filterTree,
+        hasComment,
+        hasIssue,
+        hasDrawing,
+
+        setHasComment,
+        setCommentUser,
+        setHasDrawing,
+        setHasIssue,
+        setFilterIssue,
+        setFilterTree,
+        setDateRange,
+    } = useVideoSearchStore();
 
     useEffect(() => {
-        applyParam();
-        const to = new Date();
-        const from = new Date();
-        from.setDate(from.getDate() - 7);
-        setDateRange({ from, to });
+        (async () => {
+            const users = await fetcCommentUsers({ hasDrawing });
+            setCommentUsers(users.map((u) => ({ label: u.userName, value: u.userName })));
+        })();
+    }, [open]);
 
-        const onKey = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-                setOpen(x => !x);
-                setTimeout(() => {
-                    inputRef.current?.focus();
-                }, 100);
-            }
-            if (e.key === "Enter") {
-                setOpen(false);
-            }
-        };
-        window.addEventListener("keydown", onKey);
-        return () => window.removeEventListener("keydown", onKey);
-    }, []);
-
-    const applyParam = () => {
-        if (videoFilterParam) {
-            setSearchMode(videoFilterParam.searchMode);
-            setFilterText(videoFilterParam.filterText);
-            setDateRange(videoFilterParam.dateRange);
-        }
+    const handleSearch = () => {
+        fetchVideos();
+        onClose();
     }
 
-    const handleOpenChange = (open: boolean) => {
-        if (open) {
-            applyParam();
-        }
-        setOpen(open);
-    };
+    const handleClearUserFilter = () => {
+        setCommentUser(undefined);
+        setDateRange(undefined);
+    }
 
-    useEffect(() => {
-        updateVideoFilter({
-            searchMode,
-            filterText,
-            dateRange
-        });
-    }, [searchMode, filterText, dateRange]);
+    const handleClearTreeFilter = () => {
+        setDateRange(undefined);
+    }
 
     return (
-        <Popover open={open} onOpenChange={handleOpenChange}>
-            <PopoverTrigger asChild>
-                <Button
-                    size="icon"
-                    variant="ghost"
-                    className="relative">
-                    <FontAwesomeIcon icon={faGear} className="text-[#ff8800]" />
+        <Dialog open={open} onOpenChange={x => onClose()}>
+            <DialogContent className="bg-[#202020]">
+                <DialogHeader>
+                    <DialogTitle className="text-[#ff8800]">{t("title")}</DialogTitle>
+                </DialogHeader>
 
-                    <span className="
-                        -bottom-1.5 absolute  -right-5 text-[9px] -px-1 py-2 rounded bg-[#00000000] text-gray-300 pointer-events-none">
-                        {t("shortcutKey")}
-                    </span>
-                </Button>
-            </PopoverTrigger>
+                <div className="space-y-4 min-w-[360px]">
 
-            <PopoverContent align="end" className="w-full bg-[#1f1f1f] border border-[#333] text-white">
-                <div className="flex items-center space-x-3 py-2">
-                    <Switch
-                        className="border-white"
-                        checked={searchMode === "dateRange"}
-                        onCheckedChange={(x) =>
-                            setSearchMode(x ? "dateRange" : "dateFilterOff")
-                        }
-                    />
-                    <span className="text-sm text-gray-100">
-                        {searchMode ? t(searchMode) : ""}
-                    </span>
+                    {ControlRow(t("hasComment"), () => {
+                        return (
+                            <Checkbox
+                                defaultChecked={hasComment}
+                                onCheckedChange={(x) => setHasComment(x as boolean)}
+                                className="border-[#ccc] w-8  h-8 rounded bg-[#181818] border px-2 text-sm text-white"
+                            />
+                        );
+                    })}
+
+                    {hasComment
+                        ? (
+                            <>
+                                {ControlRow(t("userFilter"), () => {
+                                    return (
+                                        <div className="flex justify-between">
+                                            <ComboBox
+                                                options={commentUsers}
+                                                setValue={setCommentUser}
+                                                value={user}
+                                                placeholder="Select user..."
+                                                className="border-[#ccc] rounded bg-[#181818] border px-2 text-sm text-white" />
+                                            <CalendarPopover
+                                                className="border-[#ccc] bg-[#181818] border h-8.2 mx-2"
+                                                value={dateRange}
+                                                onSetValue={setDateRange} />
+                                            <Button onClick={handleClearUserFilter} variant="outline" className="border-[#ccc] bg-[#181818] border h-8.2">
+                                                <BrushCleaning />
+                                            </Button>
+                                        </div>
+                                    );
+                                })}
+
+                                {ControlRow(t("hasIssue"), () => {
+                                    return (
+                                        <Checkbox
+                                            defaultChecked={hasIssue}
+                                            onCheckedChange={(x) => setHasIssue(x as boolean)}
+                                            className="border-[#ccc] w-8  h-8 rounded bg-[#181818] border px-2 text-sm text-white"
+                                        />
+                                    );
+                                })}
+
+                                {hasIssue ?
+                                    (<>
+                                        {ControlRow(t("filterIssue"), () => {
+                                            return (
+                                                <input
+                                                    type="text"
+                                                    value={filterIssue}
+                                                    onChange={(e) => setFilterIssue(e.target.value)}
+                                                    className="border-[#ccc] w-full h-8 rounded bg-[#181818] border px-2 text-sm text-white"
+                                                    placeholder="Filter..."
+                                                />
+                                            );
+                                        })}
+                                    </>) : (<></>)}
+
+                                {ControlRow(t("hasDrawing"), () => {
+                                    return (
+                                        <Checkbox
+                                            defaultChecked={hasDrawing}
+                                            onCheckedChange={(x) => setHasDrawing(x as boolean)}
+                                            className="border-[#ccc] w-8  h-8 rounded bg-[#181818] border px-2 text-sm text-white"
+                                        />
+                                    );
+                                })}
+                            </>
+                        )
+                        : (<></>)
+                    }
+
+                    {ControlRow(t("searchFilter"), () => {
+                        return (
+                            <div className="flex justify-between">
+                                <input
+                                    type="text"
+                                    value={filterTree}
+                                    onChange={(e) => setFilterTree(e.target.value)}
+                                    className="border-[#ccc] w-full h-8 rounded bg-[#181818] border px-2 text-sm text-white"
+                                    placeholder="Filter tree..."
+                                />
+                                <CalendarPopover
+                                    className="border-[#ccc] bg-[#181818] border h-8.2 mx-2"
+                                    value={dateRange}
+                                    onSetValue={setDateRange} />
+                                <Button onClick={handleClearTreeFilter} variant="outline" className="border-[#ccc] bg-[#181818] border h-8.2">
+                                    <BrushCleaning />
+                                </Button>
+                            </div>
+                        );
+                    })}
                 </div>
 
-
-                {searchMode === "dateRange" ? (
-                    <div className="flex items-center space-x-3">
-                        <Calendar
-                            mode="range"
-                            defaultMonth={dateRange?.to}
-                            selected={dateRange}
-                            onSelect={setDateRange}
-                            numberOfMonths={1}
-                            className='rounded-md border'
-                            classNames={{
-                                range_start: 'bg-[#ff880055] dark:bg-[#ff880055] rounded-l-full',
-                                range_end: 'bg-[#ff880055] dark:bg-[#ff880055] rounded-r-full',
-                                day_button: [
-                                    // 選択状態
-                                    "data-[range-start=true]:rounded-full!",
-                                    "data-[range-start=true]:bg-[#ff8800]!",
-                                    "data-[range-start=true]:text-white!",
-
-                                    "data-[range-end=true]:rounded-full!",
-                                    "data-[range-end=true]:bg-[#ff8800]!",
-                                    "data-[range-end=true]:text-white!",
-
-                                    // 中間の範囲
-                                    "data-[range-middle=true]:rounded-none",
-                                    "data-[range-middle=true]:bg-[#ff880055]",
-                                    "data-[range-middle=true]:text-white!",
-
-                                    // hover 時（全体の丸み補正）
-                                    "hover:rounded-full",
-                                ].join(" "),
-                                today:
-                                    'data-[selected=true]:rounded-l-none! rounded-full bg-[#ee990077]!'
-                            }}
-                        />
+                <DialogFooter>
+                    <div className="flex justify-end gap-2 mt-4">
+                        <Button
+                            variant="ghost"
+                            onClick={onClose}
+                            className="bg-[#333] text-white hover:bg-[#fff]"
+                        >
+                            {t("cancel")}
+                        </Button>
+                        <Button
+                            onClick={handleSearch}
+                            className="bg-[#ff8800] text-white hover:bg-[#ee3300]"
+                        >
+                            {t("ok")}
+                        </Button>
                     </div>
-                ) : <></>}
-
-                <div className="flex flex-col mt-3">
-                    <span className="text-xs text-gray-400 mb-0.5">{t("searchFilter")}</span>
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        value={filterText}
-                        onChange={(e) => setFilterText(e.target.value)}
-                        className="border-[#ccc] w-full h-8 rounded bg-[#181818] border px-2 text-sm text-white"
-                        placeholder=""
-                    />
-                </div>
-            </PopoverContent>
-        </Popover>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
+
+

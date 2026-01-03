@@ -2,30 +2,36 @@
 import React from "react";
 import { useVideoStore } from "@/stores/video-store";
 import { useTranslations } from "next-intl";
+import { SidebarTrigger } from "@/ui/sidebar";
+import { Separator } from "@/ui/separator";
 
 export default function VideoTitle() {
     const t = useTranslations("video-title");
-    
+
     const {
         selectedVideo,
         revisions,
         selectedRevision,
         selectVideoRevision,
     } = useVideoStore();
-
     return (
         <div className="px-2 mb-2 flex items-center justify-between">
             <div>
-                <h2 className="text-lg font-semibold text-[#ff8800] tracking-wide">
+                <h2 className="flex items-center gap-1 px-2 text-lg font-semibold text-[#ff8800] tracking-wide">
+                    <SidebarTrigger className="-ml-1" />
+                    <Separator
+                        orientation="vertical"
+                        className="mr-2 data-[orientation=vertical]:h-4"
+                    />
                     {selectedVideo?.title ?? t("noSelection")}
                 </h2>
                 <p className="text-xs text-[#999] mt-1">
                     {selectedRevision
                         ? t("revisionInfo", {
-                              revision: selectedRevision.revision,
-                              uploadedAt: new Date(selectedRevision.uploadedAt)
-                              .toLocaleString()
-                          })
+                            revision: selectedRevision.revision,
+                            uploadedAt: new Date(selectedRevision.uploadedAt)
+                                .toLocaleString()
+                        })
                         : t("noRevision")}
                 </p>
             </div>

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { Video, VideoRevision } from "@/lib/db-types";
+import { useVideoSearchStore } from "@/stores/video-search-store";
 import * as api from '@/lib/fetch-wrapper';
 
 interface VideoState {
@@ -9,7 +10,7 @@ interface VideoState {
     selectedRevision: VideoRevision | null;
     loading: boolean;
 
-    fetchVideos: (from: Date | undefined, to: Date | undefined) => Promise<void>;
+    fetchVideos: () => Promise<void>;
     selectVideo: (video: Video) => Promise<void>;
     nextVideo:() => Promise<boolean>;
     selectVideoRevision: (revision: VideoRevision) => void;
@@ -22,9 +23,18 @@ export const useVideoStore = create<VideoState>((set, get) => ({
     selectedRevision: null,
     loading: false,
 
-    async fetchVideos(from: Date | undefined, to: Date | undefined) {
+    async fetchVideos() {
         set({ loading: true });
-        const data = await api.fetchVideos(from, to);
+        const s = useVideoSearchStore.getState();
+        const data = await api.fetchVideos({
+            user: s.user,
+            dateRange: s.dateRange,
+            filterIssue: s.filterIssue,
+            filterTree: s.filterTree,
+            hasIssue: s.hasIssue,
+            hasDrawing: s.hasDrawing,
+            hasComment: s.hasComment,
+        });
         set({ videos: data, loading: false });
     },
 

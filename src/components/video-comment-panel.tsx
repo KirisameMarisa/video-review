@@ -41,8 +41,6 @@ import { slackToast } from "@/components/slack";
 
 import { UploadStorageType } from "@/lib/db-types";
 
-console.log(UploadStorageType);
-
 export default function VideoCommentPanel() {
     const t = useTranslations("video-comment-panel");
     const headerRef = useRef<HTMLDivElement>(null);
@@ -110,7 +108,7 @@ export default function VideoCommentPanel() {
 
     const commentCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-    const handleCommentConfirmed = async (comment: string, issueId: string) => {
+    const handleCommentConfirmed = async (comment: string, issueId: string | null) => {
         if (!editingComment) {
             if (selectedRevision) {
                 const id = await addComment({
@@ -348,7 +346,7 @@ export default function VideoCommentPanel() {
             <CommentConfirmed
                 confirmedLabel={editingComment ? "commentUpdate"  : "commentAdd"}
                 comment={editingComment ? editingComment.comment : ""}
-                issueId={editingComment ? editingComment.issueId ?? "" : ""}
+                issueId={editingComment ? editingComment.issueId ?? null : null}
                 onCancel={() => setEditing(null)}
                 onConfirmed={async (comment, issueId) => await handleCommentConfirmed(comment, issueId)}
             />

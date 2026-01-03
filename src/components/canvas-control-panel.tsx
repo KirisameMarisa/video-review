@@ -47,10 +47,6 @@ export default function CanvasControlPanel() {
     }, [canvasEditing]);
 
     useEffect(() => {
-        console.log("needSave", needSave)
-    }, [needSave])
-
-    useEffect(() => {
         modeRef.current = mode;
     }, [mode]);
 

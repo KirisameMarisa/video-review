@@ -37,8 +37,8 @@ export async function createComment(data: {
 export async function updateComment(data: {
     id: string;
     comment?: string;
-    issueId?: string;
-    drawingPath?: string;
+    issueId?: string | null;
+    drawingPath?: string | null;
     thumbsUp?: boolean;
 }) {
     const res = await fetch("/api/v1/comments", {
@@ -129,4 +129,29 @@ export async function hasUnreadVideoComment(userId: string): Promise<string[]> {
     if (!res.ok) throw new Error("failed to get unread comment info");
     const json = await res.json();
     return json.unreadVideoIds;
+}
+
+export async function fetcCommentUsers(
+    data: {
+        videoId?: string,
+        rev?: { from?: number, to?: number },
+        hasDrawing?: boolean,
+        hasIssue?: boolean,
+    }
+): Promise<{userName: string, userEmail: string}[]> {
+    const params = new URLSearchParams();
+    if (data.videoId) params.set("from", data.videoId);
+    if (data.hasDrawing) params.set("hasDrawing", data.hasDrawing ? "true" : "false");
+    if (data.hasIssue) params.set("hasIssue", data.hasIssue ? "true" : "false");
+    if (data.rev) {
+        if (data.rev.from) params.set("to", data.rev.from.toString());
+        if (data.rev.to) params.set("to", data.rev.to.toString());
+    }
+
+    const res = await fetch(`/api/v1/comments/users?${params.toString()}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) return [];
+    return await res.json();
 }

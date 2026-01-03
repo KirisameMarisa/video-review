@@ -12,7 +12,7 @@ interface CommentEditState {
     setEditing(comment: VideoComment | null): void;
     setEditDrawingPath(path: string | null): void;
     setEditComment(path: string): void;
-    setEditIssueId(path: string): void;
+    setEditIssueId(path: string | null): void;
 }
 
 export const useCommentEditStore = create<CommentEditState>((set, get) => ({
@@ -26,8 +26,8 @@ export const useCommentEditStore = create<CommentEditState>((set, get) => ({
             const updated = await api.updateComment({
                 id: editing.id,
                 comment: editing.comment,
-                issueId: editing.issueId ?? "",
-                drawingPath: editing.drawingPath ?? "",
+                issueId: editing.issueId,
+                drawingPath: editing.drawingPath,
             });
 
             useCommentStore.getState().updateComment(get().editingComment!);

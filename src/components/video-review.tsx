@@ -154,7 +154,6 @@ export default function VideoReview() {
         const eps = 0.3;
         const activeIndex = findFirstWithinEps(commentTimeList, currentTime, eps);
         if (activeIndex !== null) {
-            console.log("ActiveIndex:", activeIndex, currentTime);
             const active = commentTimeBasedMap.get(commentTimeList[activeIndex]) ?? [];
             setActiveComments(active);
         } else {
@@ -217,7 +216,6 @@ export default function VideoReview() {
             setCurrentTime(v.currentTime);
         };
         const onEnded = () => {
-            console.log(playMode, playModeRef.current)
             switch (playModeRef.current) {
                 case "normal": break;
                 case "loop": {
@@ -294,11 +292,10 @@ export default function VideoReview() {
 
     return (
         <>
-            {/* 中央 */}
             <div className={`flex flex-col h-full w-full border-r border-[#333]`}>
+                <VideoTitle />
                 {selectedRevision ? (
                     <>
-                        <VideoTitle />
                         <div className="flex-1 flex flex-col items-center justify-center bg-black rounded mb-3 relative">
                             <div className="relative inline-block">
                                 <video

@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import * as api from "@/lib/fetch-wrapper"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/ui/dialog";
 import { Upload } from "lucide-react";
 import path from "path";
 import { useTranslations } from "next-intl";
@@ -114,8 +114,7 @@ export default function VideoUploadDialog({ open, onClose }: { open: boolean; on
 
     return (
         <Dialog open={open} onOpenChange={() => step === "done" || onClose()}>
-            <DialogContent className="bg-[#202020] text-white border border-[#333]">
-                <DialogClose hidden={true} />
+            <DialogContent className="bg-[#202020]">
                 <DialogHeader>
                     <DialogTitle className="text-[#ff8800]">{t("title")}</DialogTitle>
                 </DialogHeader>
@@ -156,23 +155,25 @@ export default function VideoUploadDialog({ open, onClose }: { open: boolean; on
 
                 {message && <div className="text-sm text-[#ccc] mt-2">{message}</div>}
 
-                <div className="flex justify-end gap-2 mt-4">
-                    <Button
-                        variant="ghost"
-                        disabled={step === "uploading"}
-                        onClick={onClose}
-                        className="text-white hover:bg-[#2a2a2a]"
-                    >
-                        {t("cancel")}
-                    </Button>
-                    <Button
-                        onClick={handleUpload}
-                        disabled={!file || step !== "input"}
-                        className="bg-[#ff8800] text-black hover:bg-[#ff9900]"
-                    >
-                        {step === "uploading" ? t("uploading") : t("upload")}
-                    </Button>
-                </div>
+                <DialogFooter>
+                    <div className="flex justify-end gap-2 mt-4">
+                        <Button
+                            variant="ghost"
+                            disabled={step === "uploading"}
+                            onClick={onClose}
+                            className="bg-[#333] text-white hover:bg-[#fff]"
+                        >
+                            {t("cancel")}
+                        </Button>
+                        <Button
+                            onClick={handleUpload}
+                            disabled={!file || step !== "input"}
+                            className="bg-[#ff8800] text-white hover:bg-[#ee3300]"
+                        >
+                            {step === "uploading" ? t("uploading") : t("upload")}
+                        </Button>
+                    </div>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

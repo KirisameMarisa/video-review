@@ -1,26 +1,28 @@
 import { Video, VideoRevision } from'@/lib/db-types';
+import { DateRange } from 'react-day-picker';
 
-export async function fetchVideos(
-    from: Date | undefined,
-    to: Date | undefined,
-) {
+export async function fetchVideos(data: {
+    user?: string,
+    dateRange?: DateRange,
+    filterIssue?: string,
+    filterTree?: string,
+    hasIssue?: boolean,
+    hasDrawing?: boolean,
+    hasComment?: boolean,
+}) {
     const params = new URLSearchParams();
-    if (from) params.set("from", from.getTime().toString());
-    if (to) params.set("to", to.getTime().toString());
+    if (data.dateRange?.from) params.set("from", data.dateRange?.from.getTime().toString());
+    if (data.dateRange?.to) params.set("to", data.dateRange?.to.getTime().toString());
+    if (data.user) params.set("user", data.user);
+    if (data.filterIssue) params.set("filterIssue", data.filterIssue);
+    if (data.filterTree) params.set("filterTree", data.filterTree);
+    if (data.hasIssue) params.set("hasIssue", data.hasIssue ? "true" : "false");
+    if (data.hasDrawing) params.set("hasDrawing", data.hasDrawing ? "true" : "false");
+    if (data.hasComment) params.set("hasComment", data.hasComment ? "true" : "false");
 
     const res = await fetch(`/api/v1/videos?${params.toString()}`);
-    if (!res.ok) throw new Error("Failed to fetch videos");
+    if (!res.ok) [];
     return await res.json();
-}
-
-export async function getVideoList(): Promise<Video[]> {
-    const res = await fetch("/api/v1/videos", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-    });
-
-    if (!res.ok) throw new Error("Failed to get video list");
-    return res.json();
 }
 
 export async function getVideoFromId(videoId: string): Promise<Video> {
