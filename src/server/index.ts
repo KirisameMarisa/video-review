@@ -35,21 +35,21 @@ app.route("/v1/drawing", drawingRouter);
 app.route("/v1/upload-status", uploadStatusRouter);
 
 // 旧API
-app.route("/uploads", localRouter);
-app.route("/read-status", readStatusRouter);
-app.route("/media", resolverRouter);
-app.route("/nextcloud/media", nextCloudRouter);
-app.route("/comments", commentsRouter);
-app.route("/auth", authRouter);
-app.route("/admin", adminRouter);
-app.route("/slack", slackRouter);
-app.route("/jira", jiraRouter);
-app.route('/videos', listRouter);
-app.route("/videos/upload", oldVideoUploadRouter);
-app.route("/videos/:id", videoByIdRouter);
-app.route('/videos/folders', foldersRouter);
-app.route('/videos/download', downloadRouter);
-app.route("/drawing/upload", oldDrawingUploadRouter);
+// app.route("/uploads", localRouter);
+// app.route("/read-status", readStatusRouter);
+// app.route("/media", resolverRouter);
+// app.route("/nextcloud/media", nextCloudRouter);
+// app.route("/comments", commentsRouter);
+// app.route("/auth", authRouter);
+// app.route("/admin", adminRouter);
+// app.route("/slack", slackRouter);
+// app.route("/jira", jiraRouter);
+// app.route('/videos', listRouter);
+// app.route("/videos/upload", oldVideoUploadRouter);
+// app.route("/videos/:id", videoByIdRouter);
+// app.route('/videos/folders', foldersRouter);
+// app.route('/videos/download', downloadRouter);
+// app.route("/drawing/upload", oldDrawingUploadRouter);
 
 // OpenAPI and Swagger UI
 app.doc('/specification', {
