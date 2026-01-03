@@ -1,11 +1,13 @@
 $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $PSScriptRoot
-$Dist = Join-Path $Root "dist"
+$Dist = Join-Path $Root "installers/windows"
 
 $ExeName = "videoreview-launcher.exe"
 
 Write-Host "Building VideoReview Launcher (Windows)..."
+
+Set-Location -Path $Root
 
 if (!(Test-Path $Dist)) {
     New-Item -ItemType Directory -Path $Dist | Out-Null
