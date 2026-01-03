@@ -77,7 +77,7 @@ listRouter.openapi({
     }
 
     if (user) {
-        whereVideoComment.userName = user;
+        whereVideoComment.userEmail = user;
         whereVideoComment.createdAt = whereTimeFilter;
     } else {
         whereVideo.latestUpdatedAt = whereTimeFilter;
