@@ -37,7 +37,7 @@ export function VideoSearchDialog({ open, onClose }: { open: boolean; onClose: (
     useEffect(() => {
         (async () => {
             const users = await fetcCommentUsers({ hasDrawing });
-            setCommentUsers(users.map((u) => ({ label: u.userName, value: u.userName })));
+            setCommentUsers(users.map((u) => ({ label: u.userName, value: u.userEmail })));
         })();
     }, [open]);
 
