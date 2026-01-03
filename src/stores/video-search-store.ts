@@ -18,16 +18,21 @@ interface VideoSearchState {
     setDateRange: (x: DateRange | undefined) => void;
     setFilterTree: (x: string) => void;
     clear: () => void;
+    isFiltering: () => boolean;
 }
 
-export const useVideoSearchStore = create<VideoSearchState>((set) => ({
+const InitVideoSearchState = {
     dateRange: undefined,
     hasComment: false,
     hasDrawing: false,
     hasIssue: false,
     filterIssue: "",
-    user: "",
     filterTree: "",
+    user: ""
+};
+
+export const useVideoSearchStore = create<VideoSearchState>((set, get) => ({
+    ...InitVideoSearchState,
 
     setHasComment: (x: boolean) => set({ hasComment: x }),
     setHasDrawing: (x: boolean) => set({ hasDrawing: x }),
@@ -36,12 +41,13 @@ export const useVideoSearchStore = create<VideoSearchState>((set) => ({
     setCommentUser: (x: string | undefined) => set({ user: x }),
     setDateRange: (x: DateRange | undefined) => set({ dateRange: x }),
     setFilterTree: (x: string) => set({ filterTree: x }),
-    clear: () => set({ 
-        dateRange: undefined, 
-        hasDrawing: false, 
-        hasIssue: false, 
-        filterIssue: "", 
-        user: "", 
-        filterTree: "" 
-    })
+    clear: () => set(InitVideoSearchState),
+    isFiltering: () => {
+        const state = get();
+
+        return Object.keys(InitVideoSearchState).some((key) => {
+            return state[key as keyof typeof InitVideoSearchState]
+                !== InitVideoSearchState[key as keyof typeof InitVideoSearchState];
+        });
+    }
 }));
