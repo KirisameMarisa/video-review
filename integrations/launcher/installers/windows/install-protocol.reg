@@ -1,0 +1,8 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\videoreview]
+@="URL:VideoReview Protocol"
+"URL Protocol"="videoreview"
+
+[HKEY_CLASSES_ROOT\videoreview\shell\open\command]
+@="\"C:\\path\\to\\videoreview-launcher.exe\" \"%1\""
