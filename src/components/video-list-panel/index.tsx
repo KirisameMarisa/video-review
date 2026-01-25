@@ -75,8 +75,8 @@ export default function VideoListPanel() {
                     </ResizablePanel>
                     <ResizableHandle className="bg-[#333]" />
                     <ResizablePanel minSize={40} defaultSize={40}>
-                        <VideoThumbnails videos={videos} onSelect={(thumbnail) => {
-                            router.replace(`/video-review/review/${thumbnail.id}`);
+                        <VideoThumbnails videos={videos} onSelectVideo={(id) => {
+                            router.replace(`/video-review/review/${id}`);
                         }} />
                     </ResizablePanel>
                 </ResizablePanelGroup>
