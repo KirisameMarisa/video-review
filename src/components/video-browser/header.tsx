@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { X, Plus, Search } from "lucide-react";
+import { X, Plus, Search, MessageSquare } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useTranslations } from "next-intl";
-import { isGuest, isViewer } from "@/lib/role";
+import { isGuest } from "@/lib/role";
 import {
     SidebarGroup,
     SidebarGroupContent,
@@ -17,6 +17,9 @@ import { useVideoSearchStore } from "@/stores/video-search-store";
 import { useVideoStore } from "@/stores/video-store";
 import CalendarDateRadio from "@/ui/calendar-date-radio";
 import { Separator } from "../ui/separator";
+import { useLLMStatusStore } from "@/stores/llm-status-store";
+import { useChatSearchStore } from "@/stores/chat-search-store";
+import { ChatSearchPanel } from "@/components/chat-search";
 
 export default function VideoListPanelHeader(
 { onSearchDialogShow, onUploadDialogShow }: { onSearchDialogShow: () => void; onUploadDialogShow: () => void;}) {
@@ -24,10 +27,16 @@ export default function VideoListPanelHeader(
     const { role } = useAuthStore();
     const { fetchVideos } = useVideoStore();
     const { filterTree, setFilterTree, isFiltering, clear, videoDateRange, setVideoDateRange } = useVideoSearchStore();
+    const { available, checked, check } = useLLMStatusStore();
+    const { open: openChat } = useChatSearchStore();
 
     useEffect(() => {
         fetchVideos();
     }, [filterTree, videoDateRange]);
+
+    useEffect(() => {
+        if (!checked) check();
+    }, []);
 
     const handleClear = () => {
         clear();
@@ -65,6 +74,17 @@ export default function VideoListPanelHeader(
                         )
                         : (<></>)
                     }
+                    <button
+                        onClick={() => openChat()}
+                        disabled={!available}
+                        title={available ? undefined : "LLM is not configured"}
+                        className={`
+                            inline-flex items-center justify-center px-1 leading-none transition-colors
+                            ${available ? "hover:text-[#ff5500]" : "opacity-30 cursor-not-allowed"}
+                        `}
+                    >
+                        <MessageSquare className="size-4" />
+                    </button>
                 </div>
 
                 <button
@@ -76,6 +96,8 @@ export default function VideoListPanelHeader(
                 </button>
             </div>
             <Separator className="bg-[#333]" />
+
+            <ChatSearchPanel />
 
             <SidebarGroup className="py-0">
                 <CalendarDateRadio value={videoDateRange} onSetValue={setVideoDateRange} className="size-10" />

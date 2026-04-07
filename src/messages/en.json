@@ -53,6 +53,14 @@
     "video-list-panel": {
         "title": "Video list"
     },
+    "chat-search": {
+        "title": "Chat Search",
+        "clearHistory": "Clear conversation",
+        "llmUnavailable": "LLM is not configured",
+        "emptyState": "Ask natural-language questions about videos, comments, and events.",
+        "loading": "Thinking...",
+        "inputPlaceholder": "Ask about the video..."
+    },
     "video-control-panel": {
         "normal": "Normal",
         "loop": "Loop playback",

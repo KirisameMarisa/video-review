@@ -23,8 +23,9 @@ import { ensurePrismaWarmup } from "@/server/lib/db";
 import { avatarRouter } from "@/server/routes/avatar";
 import { userRouter } from "@/server/routes/user";
 import { chatRouter } from "@/server/routes/chat";
+import { chatSearchRouter } from "@/server/routes/chat/search";
 import { thumbnailRouter } from "@/server/routes/thumbnail";
-
+import { llmStatusRouter } from "@/server/routes/llm/status";
 export const app = new Hono().basePath("/api");
 
 // v1 API
@@ -40,6 +41,8 @@ app.route("/v1/upload-status", uploadStatusRouter);
 app.route("/v1/avatar", avatarRouter);
 app.route("/v1/user", userRouter);
 app.route("/v1/chat", chatRouter);
+app.route("/v1/llm/status", llmStatusRouter);
+app.route("/v1/chat/search", chatSearchRouter);
 app.route("/v1/thumbnail", thumbnailRouter);
 
 // deprecate API
