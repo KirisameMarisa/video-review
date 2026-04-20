@@ -79,8 +79,8 @@ listRouter.openapi({
         sortBy,
     } = query;
 
-    const videoDateRange = toDateRange(new Date(Number(videoFrom)), new Date(Number(videoTo)));
-    const commentsDateRange = toDateRange(new Date(Number(commentsFrom)), new Date(Number(commentsTo)));
+    const videoDateRange = toDateRange(videoFrom ? new Date(videoFrom) : undefined, videoTo ? new Date(videoTo) : undefined);
+    const commentsDateRange = toDateRange(commentsFrom ? new Date(commentsFrom) : undefined, commentsTo ? new Date(commentsTo) : undefined);
 
     const whereVideoComment: PrismaTypes.VideoCommentWhereInput = { deleted: false };
     const whereVideo: PrismaTypes.VideoWhereInput = { deleted: false };

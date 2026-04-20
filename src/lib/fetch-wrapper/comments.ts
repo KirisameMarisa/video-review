@@ -2,7 +2,6 @@ import { useAuthStore } from "@/stores/auth-store";
 import { VideoComment } from '@/lib/db-types';
 import { DateRange } from "react-day-picker";
 import { ApiError, ApiResult } from "@/lib/utils/api-result";
-import { string } from "zod";
 
 export async function fetchComments(data: {
     videoId: string,
@@ -17,8 +16,8 @@ export async function fetchComments(data: {
     const params = new URLSearchParams();
     params.set("videoId", data.videoId);
     params.set("selectRevision", data.selectRevision.toString());
-    if (data.dateRange?.from) params.set("from", data.dateRange?.from.getTime().toString());
-    if (data.dateRange?.to) params.set("to", data.dateRange?.to.getTime().toString());
+    if (data.dateRange?.from) params.set("from", data.dateRange.from.toISOString());
+    if (data.dateRange?.to) params.set("to", data.dateRange.to.toISOString());
     if (data.hasDrawing) params.set("hasDrawing", data.hasDrawing ? "true" : "false");
     if (data.hasIssue) params.set("hasIssue", data.hasIssue ? "true" : "false");
     if (data.fetchAllComments) params.set("fetchAllComments", data.fetchAllComments ? "true" : "false");

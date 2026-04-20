@@ -14,10 +14,10 @@ export async function fetchVideos(data: {
     tags?: string[],
 }) {
     const params = new URLSearchParams();
-    if (data.videoDateRange?.from) params.set("videoFrom", data.videoDateRange?.from.getTime().toString());
-    if (data.videoDateRange?.to) params.set("videoTo", data.videoDateRange?.to.getTime().toString());
-    if (data.commentsDateRange?.from) params.set("commentsFrom", data.commentsDateRange?.from.getTime().toString());
-    if (data.commentsDateRange?.to) params.set("commentsTo", data.commentsDateRange?.to.getTime().toString());
+    if (data.videoDateRange?.from) params.set("videoFrom", data.videoDateRange.from.toISOString());
+    if (data.videoDateRange?.to) params.set("videoTo", data.videoDateRange.to.toISOString());
+    if (data.commentsDateRange?.from) params.set("commentsFrom", data.commentsDateRange.from.toISOString());
+    if (data.commentsDateRange?.to) params.set("commentsTo", data.commentsDateRange.to.toISOString());
     if (data.user) params.set("user", data.user);
     if (data.filterIssue) params.set("filterIssue", data.filterIssue);
     if (data.filterTree) params.set("filterTree", data.filterTree);

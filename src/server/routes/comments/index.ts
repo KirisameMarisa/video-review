@@ -47,7 +47,7 @@ commentsRouter.openapi({
             filterText,
         } = query;
 
-        const dateRange = toDateRange(new Date(Number(from)), new Date(Number(to)));
+        const dateRange = toDateRange(from ? new Date(from) : undefined, to ? new Date(to) : undefined);
 
         const where: PrismaTypes.VideoCommentWhereInput = {
             deleted: false,
