@@ -26,8 +26,12 @@ export const env = {
     // LLM provider: "claude" | "ollama" | "gemini" (unset = disabled)
     LLM_PROVIDER: process.env.VIDEO_REVIEW_LLM_PROVIDER as "claude" | "ollama" | "gemini" | undefined,
     LLM_API_KEY: process.env.VIDEO_REVIEW_LLM_API_KEY,
-    LLM_BASE_URL: process.env.VIDEO_REVIEW_LLM_BASE_URL,
+    LOCAL_LLM_URL: process.env.VIDEO_REVIEW_LOCAL_LLM_URL,
     LLM_MODEL: process.env.VIDEO_REVIEW_LLM_MODEL,
+    // MCP server URL (unset = chat-search disabled)
+    MCP_URL: process.env.VIDEO_REVIEW_MCP_URL,
+    // Public URL for external tools (e.g. Gemini CLI on another machine). Shown in status API.
+    MCP_PUBLIC_URL: process.env.VIDEO_REVIEW_MCP_PUBLIC_URL,
     // VCS integration (Phase 1: env-based config)
     VCS_PROVIDER: process.env.VIDEO_REVIEW_VCS_PROVIDER as "github" | "gitlab" | "svn" | "perforce" | undefined,
     VCS_GITHUB_OWNER: process.env.VIDEO_REVIEW_VCS_GITHUB_OWNER,

@@ -38,6 +38,8 @@ const QuerySchema = z.object({
             .map((tag) => tag.trim())
             .filter((tag) => tag.length > 0)
         ).optional(),
+    limit: z.string().transform(v => parseInt(v)).optional(),
+    sortBy: z.enum(["uploadedAt_desc", "uploadedAt_asc", "title_asc"]).optional(),
 });
 
 listRouter.openapi({
@@ -73,6 +75,8 @@ listRouter.openapi({
         user,
         includeRevisions,
         tags,
+        limit,
+        sortBy,
     } = query;
 
     const videoDateRange = toDateRange(new Date(Number(videoFrom)), new Date(Number(videoTo)));
@@ -122,6 +126,11 @@ listRouter.openapi({
     }
 
     try {
+        const orderBy: PrismaTypes.VideoOrderByWithRelationInput[] =
+            sortBy === "uploadedAt_desc" ? [{ latestRevision: { uploadedAt: "desc" } }] :
+            sortBy === "uploadedAt_asc"  ? [{ latestRevision: { uploadedAt: "asc" } }] :
+            [{ folderKey: "asc" }, { title: "asc" }];
+
         const videos = await prisma.video.findMany({
             where: whereVideo,
             include: {
@@ -139,10 +148,8 @@ listRouter.openapi({
                     },
                 } : {}),
             },
-            orderBy: [
-                { folderKey: "asc" },
-                { title: "asc" },
-            ]
+            orderBy,
+            ...(limit ? { take: limit } : {}),
         });
 
         const previewCount = Math.min(videos.length, 30);
@@ -225,4 +232,79 @@ listRouter.openapi({
 }, async (c) => {
     const items = await prisma.videoEventKind.findMany({ select: { label: true } })
     return c.json({ items: items.map(x => x.label) });
+});
+
+const SearchByEventQuerySchema = z.object({
+    filterText: z.string(),
+    kind: z.string().optional(),
+    limit: z.string().transform(v => parseInt(v)).optional(),
+});
+
+listRouter.openapi({
+    method: "get",
+    summary: "Search videos by event content",
+    description: "Search for videos that have events (e.g. subtitles, detected objects) matching the given text. Returns matching videos with relevant event snippets.",
+    path: "/search-by-event",
+    request: { query: SearchByEventQuerySchema },
+    responses: {
+        200: { description: "Matching videos with event snippets" },
+        500: { description: "Internal Server Error" },
+    },
+}, async (c) => {
+    try {
+        const { filterText, kind, limit } = c.req.valid("query");
+
+        const matchingEvents = await prisma.videoEvent.findMany({
+            where: {
+                data: { contains: filterText },
+                ...(kind ? { kind: { label: kind } } : {}),
+                videoRevision: { deleted: false, video: { deleted: false } },
+            },
+            include: {
+                kind: { select: { label: true } },
+                videoRevision: {
+                    select: {
+                        videoId: true,
+                        revision: true,
+                        video: { select: { id: true, title: true, folderKey: true } },
+                    },
+                },
+            },
+            orderBy: { startMs: "asc" },
+        });
+
+        // Group by video, keeping up to 5 matching event snippets per video
+        const byVideo = new Map<string, {
+            id: string;
+            title: string;
+            folderKey: string | null;
+            matchingEvents: { kind: string; startMs: number; endMs: number; data: string }[];
+        }>();
+
+        for (const event of matchingEvents) {
+            const video = event.videoRevision.video;
+            if (!byVideo.has(video.id)) {
+                byVideo.set(video.id, {
+                    id: video.id,
+                    title: video.title,
+                    folderKey: video.folderKey,
+                    matchingEvents: [],
+                });
+            }
+            const entry = byVideo.get(video.id)!;
+            if (entry.matchingEvents.length < 5) {
+                entry.matchingEvents.push({
+                    kind: event.kind.label,
+                    startMs: event.startMs,
+                    endMs: event.endMs,
+                    data: event.data,
+                });
+            }
+        }
+
+        const results = Array.from(byVideo.values());
+        return c.json(limit ? results.slice(0, limit) : results);
+    } catch {
+        return c.json({ error: "Failed to search events" }, 500);
+    }
 });

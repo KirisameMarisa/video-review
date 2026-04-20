@@ -1,39 +1,21 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { Client as McpClient } from "@modelcontextprotocol/sdk/client/index.js";
 import { env } from "@/server/lib/env";
-
-export type VideoEvent = {
-    start_ms: number;
-    end_ms: number;
-    data: string;
-};
-
-export type VideoEventContext = {
-    events: VideoEvent[];
-};
-
-export type ToolDefinition = {
-    name: string;
-    description: string;
-    inputSchema: Record<string, unknown>;
-};
-
-export type ToolCall = {
-    id: string;
-    name: string;
-    input: Record<string, unknown>;
-};
 
 export type ChatTurn = {
     role: "user" | "assistant";
     content: string;
 };
 
+type OpenAIToolCall = { id: string; function: { name: string; arguments: string } };
+type OpenAIMessage = { role: string; content: string | null; tool_calls?: unknown[]; tool_call_id?: string };
+
 export interface LLMClient {
     complete(prompt: string): Promise<string>;
-    completeWithTools(
+    completeWithMCP(
         messages: ChatTurn[],
-        tools: ToolDefinition[],
-        onToolCall: (call: ToolCall) => Promise<string>,
+        mcpClient: McpClient,
+        system: string,
         maxTurns?: number,
     ): Promise<string>;
 }
@@ -58,16 +40,18 @@ class ClaudeClient implements LLMClient {
         return block.text;
     }
 
-    async completeWithTools(
+    async completeWithMCP(
         messages: ChatTurn[],
-        tools: ToolDefinition[],
-        onToolCall: (call: ToolCall) => Promise<string>,
-        maxTurns = 5,
+        mcpClient: McpClient,
+        system: string,
+        maxTurns = 10,
     ): Promise<string> {
-        const anthropicTools: Anthropic.Tool[] = tools.map((t) => ({
+        const { tools: mcpTools } = await mcpClient.listTools();
+
+        const anthropicTools: Anthropic.Tool[] = mcpTools.map((t) => ({
             name: t.name,
-            description: t.description,
-            input_schema: t.inputSchema as Anthropic.Tool["input_schema"],
+            description: t.description ?? "",
+            input_schema: (t.inputSchema ?? { type: "object", properties: {} }) as Anthropic.Tool["input_schema"],
         }));
 
         const anthropicMessages: Anthropic.MessageParam[] = messages.map((m) => ({
@@ -79,36 +63,27 @@ class ClaudeClient implements LLMClient {
             const response = await this.client.messages.create({
                 model: this.model,
                 max_tokens: 4096,
+                system,
                 tools: anthropicTools,
                 messages: anthropicMessages,
             });
 
-            if (response.stop_reason === "end_turn") {
-                const text = response.content.find((b) => b.type === "text");
-                return text ? text.text : "";
-            }
-
-            if (response.stop_reason !== "tool_use") {
-                const text = response.content.find((b) => b.type === "text");
-                return text ? text.text : "";
-            }
-
             const toolUseBlocks = response.content.filter((b) => b.type === "tool_use");
+
+            if (response.stop_reason !== "tool_use" || toolUseBlocks.length === 0) {
+                const text = response.content.find((b) => b.type === "text");
+                return text ? text.text : "";
+            }
+
             anthropicMessages.push({ role: "assistant", content: response.content });
 
             const toolResults: Anthropic.ToolResultBlockParam[] = await Promise.all(
                 toolUseBlocks.map(async (block) => {
                     if (block.type !== "tool_use") throw new Error("unexpected block type");
-                    const result = await onToolCall({
-                        id: block.id,
-                        name: block.name,
-                        input: block.input as Record<string, unknown>,
-                    });
-                    return {
-                        type: "tool_result" as const,
-                        tool_use_id: block.id,
-                        content: result,
-                    };
+                    const result = await mcpClient.callTool({ name: block.name, arguments: block.input as Record<string, unknown> });
+                    const content = result.content as { type: string; text?: string }[];
+                    const text = content.map((c) => c.type === "text" ? c.text ?? "" : "").join("");
+                    return { type: "tool_result" as const, tool_use_id: block.id, content: text };
                 }),
             );
 
@@ -144,59 +119,51 @@ class OllamaClient implements LLMClient {
         return data.choices[0].message.content;
     }
 
-    async completeWithTools(
+    async completeWithMCP(
         messages: ChatTurn[],
-        tools: ToolDefinition[],
-        onToolCall: (call: ToolCall) => Promise<string>,
-        maxTurns = 5,
+        mcpClient: McpClient,
+        system: string,
+        maxTurns = 10,
     ): Promise<string> {
-        type OllamaMessage = { role: string; content: string | null; tool_calls?: unknown[]; tool_call_id?: string };
-        const ollamaMessages: OllamaMessage[] = messages.map((m) => ({ role: m.role, content: m.content }));
+        const { tools: mcpTools } = await mcpClient.listTools();
 
-        const ollamaTools = tools.map((t) => ({
+        const ollamaTools = mcpTools.map((t) => ({
             type: "function",
             function: {
                 name: t.name,
-                description: t.description,
-                parameters: t.inputSchema,
+                description: t.description ?? "",
+                parameters: t.inputSchema ?? { type: "object", properties: {} },
             },
         }));
+
+        const ollamaMessages: OpenAIMessage[] = [
+            { role: "system", content: system },
+            ...messages.map((m) => ({ role: m.role, content: m.content })),
+        ];
 
         for (let turn = 0; turn < maxTurns; turn++) {
             const res = await fetch(`${this.baseUrl}/v1/chat/completions`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    model: this.model,
-                    messages: ollamaMessages,
-                    tools: ollamaTools,
-                    stream: false,
-                }),
+                body: JSON.stringify({ model: this.model, messages: ollamaMessages, tools: ollamaTools, stream: false }),
             });
             if (!res.ok) throw new Error(`Ollama error: HTTP ${res.status}`);
 
-            const data = await res.json() as {
-                choices: {
-                    finish_reason: string;
-                    message: {
-                        role: string;
-                        content: string | null;
-                        tool_calls?: { id: string; function: { name: string; arguments: string } }[];
-                    };
-                }[];
-            };
-
+            const data = await res.json() as { choices: { finish_reason: string; message: { role: string; content: string | null; tool_calls?: OpenAIToolCall[] } }[] };
             const choice = data.choices[0];
-            if (choice.finish_reason !== "tool_calls" || !choice.message.tool_calls?.length) {
+
+            if (!choice.message.tool_calls?.length) {
                 return choice.message.content ?? "";
             }
 
             ollamaMessages.push({ role: "assistant", content: null, tool_calls: choice.message.tool_calls });
 
             for (const tc of choice.message.tool_calls) {
-                const input = JSON.parse(tc.function.arguments) as Record<string, unknown>;
-                const result = await onToolCall({ id: tc.id, name: tc.function.name, input });
-                ollamaMessages.push({ role: "tool", content: result, tool_call_id: tc.id });
+                const args = JSON.parse(tc.function.arguments) as Record<string, unknown>;
+                const result = await mcpClient.callTool({ name: tc.function.name, arguments: args });
+                const content = result.content as { type: string; text?: string }[];
+                const text = content.map((c) => c.type === "text" ? c.text ?? "" : "").join("");
+                ollamaMessages.push({ role: "tool", content: text, tool_call_id: tc.id });
             }
         }
 
@@ -207,6 +174,7 @@ class OllamaClient implements LLMClient {
 class GeminiClient implements LLMClient {
     private apiKey: string;
     private model: string;
+    private readonly endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
 
     constructor(apiKey: string, model: string) {
         this.apiKey = apiKey;
@@ -214,83 +182,61 @@ class GeminiClient implements LLMClient {
     }
 
     async complete(prompt: string): Promise<string> {
-        const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${this.apiKey}`,
-                },
-                body: JSON.stringify({
-                    model: this.model,
-                    messages: [{ role: "user", content: prompt }],
-                }),
-            }
-        );
+        const res = await fetch(this.endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${this.apiKey}` },
+            body: JSON.stringify({ model: this.model, messages: [{ role: "user", content: prompt }] }),
+        });
         if (!res.ok) throw new Error(`Gemini error: HTTP ${res.status}`);
         const data = await res.json() as { choices: { message: { content: string } }[] };
         return data.choices[0].message.content;
     }
 
-    async completeWithTools(
+    async completeWithMCP(
         messages: ChatTurn[],
-        tools: ToolDefinition[],
-        onToolCall: (call: ToolCall) => Promise<string>,
-        maxTurns = 5,
+        mcpClient: McpClient,
+        system: string,
+        maxTurns = 10,
     ): Promise<string> {
-        type GeminiMessage = { role: string; content: string | null; tool_calls?: unknown[]; tool_call_id?: string };
-        const geminiMessages: GeminiMessage[] = messages.map((m) => ({ role: m.role, content: m.content }));
+        const { tools: mcpTools } = await mcpClient.listTools();
 
-        const geminiTools = tools.map((t) => ({
+        const geminiTools = mcpTools.map((t) => ({
             type: "function",
             function: {
                 name: t.name,
-                description: t.description,
-                parameters: t.inputSchema,
+                description: t.description ?? "",
+                parameters: t.inputSchema ?? { type: "object", properties: {} },
             },
         }));
 
+        const geminiMessages: OpenAIMessage[] = [
+            { role: "system", content: system },
+            ...messages.map((m) => ({ role: m.role, content: m.content })),
+        ];
+
         for (let turn = 0; turn < maxTurns; turn++) {
-            const res = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${this.apiKey}`,
-                    },
-                    body: JSON.stringify({
-                        model: this.model,
-                        messages: geminiMessages,
-                        tools: geminiTools,
-                    }),
-                }
-            );
+            const res = await fetch(this.endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${this.apiKey}` },
+                body: JSON.stringify({ model: this.model, messages: geminiMessages, tools: geminiTools }),
+            });
             if (!res.ok) throw new Error(`Gemini error: HTTP ${res.status}`);
 
-            const data = await res.json() as {
-                choices: {
-                    finish_reason: string;
-                    message: {
-                        role: string;
-                        content: string | null;
-                        tool_calls?: { id: string; function: { name: string; arguments: string } }[];
-                    };
-                }[];
-            };
-
+            const data = await res.json() as { choices: { finish_reason: string; message: { role: string; content: string | null; tool_calls?: OpenAIToolCall[] } }[] };
             const choice = data.choices[0];
-            if (choice.finish_reason !== "tool_calls" || !choice.message.tool_calls?.length) {
+
+            if (!choice.message.tool_calls?.length) {
                 return choice.message.content ?? "";
             }
 
             geminiMessages.push({ role: "assistant", content: null, tool_calls: choice.message.tool_calls });
 
             for (const tc of choice.message.tool_calls) {
-                const input = JSON.parse(tc.function.arguments) as Record<string, unknown>;
-                const result = await onToolCall({ id: tc.id, name: tc.function.name, input });
-                geminiMessages.push({ role: "tool", content: result, tool_call_id: tc.id });
+                const args = JSON.parse(tc.function.arguments) as Record<string, unknown>;
+                const result = await mcpClient.callTool({ name: tc.function.name, arguments: args });
+                const content = result.content as { type: string; text?: string }[];
+                const text = content.map((c) => c.type === "text" ? c.text ?? "" : "").join("");
+                geminiMessages.push({ role: "tool", content: text, tool_call_id: tc.id });
             }
         }
 
@@ -310,7 +256,7 @@ function buildClient(): LLMClient | null {
             return new ClaudeClient(apiKey, model);
         }
         case "ollama": {
-            const baseUrl = env.LLM_BASE_URL ?? "http://localhost:11434";
+            const baseUrl = env.LOCAL_LLM_URL ?? "http://localhost:11434";
             const model = env.LLM_MODEL ?? "llama3.1:8b";
             return new OllamaClient(baseUrl, model);
         }

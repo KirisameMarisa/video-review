@@ -17,120 +17,141 @@ if (!apiToken) {
 
 const client = createClient({ baseUrl, apiToken });
 
-const server = new McpServer({ name: "video-review", version: "1.0.0" });
+function createServer(): McpServer {
+    const server = new McpServer({ name: "video-review", version: "1.0.0" });
 
-server.registerTool(
-    "list_videos",
-    {
-        description: "List videos in Video Review. Supports filtering by title, tags, and upload date range.",
-        inputSchema: {
-            name: z.string().optional().describe("Filter by video title (partial match)"),
-            tags: z.string().optional().describe("Filter by tags (comma-separated, e.g. 'bug,cutscene')"),
-            videoFrom: z.string().optional().describe("Filter videos uploaded after this date (ISO 8601)"),
-            videoTo: z.string().optional().describe("Filter videos uploaded before this date (ISO 8601)"),
-            includeRevisions: z.boolean().optional().describe("Include all revisions in each video"),
+    server.registerTool(
+        "list_videos",
+        {
+            description: "List videos in Video Review. Supports filtering by title, tags, upload date range, and whether they have comments. Use sortBy='uploadedAt_desc' with a limit to get the most recently uploaded videos.",
+            inputSchema: {
+                name: z.string().optional().describe("Filter by video title (partial match)"),
+                tags: z.string().optional().describe("Filter by tags (comma-separated, e.g. 'bug,cutscene')"),
+                videoFrom: z.string().optional().describe("Filter videos uploaded after this date (ISO 8601)"),
+                videoTo: z.string().optional().describe("Filter videos uploaded before this date (ISO 8601)"),
+                includeRevisions: z.boolean().optional().describe("Include all revisions in each video"),
+                hasComments: z.boolean().optional().describe("Only return videos that have at least one review comment"),
+                sortBy: z.enum(["uploadedAt_desc", "uploadedAt_asc", "title_asc"]).optional().describe("Sort order. Use 'uploadedAt_desc' to get most recently uploaded videos first"),
+                limit: z.number().optional().describe("Maximum number of videos to return"),
+            },
         },
-    },
-    async ({ name, tags, videoFrom, videoTo, includeRevisions }) => {
-        const data = await client.get("/videos", {
-            name,
-            tags,
-            videoFrom,
-            videoTo,
-            includeRevisions: includeRevisions ? "true" : undefined,
-        });
-        return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-    },
-);
-
-server.registerTool(
-    "get_video",
-    {
-        description: "Get details of a single video including all revisions, tags, and summary.",
-        inputSchema: {
-            id: z.string().describe("Video UUID"),
+        async ({ name, tags, videoFrom, videoTo, includeRevisions, hasComments, sortBy, limit }) => {
+            const data = await client.get("/videos", {
+                name, tags, videoFrom, videoTo,
+                includeRevisions: includeRevisions ? "true" : undefined,
+                hasComment: hasComments ? "true" : undefined,
+                sortBy,
+                limit: limit != null ? String(limit) : undefined,
+            });
+            return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
         },
-    },
-    async ({ id }) => {
-        const data = await client.get(`/videos/${id}`);
-        return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-    },
-);
+    );
 
-server.registerTool(
-    "list_comments",
-    {
-        description: "List review comments. Can be filtered by video, text content, date range, or whether they have drawings/issue links.",
-        inputSchema: {
-            videoId: z.string().optional().describe("Filter by video UUID"),
-            filterText: z.string().optional().describe("Filter comments by text content"),
-            from: z.string().optional().describe("Filter comments created after this date (ISO 8601)"),
-            to: z.string().optional().describe("Filter comments created before this date (ISO 8601)"),
-            hasDrawing: z.boolean().optional().describe("Only return comments that have a drawing annotation"),
-            hasIssue: z.boolean().optional().describe("Only return comments linked to a Jira issue"),
-            selectRevision: z.number().optional().describe("Filter by video revision number"),
-            user: z.string().optional().describe("Filter comments by user name or email"),
+    server.registerTool(
+        "get_video",
+        {
+            description: "Get details of a single video including all revisions, tags, and summary.",
+            inputSchema: { id: z.string().describe("Video UUID") },
         },
-    },
-    async ({ videoId, filterText, from, to, hasDrawing, hasIssue, selectRevision, user }) => {
-        const data = await client.get("/comments", {
-            videoId,
-            filterText,
-            from,
-            to,
-            hasDrawing: hasDrawing ? "true" : undefined,
-            hasIssue: hasIssue ? "true" : undefined,
-            selectRevision: selectRevision != null ? String(selectRevision) : undefined,
-            user,
-        });
-        return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-    },
-);
-
-server.registerTool(
-    "list_video_events",
-    {
-        description: "List analysis events for a video (e.g. detected objects, shot types, audio anomalies). Events are keyed by kind and time range.",
-        inputSchema: {
-            videoId: z.string().describe("Video UUID"),
-            kind: z.string().optional().describe("Filter by event kind label (e.g. 'object_detection', 'text_detection', 'shot_type')"),
-            filterText: z.string().optional().describe("Filter events by their data content"),
-            selectRevision: z.number().optional().describe("Revision number to query events for (defaults to latest)"),
+        async ({ id }) => {
+            const data = await client.get(`/videos/${id}`);
+            return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
         },
-    },
-    async ({ videoId, kind, filterText, selectRevision }) => {
-        const data = await client.get(`/videos/${videoId}/events`, {
-            kind,
-            filterText,
-            selectRevision: selectRevision != null ? String(selectRevision) : undefined,
-        });
-        return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-    },
-);
+    );
 
-server.registerTool(
-    "list_tags",
-    {
-        description: "List all tags that exist across all videos in Video Review.",
-    },
-    async () => {
-        const data = await client.get("/videos/tags");
-        return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-    },
-);
+    server.registerTool(
+        "list_comments",
+        {
+            description: "List review comments across all videos. videoId is optional — omit it to retrieve comments from all videos. Can be filtered by text content, date range, user, or whether they have drawings/issue links.",
+            inputSchema: {
+                videoId: z.string().optional().describe("Filter by video UUID"),
+                filterText: z.string().optional().describe("Filter comments by text content"),
+                from: z.string().optional().describe("Filter comments created after this date (ISO 8601)"),
+                to: z.string().optional().describe("Filter comments created before this date (ISO 8601)"),
+                hasDrawing: z.boolean().optional().describe("Only return comments that have a drawing annotation"),
+                hasIssue: z.boolean().optional().describe("Only return comments linked to a Jira issue"),
+                selectRevision: z.number().optional().describe("Filter by video revision number"),
+                user: z.string().optional().describe("Filter comments by user name or email"),
+            },
+        },
+        async ({ videoId, filterText, from, to, hasDrawing, hasIssue, selectRevision, user }) => {
+            const data = await client.get("/comments", {
+                videoId, filterText, from, to,
+                hasDrawing: hasDrawing ? "true" : undefined,
+                hasIssue: hasIssue ? "true" : undefined,
+                selectRevision: selectRevision != null ? String(selectRevision) : undefined,
+                user,
+            });
+            return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
+        },
+    );
 
-const transport = process.env.MCP_TRANSPORT === "http"
-    ? await startHttpServer()
-    : new StdioServerTransport();
+    server.registerTool(
+        "list_video_events",
+        {
+            description: "List analysis events for a video (e.g. detected objects, shot types, audio anomalies). Events are keyed by kind and time range.",
+            inputSchema: {
+                videoId: z.string().describe("Video UUID"),
+                kind: z.string().optional().describe("Filter by event kind label (e.g. 'object_detection', 'text_detection', 'shot_type')"),
+                filterText: z.string().optional().describe("Filter events by their data content"),
+                selectRevision: z.number().optional().describe("Revision number to query events for (defaults to latest)"),
+            },
+        },
+        async ({ videoId, kind, filterText, selectRevision }) => {
+            const data = await client.get(`/videos/${videoId}/events`, {
+                kind, filterText,
+                selectRevision: selectRevision != null ? String(selectRevision) : undefined,
+            });
+            return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
+        },
+    );
 
-await server.connect(transport);
+    server.registerTool(
+        "search_videos_by_event",
+        {
+            description: "Search for videos by their event content (e.g. subtitles, detected objects, speech transcripts). Use this when the user asks questions like 'which video has a conversation about X' or 'find videos where Y appears'. Returns matching videos with up to 5 matching event snippets each.",
+            inputSchema: {
+                filterText: z.string().describe("Text to search for within event data (e.g. subtitle content, detected object label)"),
+                kind: z.string().optional().describe("Filter by event kind label (e.g. 'subtitle', 'object_detection')"),
+                limit: z.number().optional().describe("Maximum number of videos to return"),
+            },
+        },
+        async ({ filterText, kind, limit }) => {
+            const data = await client.get("/videos/search-by-event", {
+                filterText,
+                kind,
+                limit: limit != null ? String(limit) : undefined,
+            });
+            return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
+        },
+    );
 
-async function startHttpServer(): Promise<StreamableHTTPServerTransport> {
-    const port = parseInt(process.env.MCP_PORT ?? "3490", 10);
-    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+    server.registerTool(
+        "list_tags",
+        { description: "List all tags that exist across all videos in Video Review." },
+        async () => {
+            const data = await client.get("/videos/tags");
+            return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
+        },
+    );
+
+    return server;
+}
+
+if (process.env.VIDEO_REVIEW_MCP_TRANSPORT === "http") {
+    await startHttpServer();
+} else {
+    await createServer().connect(new StdioServerTransport());
+}
+
+async function startHttpServer(): Promise<void> {
+    const port = parseInt(process.env.VIDEO_REVIEW_MCP_PORT ?? "3490", 10);
 
     const httpServer = http.createServer(async (req, res) => {
         if (req.url === "/mcp") {
+            const server = createServer();
+            const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+            await server.connect(transport);
             await transport.handleRequest(req, res);
         } else {
             res.writeHead(404).end();
@@ -139,5 +160,4 @@ async function startHttpServer(): Promise<StreamableHTTPServerTransport> {
 
     await new Promise<void>((resolve) => httpServer.listen(port, resolve));
     process.stderr.write(`MCP server listening on http://0.0.0.0:${port}/mcp\n`);
-    return transport;
 }
