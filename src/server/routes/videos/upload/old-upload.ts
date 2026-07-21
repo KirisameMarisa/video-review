@@ -76,12 +76,7 @@ oldUploadRouter.post('/', async (c) => {
 
                 let video = await prisma.video.findFirst({ where: { title, folderKey } });
                 if (!video) {
-                    video = await prisma.video.create({ data: { title, folderKey, scenePath } });
-                } else {
-                    await prisma.video.update({
-                        where: { id: video.id },
-                        data: { latestUpdatedAt: new Date() },
-                    });
+                    video = await prisma.video.create({ data: { title, folderKey, scenePath, latestRevisionNum: null } });
                 }
 
                 const latestRev = await prisma.videoRevision.findFirst({
@@ -108,6 +103,11 @@ oldUploadRouter.post('/', async (c) => {
                         revision: nextRev,
                         filePath: storageKey,
                     },
+                });
+
+                await prisma.video.update({
+                    where: { id: video.id },
+                    data: { latestRevisionNum: nextRev },
                 });
 
                 if (fs.existsSync(tmpFilePath)) {

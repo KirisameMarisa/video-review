@@ -1,6 +1,6 @@
 import { prisma } from "@/server/lib/db";
 import { OpenAPIHono as Hono } from "@hono/zod-openapi";
-import { externalLinksRouter } from "@/routes/comments/[id]/external-links";
+import { externalLinksRouter } from "@/server/routes/comments/[id]/external-links";
 
 export const byIdRouter = new Hono();
 

@@ -1,0 +1,71 @@
+name: test
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  hono-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: videoreview_test
+        options: >-
+          --health-cmd "pg_isready -U user -d videoreview_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v5
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Prepare test env
+        run: |
+          cp .example.test.env .env.test
+          # Use the built-in GITHUB_TOKEN with this repo's owner/name for VCS integration tests
+          REPO_OWNER="${{ github.repository_owner }}"
+          REPO_NAME="${{ github.event.repository.name }}"
+          sed -i "s|VIDEO_REVIEW_VCS_GITHUB_OWNER=\"\"|VIDEO_REVIEW_VCS_GITHUB_OWNER=\"$REPO_OWNER\"|" .env.test
+          sed -i "s|VIDEO_REVIEW_VCS_GITHUB_REPO=\"\"|VIDEO_REVIEW_VCS_GITHUB_REPO=\"$REPO_NAME\"|" .env.test
+          sed -i "s|VIDEO_REVIEW_VCS_GITHUB_TOKEN=\"\"|VIDEO_REVIEW_VCS_GITHUB_TOKEN=\"$GITHUB_TOKEN\"|" .env.test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run hono tests
+        id: run_tests
+        run: |
+          mkdir -p test-results
+          # Exclude integration tests that require external services (LLM, MCP)
+          # not available in CI. They are covered by skipIf guards but we exclude
+          # the files explicitly to keep CI output clean.
+          npm run test:hono -- --ignore="tests/server/routes/videos/vcs-summary.integration.test.ts"
+      - name: Publish test report
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: Hono Tests
+          path: tests/test-results/junit.xml
+          reporter: java-junit
+          fail-on-error: true
+      - name: Upload junit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hono-junit-report
+          path: tests/test-results/junit.xml

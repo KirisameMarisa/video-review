@@ -177,101 +177,26 @@ VideoReview は、制作現場で使われ続けることを前提に
 
 ## 🚀 Getting Started
 
-### 🐳 Docker
-
-### 前提
-* Docker、Docker Composeを事前にインストールしておいてください
-
----
-
-### 設定ファイルのコピー
+### 🐳 Quick Start (Docker)
 
 ```bash
+
+# 1. 環境変数ファイルコピー
 cp .example.env .env
-cp compose.prod.example.yml compose.prod.yml
-```
 
-### ストレージパスの設定
-
-動画などを保存するストレージパスを設定してください `compose.prod.yml`
-
-```yaml
-volumes:
-  - /mnt/data/videoreview:/storage
-```
-
-### Build & Run
-```bash
-# 1. イメージの作成
+# 2. イメージの作成
 docker build -t videoreview:latest -f docker/web/Dockerfile.prod .
+docker build -t video-processing:latest -f docker/video-processing/Dockerfile .
 
-# 2. DBを起動
+# 3. DBを起動
 docker compose -f compose.prod.yml up -d db
 
-# 3. DB構築 (初回起動、またはschemaが更新されたとき)
+# 4. DB構築 (初回起動、またはschemaが更新されたとき)
 docker compose -f compose.prod.yml run --rm videoreview npm run prisma:deploy
 
-# 4. サービス起動
-docker compose -f compose.prod.yml up -d videoreview
-```
+# 5. サービス起動
+docker compose -f compose.prod.yml up -d videoreview -d video-processing
 
-## 💻 Local / On‑premise Setup
-VideoReviewをサーバーやローカルマシンで直接実行する際はこちら
-
-### Prerequisites
-* node v24
-* postgreSQL
-
-### 環境変数の設定
-
-.env ファイルをコピー後、編集し必要な値を設定してください
-
-```bash
-cp .example.env .env
-```
-
-```bash
-VIDEO_REVIEW_LOCAL_ROOTDIR="/path/.../..."
-DATABASE_URL="postgresql://user:password@localhost:5432/videoreview"
-```
-
-### 注意事項
-
-本番環境では、動画保存用のストレージを **必ず明示的に設定してください**。
-
-`VIDEO_REVIEW_LOCAL_ROOTDIR` が未設定、または無効な場合、  
-アプリケーションは `process.cwd()/uploads` にフォールバックして
-動画ファイルを保存します。
-
-このフォールバック挙動は以下の理由から、長期保存や本番運用には適していません。
-
-- アプリケーションの再配置や更新でファイルが失われる可能性がある
-- Docker 環境では、コンテナ内部の一時的なファイルシステムに保存される
-- volume マウントされていない場合、コンテナ再作成で動画が消失する
-- 保存場所が不明確になり、バックアップや容量管理が困難
-
-## 🐳 Docker (Development)
-
-### Prerequisites
-* node v24
-* postgreSQL
-
-### 環境変数の設定
-.env ファイルをコピー後、編集し必要な値を設定してください
-
-```bash
-cp .example.env .env
-```
-```bash
-DATABASE_URL="postgresql://user:password@localhost:5432/videoreview"
-```
-
-### Run docker compose
-```bash
-# Install dependencies
-npm install
-# Start containers
-docker compose up -d --build
 ```
 
 ### Access
@@ -283,6 +208,13 @@ docker compose up -d --build
   http://localhost:3489/api/docs
 
 ---
+
+## 📘 More Setup Options
+
+詳しいビルドオプションなどは、以下のドキュメントを参照してください
+* 🐳 [Docker Prod / Devlopment Build Guide](./documents/build.run/docker-guide.jp.md)
+* 💻 [Local / On‑premise Build Guide](./documents/build.run/local-guide.jp.md)
+* 🤖 [AI & Advanced Build Guide](./documents/build.run/ai-guide.jp.md)
 
 ## 📄 License
 

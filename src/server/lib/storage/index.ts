@@ -1,33 +1,94 @@
 import { NextResponse } from "next/server";
-import { LocalStorage } from "@/server/lib/storage/local";
-import { NextCloudStorage } from "@/server/lib/storage/nextcloud";
-import { S3Storage } from "@/server/lib/storage/s3";
 import { Readable } from "stream";
-import { UploadStorageType } from "@/lib/db-types";
-import { env } from "@/server/lib/env";
+import { DriversFactory, FileDriver } from "@/server/lib/storage/drivers";
 
 import "server-only"
 
-export interface FileStorage {
-    type(): string;
-    directUploadFromBuffer(storageKey: string, src: Readable, contentType: string, cacheControl?: string): Promise<void>;
-    directUploadFromFile(storageKey: string, src: string): Promise<void>;
-    uploadURL(session_id: string, storageKey: string, contentType: string): Promise<string>;
-    fallbackURL(storageKey: string): Promise<string>;
-    download(storageKey: string): Promise<NextResponse>;
-    hasObject(storageKey: string): Promise<boolean>;
-    deleteObject(storageKey: string): Promise<boolean>;
+export class FileStorage {
+
+    readonly fileDriver: FileDriver | undefined;
+
+    constructor() {
+        this.fileDriver = DriversFactory();
+    }
+
+    getDriver(): FileDriver | undefined {
+        return this.fileDriver;
+    }
+
+    type(): string {
+        if (!this.fileDriver) {
+            throw new Error("File driver is not initialized");
+        }
+        return this.fileDriver.type();
+    }
+
+    directUploadFromBuffer(storageKey: string, src: Readable, contentType: string, cacheControl?: string): Promise<void> {
+        if (!this.fileDriver) {
+            throw new Error("File driver is not initialized");
+        }
+        return this.fileDriver.directUploadFromBuffer(storageKey, src, contentType, cacheControl);
+    }
+
+    directUploadFromFile(storageKey: string, src: string): Promise<void> {
+        if (!this.fileDriver) {
+            throw new Error("File driver is not initialized");
+        }
+        return this.fileDriver.directUploadFromFile(storageKey, src);
+    }
+
+    uploadURL(session_id: string, storageKey: string, contentType: string): Promise<string> {
+        if (!this.fileDriver) {
+            throw new Error("File driver is not initialized");
+        }
+        return this.fileDriver.uploadURL(session_id, storageKey, contentType);
+    }
+
+    fallbackURL(storageKey: string): Promise<string> {
+        if (!this.fileDriver) {
+            throw new Error("File driver is not initialized");
+        }
+        return this.fileDriver.fallbackURL(storageKey);
+    }
+
+    directReadStream(storageKey: string): Promise<Readable> {
+        if (!this.fileDriver) {
+            throw new Error("File driver is not initialized");
+        }
+        return this.fileDriver.directReadStream(storageKey);
+    }
+
+    async download(storageKey: string): Promise<NextResponse> {
+        if (!this.fileDriver) {
+            throw new Error("File driver is not initialized");
+        }
+        const body = await this.fileDriver.download(storageKey);
+        
+        if (typeof body === "string") {
+            return NextResponse.redirect(body, 302);
+        } else {
+            return new NextResponse(body as any, {
+                headers: {
+                    "Content-Type": "application/octet-stream",
+                },
+            });
+        }
+    }
+
+    hasObject(storageKey: string): Promise<boolean> {
+        if (!this.fileDriver) {
+            throw new Error("File driver is not initialized");
+        }
+        return this.fileDriver.hasObject(storageKey);
+    }
+
+    deleteObject(storageKey: string): Promise<boolean> {
+        if (!this.fileDriver) {
+            throw new Error("File driver is not initialized");
+        }
+        return this.fileDriver.deleteObject(storageKey);
+    }
 }
 
-export const VideoReviewStorage: FileStorage = (() => {
-    switch (env.VIDEO_REVIEW_STORAGE) {
-        case UploadStorageType.s3:
-            return new S3Storage();
-        case UploadStorageType.nextCloud:
-            return new NextCloudStorage();
-        case UploadStorageType.local:
-            return new LocalStorage();
-        default:
-            return new LocalStorage();
-    }
-})();
+
+export const VideoReviewStorage = new FileStorage();

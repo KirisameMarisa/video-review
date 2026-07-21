@@ -22,12 +22,11 @@ export default function VideoTimelineBar() {
         return set;
     }, [displayComments]);
 
-    // valueは配列で受ける
+    // Slider API expects an array even for a single thumb.
     const value = [timelineTime ?? currentTime];
 
     return (
         <div className="relative h-6 w-full cursor-pointer select-none">
-            {/* 背景バー・再生バー*/}
             <Slider
                 min={0}
                 max={duration}
@@ -43,7 +42,9 @@ export default function VideoTimelineBar() {
                 className="w-full"
             />
 
-            {/* コメントマーカー */}
+            {/* Comment markers are quantized to 0.01s to avoid near-duplicate positions.
+                Clicking a marker jumps playback to that timestamp.
+                The active marker is highlighted when close to current playback time. */}
             {
                 [...commentTimeSet.entries()].map(([t]) => (
                     <div

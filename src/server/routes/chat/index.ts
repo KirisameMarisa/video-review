@@ -1,6 +1,6 @@
 import { OpenAPIHono as Hono } from "@hono/zod-openapi";
 import { z } from "zod";
-import { ChatProviders, ChatType } from "@/server/lib/utils/chat-type";
+import { ChatProviders, ChatType } from "@/server/lib/chat/chat-type";
 import { authorize } from "@/server/lib/token";
 import { ServerError } from "@/server/lib/server-error";
 import { ContentfulStatusCode } from "hono/utils/http-status";

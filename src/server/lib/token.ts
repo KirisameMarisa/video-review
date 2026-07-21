@@ -78,31 +78,30 @@ export async function authorize(req: Request, passedRoles: Role[]) {
     const apiToken = req.headers.get("x-api-token");
     const maintenanceToken = req.headers.get("x-maintenance-token");
 
-    try {
-        if (apiToken) {
-            const apiTokenHash = hash("sha256", apiToken);
-            const storedHash = await getApiSecretHash();
+    if (apiToken) {
+        const apiTokenHash = hash("sha256", apiToken);
+        const storedHash = await getApiSecretHash();
 
-            if (!storedHash) {
-                throw new ServerError("api token configuration is missing", 500);
-            }
-
-            // Standard root.
-            if (apiTokenHash === storedHash) {
-                return {
-                    type: "api-token" as const,
-                    role: "admin",
-                };
-            }
-
-            // deprecated plain text root.
-            if (apiToken === storedHash) {
-                throw new ServerError("plain api token is no longer supported", 401);
-            }
-
-            throw new ServerError("invalid api token", 401);
+        if (!storedHash) {
+            throw new ServerError("api token configuration is missing", 500);
         }
-    } catch { }
+
+        // Standard root.
+        if (apiTokenHash === storedHash) {
+            return {
+                type: "api-token" as const,
+                role: "admin",
+            };
+        }
+
+        // deprecated plain text root.
+        if (apiToken === storedHash) {
+            return {
+                type: "api-token" as const,
+                role: "admin",
+            };
+        }
+    }
 
     if (
         maintenanceToken &&

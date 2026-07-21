@@ -1,4 +1,5 @@
-import { LocalBaseDirectory } from "@/server/lib/storage/local";
+import { VideoReviewStorage } from "@/server/lib/storage";
+import { LocalDriver } from "@/server/lib/storage/drivers/local";
 import { OpenAPIHono as Hono } from "@hono/zod-openapi";
 import fs from "fs";
 import path from "path";
@@ -26,7 +27,18 @@ localRouter.openapi({
     if(!relativePath) {
         return c.json({ error: "missing path" }, 400);
     }
-    const filePath = path.join(LocalBaseDirectory(), relativePath);
+
+    const fileDriver = VideoReviewStorage.getDriver();
+    if (!fileDriver || fileDriver.type() !== "local") {
+        return c.json({ error: "storage not configured" }, 500);
+    }
+
+    const localBaseDirectory = (fileDriver as LocalDriver).localBaseDirectory;
+    if (!localBaseDirectory) {
+        return c.json({ error: "local storage base directory not configured" }, 500);
+    }
+
+    const filePath = path.join(localBaseDirectory, relativePath);
     const ext = path.extname(filePath).toLowerCase();
 
     try {

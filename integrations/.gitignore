@@ -1,1 +1,9 @@
 videoreview-launcher*
+
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+*/dist/

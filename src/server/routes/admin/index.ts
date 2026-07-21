@@ -1,6 +1,8 @@
 import { prisma } from "@/server/lib/db";
 import { OpenAPIHono as Hono, z } from "@hono/zod-openapi";
-import { maintenanceRouter } from "@/routes/admin/maintenance";
+import { maintenanceRouter } from "@/server/routes/admin/maintenance";
+import { createVCSProviderFromEnv } from "@/server/lib/vcs/from-env";
+import { listUTCDays, upsertMerge, upsertCommit } from "@/server/lib/vcs/cache";
 import { authorize } from "@/server/lib/token";
 import { ServerError } from "@/server/lib/server-error";
 import { ContentfulStatusCode } from "hono/utils/http-status";
@@ -23,6 +25,12 @@ const CreateUserBody = z.object({
 const UpdateRoleBody = z.object({
     userId: z.string().optional(),
     role: z.enum(["viewer", "admin"]).optional(),
+});
+
+const WarmCacheBody = z.object({
+    from: z.iso.datetime({ message: "from must be an ISO 8601 datetime string" }),
+    to: z.iso.datetime({ message: "to must be an ISO 8601 datetime string" }),
+    refresh: z.boolean().optional(),
 });
 
 adminRouter.openapi({
@@ -220,6 +228,133 @@ adminRouter.openapi({
         data: { role },
     });
     return c.json(updated, { status: 200 });
+});
+
+adminRouter.openapi({
+    method: "post",
+    summary: "Pre-warm VCS cache for a date range",
+    description: [
+        "Fetches all PRs and commits in the given date range from the configured VCS provider",
+        "and stores them in VCSCachedMerge / VCSCachedCommit.",
+        "Intended for CI jobs to pre-populate the cache before users request vcs-changes.",
+        "Already-cached records (filesFetchedAt IS NOT NULL) are skipped.",
+    ].join(" "),
+    path: "/vcs/warm-cache",
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: WarmCacheBody,
+                },
+            },
+        },
+    },
+    responses: {
+        200: { description: "Cache warmed successfully" },
+        400: { description: "Invalid date range" },
+        401: { description: "Unauthorized" },
+        503: { description: "VCS provider not configured" },
+    },
+}, async (c) => {
+    try {
+        await authorize(c.req.raw, ["admin"]);
+    } catch (e) {
+        if (e instanceof ServerError) {
+            return c.json({ error: e.message }, e.status as ContentfulStatusCode);
+        }
+        return c.json({ error: "unauthorized" }, { status: 401 });
+    }
+
+    const { from: fromStr, to: toStr, refresh } = c.req.valid("json");
+    const from = new Date(fromStr);
+    const to = new Date(toStr);
+
+    if (from >= to) {
+        return c.json({ error: "from must be before to" }, { status: 400 });
+    }
+
+    let provider;
+    try {
+        provider = createVCSProviderFromEnv();
+    } catch (err) {
+        return c.json({ error: String(err) }, { status: 503 });
+    }
+    if (!provider) {
+        return c.json({ error: "VCS provider is not configured" }, { status: 503 });
+    }
+
+    const repoName = provider.name;
+    const days = listUTCDays(from, to);
+
+    const alreadyFetched = refresh ? new Set<number>() : await prisma.vCSFetchedRange.findMany({
+        where: { repoName, date: { in: days } },
+        select: { date: true },
+    }).then(rows => new Set(rows.map(r => r.date.getTime())));
+
+    type DayResult = { day: string; fetched: number; skipped: number; failed: number; errors: string[] };
+
+    const dayResults = await Promise.allSettled(
+        days.map(async (day): Promise<DayResult> => {
+            if (alreadyFetched.has(day.getTime())) {
+                return { day: day.toISOString(), fetched: 0, skipped: 1, failed: 0, errors: [] };
+            }
+
+            const dayEnd = new Date(day.getTime() + 86_400_000);
+            let changeSet;
+            try {
+                changeSet = await provider.getChanges({ from: day, to: dayEnd });
+            } catch (err) {
+                return { day: day.toISOString(), fetched: 0, skipped: 0, failed: 1, errors: [String(err)] };
+            }
+
+            const settled = await Promise.allSettled([
+                ...changeSet.pullRequests.map(pr => upsertMerge(provider, repoName, pr)),
+                ...changeSet.commits.map(commit => upsertCommit(provider, repoName, commit)),
+            ]);
+
+            const errors = settled
+                .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+                .map(r => String(r.reason));
+
+            if (errors.length === 0) {
+                await prisma.vCSFetchedRange.upsert({
+                    where: { repoName_date: { repoName, date: day } },
+                    create: { repoName, date: day },
+                    update: { fetchedAt: new Date() },
+                });
+            }
+
+            return {
+                day: day.toISOString(),
+                fetched: settled.filter(r => r.status === "fulfilled").length,
+                skipped: 0,
+                failed: errors.length,
+                errors,
+            };
+        })
+    );
+
+    const succeeded = dayResults
+        .filter((r): r is PromiseFulfilledResult<DayResult> => r.status === "fulfilled")
+        .map(r => r.value);
+    const failed = dayResults
+        .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+        .map(r => ({ day: "unknown", errors: [String(r.reason)] }));
+    const allErrors = [
+        ...succeeded.flatMap(d => d.errors.map(e => `${d.day}: ${e}`)),
+        ...failed.map(d => d.errors[0]),
+    ];
+
+    return c.json({
+        days: {
+            total: days.length,
+            fetched: succeeded.filter(d => d.failed === 0 && d.skipped === 0).length,
+            skipped: succeeded.filter(d => d.skipped === 1).length,
+            failed: succeeded.filter(d => d.failed > 0).length + failed.length,
+            ...(allErrors.length > 0 ? { errors: allErrors } : {}),
+        },
+        range: { from: from.toISOString(), to: to.toISOString() },
+    });
 });
 
 adminRouter.route("/maintenance", maintenanceRouter);

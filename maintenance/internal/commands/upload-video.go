@@ -19,6 +19,7 @@ func RunUploadVideo(cmd string, args []string) {
 	folderKey := fs.String("folder_key", "", "folder key for the video")
 	scenePath := fs.String("scene_path", "", "scene path of the video")
 	videoPath := fs.String("video_path", "", "path to the video file")
+	vcsWatchPaths := fs.String("vcs_watch_paths", "", "comma-separated list of file paths to watch for VCS changes")
 	fs.Parse(args)
 
 	if *title == "" || *folderKey == "" {
@@ -44,9 +45,10 @@ func RunUploadVideo(cmd string, args []string) {
 			Method: POST,
 			Path:   "/api/v1/videos/upload/init",
 			Form: map[string]string{
-				"folderKey": *folderKey,
-				"title":     *title,
-				"scenePath": *scenePath,
+				"folderKey":     *folderKey,
+				"title":         *title,
+				"scenePath":     *scenePath,
+				"vcsWatchPaths": *vcsWatchPaths,
 			},
 		})
 		if err != nil {

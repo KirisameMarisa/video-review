@@ -1,5 +1,6 @@
 import { OpenAPIHono as Hono } from "@hono/zod-openapi";
-import { nextCloudClient } from "@/server/lib/storage/integrations/nextcloud";
+import { VideoReviewStorage } from "@/server/lib/storage";
+import { NextCloudDriver } from "@/server/lib/storage/drivers/nextcloud";
 
 export const nextCloudRouter = new Hono();
 
@@ -33,18 +34,19 @@ nextCloudRouter.openapi({
         return c.json({ error: "invalid path" }, 400);
     }
 
-    if (!nextCloudClient) {
-        return c.json({ error: "Nextcloud client not configured" }, 500);
+    const fileDriver = VideoReviewStorage.getDriver();
+    if (!fileDriver || fileDriver.type() !== "nextCloud") {
+        return c.json({ error: "storage not configured" }, 500);
     }
 
     const ncPath = pathSegments.join("/");
     const isThumbnail = ncPath.startsWith("thumbnails/");
-    const ncUrl = nextCloudClient.pathUnderRoot(ncPath);
+    const ncUrl = (fileDriver as NextCloudDriver).pathUnderRoot(ncPath);
     const range = c.req.header("range");
     const res = await fetch(ncUrl, {
         method: "GET",
         headers: {
-            ...nextCloudClient.getHeaders(),
+            ...(fileDriver as NextCloudDriver).getHeaders(),
             ...(range ? { Range: range } : {}),
         },
     });

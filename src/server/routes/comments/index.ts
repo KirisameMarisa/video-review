@@ -1,9 +1,9 @@
 import { PrismaTypes } from "@/lib/db-types";
 import { prisma } from "@/server/lib/db";
 import { OpenAPIHono as Hono } from "@hono/zod-openapi";
-import { byIdRouter } from "@/routes/comments/[id]";
-import { lastUpdatedRouter } from "@/routes/comments/last-updated";
-import { usersRouter } from "@/routes/comments/users";
+import { byIdRouter } from "@/server/routes/comments/[id]";
+import { lastUpdatedRouter } from "@/server/routes/comments/last-updated";
+import { usersRouter } from "@/server/routes/comments/users";
 import { z } from "zod";
 import { toDateRange } from "@/lib/utils/date-helper";
 

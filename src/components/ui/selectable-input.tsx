@@ -28,7 +28,6 @@ export function SelectableInput({
         <div className="space-y-2">
             <label className="text-sm text-[#ccc]">{label}</label>
 
-            {/* 既存の候補から選択 */}
             <Select
                 value={options.includes(selected) ? selected : ""}
                 onValueChange={(v) => onSelect(v)}
@@ -45,7 +44,6 @@ export function SelectableInput({
                 </SelectContent>
             </Select>
 
-            {/* 候補にない場合、直接入力 */}
             <Input
                 placeholder={placeholder}
                 value={customValue}

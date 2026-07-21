@@ -1,8 +1,8 @@
 import { OpenAPIHono as Hono } from "@hono/zod-openapi";
-import { resolverRouter } from "@/routes/media/resolver";
-import { localRouter } from "@/routes/media/local";
-import { nextCloudRouter } from "@/routes/media/nextcloud";
-import { downloadRouter } from "@/routes/media/download";
+import { resolverRouter } from "@/server/routes/media/resolver";
+import { localRouter } from "@/server/routes/media/local";
+import { nextCloudRouter } from "@/server/routes/media/nextcloud";
+import { downloadRouter } from "@/server/routes/media/download";
 
 export const mediaRouter = new Hono();
 

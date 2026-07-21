@@ -1,6 +1,6 @@
 import { WebhookPayloadBuilder } from "@/server/lib/chat/webhook/index";
 import { toWebhookMessage } from "@/server/lib/chat/webhook/builders/from-chat";
-import { ChatType } from "@/server/lib/utils/chat-type";
+import { ChatType } from "@/server/lib/chat/chat-type";
 
 export const teamsBuilder: WebhookPayloadBuilder = {
 

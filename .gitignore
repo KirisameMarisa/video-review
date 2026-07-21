@@ -36,9 +36,6 @@ yarn-error.log*
 .env*
 .env.demo*
 
-# prod compose files
-compose.prod.yml
-
 # vercel
 .vercel
 
@@ -47,7 +44,6 @@ compose.prod.yml
 next-env.d.ts
 
 # etc
-package-lock.json
 todo.txt
 
 # login-bg
@@ -57,3 +53,5 @@ public/img/login-bg/*
 public/swagger.json
 prisma/schemas/**
 src/schema/**
+
+llm_models/

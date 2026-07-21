@@ -4,6 +4,8 @@ import { authorize } from "@/server/lib/token";
 import { ServerError } from "@/server/lib/server-error";
 import { VideoReviewStorage } from "@/server/lib/storage";
 import { prisma } from "@/server/lib/db";
+import { formatVideoRes } from "@/server/lib/utils/format-video-res";
+import { env } from "@/lib/env";
 
 export const downloadRouter = new Hono();
 
@@ -39,8 +41,11 @@ downloadRouter.openapi({
     const { searchParams } = new URL(c.req.url);
     const videoRevId = searchParams.get("videoRevId");
     const videoId = searchParams.get("videoId");
+    const width = searchParams.get("width");
 
-    if (!videoId) {
+    console.log(`Received download request for videoId: ${videoId}, videoRevId: ${videoRevId}, width: ${width}`);
+
+    if (!videoId || !videoRevId) {
         return c.json({ error: "Missing parameters" }, { status: 400 });
     }
 
@@ -60,7 +65,14 @@ downloadRouter.openapi({
         return c.json({ error: "Video revision not found" }, { status: 404 });
     }
 
-    const storageKey = videoRev.filePath;
+    let storageKey = videoRev.filePath;
+    if (width) {
+        const targetWidth = parseInt(width);
+        if (!isNaN(targetWidth) && env.RESOLUTION_PRESETS.includes(targetWidth)) {
+            storageKey = formatVideoRes(storageKey, targetWidth);
+        }
+    }
+
     const stream = await VideoReviewStorage.download(storageKey);
     return stream;
 });

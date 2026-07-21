@@ -30,6 +30,9 @@ VideoReviewを動作させているサーバーURL
 VideoReview にて発行した API トークンを設定
 > VIDEO_REVIEW_API_TOKEN
 
+コマンドに直接指定することも可能です
+> go run . --server xxx.xxx.xxx.xxx --token xxxxxx command --video_id xxx
+
 ### コマンド一覧
 
 ##### 管理者を作成します
@@ -57,5 +60,25 @@ VideoReview にて発行した API トークンを設定
 > go run . upload-video --title "title" --folder_key "folder_key" --scene_path "scene_path" --video_path "/path/to/video.mp4"
 
 ##### サムネイル作成をします
-> go run . create-video-tmb --video_id {uuid}
+> go run . create-video-tmb --video_id {uuid}  
 > go run . create-video-tmb-all
+
+##### コメントを取得します
+> go run . get-comments --video_id {uuid}  
+
+##### タグ、要約をつけます
+`手動でタグと要約をつけます`
+> go run . annotate-video-rev --video_rev_id {uuid} --tags "A,B,C" --summary "summary text"
+
+`自動（ローカルLLMを利用します）`
+> go run . auto-ai-annotate-video-rev
+
+> go run . auto-ai-annotate-video-rev --video_rev_id {uuid}　
+
+`自動（動画の解析結果、動画イベント情報からルールに基づいてタグをつけます）`
+> go run . auto-deterministic-annotate-video-rev
+
+> go run . auto-deterministic-annotate-video-rev --video_rev_id {uuid}　
+
+##### 動画のイベント情報をアップロードします
+> go run . upload-video-event-context --video_id {uuid}　--kind {log|subtitle|etc} --jsonPath "json_path"

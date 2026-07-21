@@ -1,4 +1,4 @@
-import { ChatType } from "@/server/lib/utils/chat-type";
+import { ChatType } from "@/server/lib/chat/chat-type";
 import nodemailer from "nodemailer";
 import { env } from "@/server/lib/env";
 

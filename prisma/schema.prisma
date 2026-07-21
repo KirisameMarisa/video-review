@@ -45,41 +45,90 @@ model Identity {
 }
 
 model Video {
-  id              String            @id @default(uuid())
-  title           String
-  folderKey       String
-  scenePath       String?
-  revisions       VideoRevision[]
-  comments        VideoComment[]
-  latestUpdatedAt DateTime          @default(now())
-  deleted         Boolean           @default(false)
+  id                String            @id @default(uuid())
+  title             String
+  folderKey         String
+  scenePath         String?
+  vcsWatchPaths     String[]          @default([])
+  revisions         VideoRevision[]   @relation("VideoRevisions")
+  latestRevisionNum Int?
+  latestRevision    VideoRevision?    @relation("VideoLatestRevision", fields: [id, latestRevisionNum], references: [videoId, revision])
+  comments          VideoComment[]
+  latestUpdatedAt   DateTime          @default(now())
+  deleted           Boolean           @default(false)
+  links             Json              @default("[]")
 
+  @@unique([id, latestRevisionNum])
 }
 
 model VideoRevision {
-  id          String   @id @default(uuid())
-  videoId     String
-  video       Video    @relation(fields: [videoId], references: [id])
-  revision    Int
-  filePath    String
-  uploadedAt  DateTime @default(now())
-  deleted     Boolean  @default(false)
+  id            String   @id @default(uuid())
+  videoId        String
+  video          Video    @relation("VideoRevisions", fields: [videoId], references: [id])
+  revision       Int
+  filePath       String
+  uploadedAt     DateTime @default(now())
+  deleted        Boolean  @default(false)
+  tags           String[] @default([])
+  summary        String?
+  latestForVideo Video?   @relation("VideoLatestRevision")
+
+  processingJob VideoProcessingJob?
+  events      VideoEvent[]
+  vcsLinks    VCSRevisionLink[]
 
   @@unique([videoId, revision])
+}
+
+model VideoEventKind {
+  id        String   @id @default(uuid())
+  label     String   @unique
+  events    VideoEvent[]
+}
+
+model VideoEvent {
+  id              String   @id @default(uuid())
+  videoRevisionId String
+  kindId          String
+  startMs         Int
+  endMs           Int
+  data            String
+  contentId       String?
+  seq             Int               @default(0)
+  links           Json              @default("[]")
+  createdAt       DateTime          @default(now())
+
+  videoRevision VideoRevision @relation(fields: [videoRevisionId], references: [id], onDelete: Cascade)
+  kind          VideoEventKind @relation(fields: [kindId], references: [id], onDelete: Restrict)
+
+  @@index([videoRevisionId])
+  @@index([kindId])
+  @@index([videoRevisionId, kindId, startMs])
+}
+
+model VideoProcessingJob {
+  id              String   @id @default(uuid())
+  videoRevisionId String  @unique
+  status          JobStatus @default(pending)
+  createdAt       DateTime @default(now())
+
+  videoRevision VideoRevision @relation(fields: [videoRevisionId], references: [id], onDelete: Cascade)
+
+  @@index([status])
 }
 
 model VideoComment {
   id                String          @id @default(uuid())
   video             Video           @relation(fields: [videoId], references: [id])
   videoId           String
-  videoRevNum       Int     
+  videoRevNum       Int
   userName          String
   userEmail         String          @default("")
-  comment           String         
-  time              Float          
-  issueId           String?        
+  comment           String
+  time              Float
+  issueId           String?
   notifiedProviders String[]        @default([])
-  drawingPath       String?        
+  drawingPath       String?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   deleted           Boolean         @default(false)
@@ -118,18 +167,106 @@ model UserVideoReadStatus {
 }
 
 model UploadSession {
-  id          String   @id @default(uuid())
-  storageKey String
-  storage    UploadStorageType
-  title      String
-  folderKey  String
-  scenePath  String?
-  nextRev    Int
-  createdAt  DateTime @default(now())
+  id            String            @id @default(uuid())
+  storageKey    String
+  storage       UploadStorageType
+  title         String
+  folderKey     String
+  scenePath     String?
+  vcsWatchPaths String[]          @default([])
+  nextRev       Int
+  createdAt     DateTime          @default(now())
 }
 
 enum UploadStorageType {
   local
   s3
   nextCloud
+}
+
+enum JobStatus {
+  pending
+  running
+  succeeded
+  failed
+}
+
+model VCSConfig {
+  id        String   @id @default(uuid())
+  label     String
+  provider  String
+  config    Json
+  tokenKey  String?
+  branch    String   @default("main")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  revisionLinks VCSRevisionLink[]
+}
+
+model VCSRevisionLink {
+  id              String   @id @default(uuid())
+  videoRevisionId String
+  videoRevision   VideoRevision @relation(fields: [videoRevisionId], references: [id])
+  vcsConfigId     String
+  vcsConfig       VCSConfig @relation(fields: [vcsConfigId], references: [id])
+
+  rangeFrom     DateTime?
+  rangeTo       DateTime?
+  fetchedAt     DateTime?
+  summary       String?
+  /// [{ cachedMergeId: string, relevance: string, relevanceReason: string }]
+  mergeResults  Json?
+  /// [{ cachedCommitId: string, relevance: string, relevanceReason: string }]
+  commitResults Json?
+
+  @@unique([videoRevisionId, vcsConfigId])
+}
+
+model VCSCachedMerge {
+  id             String    @id @default(uuid())
+  /// 外部ID（PR番号など）
+  externalId     String
+  /// プロバイダー識別子（例: "github:owner/repo"）
+  repoName       String
+  title          String
+  description    String?
+  author         String
+  mergedAt       DateTime
+  url            String
+  labels         String[]
+  /// fetchMergeFiles() の結果。filesFetchedAt IS NULL = 未フェッチ
+  files          String[]  @default([])
+  filesFetchedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([externalId, repoName])
+}
+
+model VCSFetchedRange {
+  repoName  String
+  /// UTC midnight (start of UTC day)
+  date      DateTime
+  fetchedAt DateTime @default(now())
+
+  @@unique([repoName, date])
+}
+
+model VCSCachedCommit {
+  id             String    @id @default(uuid())
+  hash           String
+  repoName       String
+  shortHash      String
+  message        String
+  author         String
+  committedAt    DateTime
+  url            String?
+  /// fetchCommitFiles() の結果。filesFetchedAt IS NULL = 未フェッチ
+  files          String[]  @default([])
+  filesFetchedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([hash, repoName])
 }

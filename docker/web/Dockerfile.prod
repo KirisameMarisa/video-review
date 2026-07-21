@@ -1,15 +1,34 @@
-FROM node:24-slim
-
+FROM node:24-slim AS deps
 WORKDIR /app
 
 COPY package*.json ./
+RUN npm ci
+
+FROM deps AS builder
+WORKDIR /app
+
+ENV CI_BUILD=true
+
 COPY . .
+RUN npm run prisma:generate
+RUN npm run build
+
+
+FROM node:24-slim AS runner
+WORKDIR /app
 
 RUN apt-get update \
- && apt-get update -y && apt-get install -y openssl ffmpeg \
+ && apt-get update -y && apt-get install -y openssl \
  && rm -rf /var/lib/apt/lists/*
 
-RUN npm run build
+ENV NODE_ENV=production
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 EXPOSE 3000
 

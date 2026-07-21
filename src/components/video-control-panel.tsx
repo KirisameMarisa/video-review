@@ -23,10 +23,10 @@ import { formatTime } from "@/lib/utils";
 import { createVideoTimeLink, OpenScene } from "@/lib/url";
 import { EPlayMode, useVideoPlayerStore } from "@/stores/video-player-store";
 import { useVideoStore } from "@/stores/video-store";
-import { ShareLinkDialog } from "@/components/share-link";
-import { downloadVideo } from "@/lib/fetch-wrapper";
 import { useTranslations } from "next-intl";
 import { Slider } from "@/ui/slider";
+import { ShareLinkDialog } from "@/components/dialog/share-link";
+import { VideoDownloadDialog } from "@/components/dialog/video-download";
 
 export default function VideoControlPanel() {
     const t = useTranslations("video-control-panel");
@@ -63,7 +63,6 @@ export default function VideoControlPanel() {
 
     return (
         <div onMouseLeave={() => { setShowVolume(false); setShowPlayMode(false); }} className="flex items-center gap-3 mb-3 bg-[#202020] rounded-lg px-3 py-2 border border-[#333]">
-            {/* 再生／停止 */}
             <Button
                 variant="ghost"
                 size="icon"
@@ -73,7 +72,6 @@ export default function VideoControlPanel() {
                 <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} />
             </Button>
 
-            {/* 音量バー */}
             <div className="ml-2 flex items-center gap-2" onMouseOver={() => setShowVolume(true)}>
                 <Button
                     variant="ghost"
@@ -106,12 +104,10 @@ export default function VideoControlPanel() {
                 </span>
             </div>
 
-            {/* 時間表示 */}
             <span className="ml-2 flex items-center gap-2 text-sm text-[#aaa] w-30">
                 {formatTime(currentTime)} / {formatTime(duration)}
             </span>
 
-            {/* 再生速度 */}
             <Select
                 value={playbackRate.toString()}
                 onValueChange={(val) => {
@@ -131,7 +127,6 @@ export default function VideoControlPanel() {
                 </SelectContent>
             </Select>
 
-            {/* 再生モード */}
             <div className="flex items-center" onMouseOver={() => setShowPlayMode(true)}>
 
                 <span className="text-xs text-white">
@@ -162,7 +157,6 @@ export default function VideoControlPanel() {
                 </div>
             </div>
 
-            {/* 右端：リンクコピー */}
             <div className="ml-auto rounded">
                 <OpenSceneButton scenePath={selectedVideo?.scenePath ?? null} />
                 <DownloadVideo videoId={selectedVideo?.id ?? null} videoRevId={selectedRevision?.id ?? null} />
@@ -192,15 +186,17 @@ function DownloadVideo({ videoId, videoRevId }: { videoId: string | null, videoR
     if (!videoId || !videoRevId) {
         return <></>
     }
+    const [open, setOpen] = useState(false);
 
     return (
         <>
             <button
-                onClick={() => downloadVideo(videoId, videoRevId)}
+                onClick={() => setOpen(true)}
                 className="px-3 py-1 bg-[#ff8800] hover:bg-[#ff5500] text-black text-sm font-medium"
             >
                 <FontAwesomeIcon icon={faDownload} />
             </button>
+            <VideoDownloadDialog videoId={videoId} videoRevId={videoRevId} open={open} onClose={() => setOpen(false)} />
         </>
     );
 }

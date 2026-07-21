@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -11,7 +15,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
@@ -19,25 +23,49 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@/app/*": ["./src/app/*"],
-      "@/api/*": ["./src/app/api/*"],
-      "@/web/*": ["./src/app/video-review/*"],
-      "@/styles/*": ["./src/styles/*"],
-      "@/stores/*": ["./src/stores/*"],
-      "@/components/*": ["./src/components/*"],
-      "@/ui/*": ["./src/components/ui/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/server/*": ["./src/server/*"],
-      "@/routes/*": ["./src/server/routes/*"],
-      "@/schema/*": ["./src/schema/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@/app/*": [
+        "./src/app/*"
+      ],
+      "@/api/*": [
+        "./src/app/api/*"
+      ],
+      "@/web/*": [
+        "./src/app/video-review/*"
+      ],
+      "@/styles/*": [
+        "./src/styles/*"
+      ],
+      "@/stores/*": [
+        "./src/stores/*"
+      ],
+      "@/components/*": [
+        "./src/components/*"
+      ],
+      "@/ui/*": [
+        "./src/components/ui/*"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/server/*": [
+        "./src/server/*"
+      ],
+      "@/schema/*": [
+        "./src/schema/*"
+      ]
     }
   },
   "include": [
-    "next-env.d.ts", 
-    "**/*.ts", 
-    "**/*.tsx", 
-    ".next/types/**/*.ts"
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

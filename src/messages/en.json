@@ -9,7 +9,20 @@
         "noSelection": "No video selected",
         "revisionInfo": "Revision: {revision} ({uploadedAt})",
         "noRevision": "No revision info",
-        "revisionOption": "rev_{revision} ({date})"
+        "revisionOption": "rev_{revision} ({date})",
+        "tagsLabel": "Tags",
+        "noTags": "None",
+        "addTag": "Add tag",
+        "tagInputPlaceholder": "Add tag...",
+        "summaryLabel": "Summary",
+        "noSummary": "None"
+    },
+    "video-download": {
+        "title": "Download Video",
+        "selectRes": "Select resolution",
+        "cancel": "Cancel",
+        "downloading": "Downloading...",
+        "prepare": "Download"
     },
     "video-upload": {
         "title": "Upload Video",
@@ -55,6 +68,36 @@
         "commentItemEdit": "Edit",
         "commentItemRemove": "Remove"
     },
+    "vcs-changes-panel": {
+        "tab": "Changes",
+        "loading": "Fetching changes...",
+        "empty": "No PRs or commits merged in this period",
+        "not-configured": "VCS integration is not configured",
+        "error": "Error",
+        "no-revision": "No previous revision",
+        "section-prs": "Merged PRs",
+        "section-commits": "Commits",
+        "show-unlikely": "Show low-relevance changes",
+        "hide-unlikely": "Hide low-relevance changes",
+        "unit-items": "",
+        "unit-days": " days",
+        "commits": "Commits",
+        "summary-loading": "Generating summary...",
+        "refresh": "Refresh"
+    },
+    "video-event-panel": {
+        "tab": "Events",
+        "openLink": "Open link",
+        "empty": "No events"
+    },
+    "video-event-search": {
+        "title": "Event Search",
+        "searchFilter": "Event text",
+        "kind": "Event kind",
+        "hasLink": "Has link",
+        "ok": "Search",
+        "cancel": "Cancel"
+    },
     "comment-confirmed": {
         "commentUpdate": "Update Comment",
         "commentAdd": "Add Comment",
@@ -66,6 +109,10 @@
         "title": "Share link",
         "helperText": "Copy and share using Ctrl+C.",
         "close": "Close"
+    },
+    "prompt-edit": {
+        "title": "Prompt Editor",
+        "save": "Save"
     },
     "comment-search": {
         "title": "Comment Search",
@@ -95,7 +142,8 @@
         "languageOptionEn": "English",
         "languageOptionJa": "Japanese",
         "logout": "Logout",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "editPrompt": "Edit Prompt"
     },
     "calendar-date-radio": {
         "today": "Today",

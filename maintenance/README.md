@@ -32,6 +32,9 @@ VideoReview API Token
 Set the API token generated from the web UI
 > VIDEO_REVIEW_API_TOKEN
 
+It can also be specified directly in the command.
+> go run . --server xxx.xxx.xxx.xxx --token xxxxxx command --video_id xxx
+
 ### Command List
 
 ##### bootstrap
@@ -58,6 +61,39 @@ Set the API token generated from the web UI
 ##### Upload a video
 > go run . upload-video --title "title" --folder_key "folder_key" --scene_path "scene_path" --video_path "/path/to/video.mp4"
 
-##### create thumbnail
-> go run . create-video-tmb --video_id {uuid}
+##### Create thumbnail
+> go run . create-video-tmb --video_id {uuid}  
 > go run . create-video-tmb-all
+
+##### Cet comments
+> go run . get-comments --video_id {uuid}  
+
+##### Annotate video revision
+`Manual Annotation`
+
+Set tags and/or summary manually.
+
+> go run . annotate-video-rev --video_rev_id {uuid} --tags "A,B,C" --summary "summary text"
+
+`Automatic Annotation (LLM)`
+
+Generate tags and/or summary using LLM.
+> go run . auto-ai-annotate-video-rev
+
+> go run . auto-ai-annotate-video-rev --video_rev_id {uuid}　
+
+Generate for a specific revision.
+* --gen_tags
+* --gen_summary
+
+`Automatic Annotation (Deterministic)`
+
+Generate tags using predefined rules from video event context.
+> go run . auto-deterministic-annotate-video-rev
+
+> go run . auto-deterministic-annotate-video-rev --video_rev_id {uuid}　
+
+##### Upload Video Event Context
+Upload normalized event JSON for a video.
+
+> go run . upload-video-event-context --video_id {uuid}　--kind {log|subtitle|etc} --jsonPath "json_path"

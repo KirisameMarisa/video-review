@@ -1,4 +1,4 @@
-import { ChatType } from "@/server/lib/utils/chat-type";
+import { ChatType } from "@/server/lib/chat/chat-type";
 import { builders } from "@/server/lib/chat/webhook/builders";
 import { env } from "@/server/lib/env";
 

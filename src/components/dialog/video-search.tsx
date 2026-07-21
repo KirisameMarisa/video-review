@@ -3,20 +3,21 @@
 import React, { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/ui/dialog";
-import { fetcCommentUsers } from "@/lib/fetch-wrapper";
+import { fetcCommentUsers, fetchAllVideoTags } from "@/lib/fetch-wrapper";
 import { ControlRow } from "@/ui/control-row";
 import ComboBox from "@/ui/combo-box";
 import { Checkbox } from "@/ui/checkbox";
-import CalendarPopover from "@/ui/calendar-popover";
 import { useVideoSearchStore } from "@/stores/video-search-store";
 import { Button } from "@/ui/button";
 import { useVideoStore } from "@/stores/video-store";
 import { X } from "lucide-react";
 import CalendarDateRadio from "@/ui/calendar-date-radio";
+import MultiComboBox from "@/ui/multi-combobox";
+import { Badge } from "@/ui/badge";
 
 export function VideoSearchDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
     const t = useTranslations("video-search");
-    const { fetchVideos } = useVideoStore();
+    const { fetchVideos, allVideoTags } = useVideoStore();
     const [commentUsers, setCommentUsers] = useState<{ label: string, value: string }[]>([]);
 
     const {
@@ -28,6 +29,7 @@ export function VideoSearchDialog({ open, onClose }: { open: boolean; onClose: (
         hasComment,
         hasIssue,
         hasDrawing,
+        tags,
 
         setHasComment,
         setCommentUser,
@@ -36,7 +38,8 @@ export function VideoSearchDialog({ open, onClose }: { open: boolean; onClose: (
         setFilterIssue,
         setFilterTree,
         setVideoDateRange,
-        setCommentsDateRange
+        setCommentsDateRange,
+        setTags
     } = useVideoSearchStore();
 
     useEffect(() => {
@@ -169,6 +172,19 @@ export function VideoSearchDialog({ open, onClose }: { open: boolean; onClose: (
                             </div>
                         );
                     })}
+
+                    {ControlRow("Tags", () => {
+                        return (
+                            <div className="mx-2 w-full">
+                                <MultiComboBox
+                                    placeholder="Select tags..."
+                                    options={allVideoTags ?? []}
+                                    value={tags}
+                                    setValue={setTags}
+                                />
+                            </div>
+                        );
+                    })}
                 </div>
 
                 <DialogFooter>
@@ -192,5 +208,4 @@ export function VideoSearchDialog({ open, onClose }: { open: boolean; onClose: (
         </Dialog>
     );
 }
-
 

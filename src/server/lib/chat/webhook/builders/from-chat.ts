@@ -1,5 +1,5 @@
 // webhook/from-chat.ts
-import { ChatType } from "@/server/lib/utils/chat-type";
+import { ChatType } from "@/server/lib/chat/chat-type";
 
 export interface WebhookMessage {
     title: string;

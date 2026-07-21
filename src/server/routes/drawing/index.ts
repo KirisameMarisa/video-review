@@ -1,5 +1,5 @@
 import { OpenAPIHono as Hono } from "@hono/zod-openapi";
-import { uploadRouter } from "@/routes/drawing/upload";
+import { uploadRouter } from "@/server/routes/drawing/upload";
 
 export const drawingRouter = new Hono();
 

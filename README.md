@@ -176,121 +176,26 @@ Guiding ideas are:
 
 ## 🚀 Getting Started
 
-## 🐳 Docker (Production)
-Recommended for production and long-term operation.
-
-### Prerequisites
-* Docker and Docker Compose
----
-
-### Copy setting files
+### 🐳 Quick Start (Docker)
 
 ```bash
+
+# 1. Copy .env
 cp .example.env .env
-cp compose.prod.example.yml compose.prod.yml
-```
 
-
-### Storage location
-
-Edit `compose.prod.yml` and set the host path for storage.
-
-```yaml
-volumes:
-  - /mnt/data/videoreview:/storage
-```
-
-### Build & Run
-```bash
-# 1. Create image
+# 2. Create image
 docker build -t videoreview:latest -f docker/web/Dockerfile.prod .
+docker build -t video-processing:latest -f docker/video-processing/Dockerfile .
 
-# 2. Run only DB
+# 3. Run only DB
 docker compose -f compose.prod.yml up -d db
 
-# 3. Run prisma deploy (just once, for initial setup or schema changes)
+# 4. Run prisma deploy (just once, for initial setup or schema changes)
 docker compose -f compose.prod.yml run --rm videoreview npm run prisma:deploy
 
-# 4. Run web service
-docker compose -f compose.prod.yml up -d videoreview
+# 5. Run web service
+docker compose -f compose.prod.yml up -d videoreview -d video-processing
 
-```
-
-## 💻 Local / On‑premise Setup
-Use this method when running VideoReview directly on a server or local machine.
-
-### Prerequisites
-* node v24
-* postgreSQL
-
-### Environment Configuration
-
-Please copy .env and edit it to set the required values
-
-```bash
-cp .example.env .env
-```
-
-```bash
-VIDEO_REVIEW_LOCAL_ROOTDIR="/path/.../..."
-DATABASE_URL="postgresql://user:password@localhost:5432/videoreview"
-```
-
-### Build & Run
-
-```bash
-# Install dependencies
-npm install
-
-# Generate Prisma Client
-npm run prisma:deploy
-npm run prisma:generate
-
-# Start the application
-npm run build
-npm run start
-```
-
-### Notes
-
-In production environments, it is strongly recommended to explicitly set `VIDEO_REVIEW_LOCAL_ROOTDIR`.
-
-If `VIDEO_REVIEW_LOCAL_ROOTDIR` is not set or is invalid, the application falls back to
-`process.cwd()/uploads` to store uploaded video files.
-
-This fallback behavior is **not suitable for production use or long-term storage**
-for the following reasons:
-
-- Files may be lost during application updates or redeployment
-- In Docker environments, files are stored inside the container filesystem
-- Without a mounted volume, files will be removed when the container is recreated
-- The storage location is unclear, making backups and capacity management difficult
-
---- 
-
-## 🐳 Docker (Development)
-
-### Prerequisites
-* node v24
-* postgreSQL
-
-### Environment Configuration
-
-Please copy .env and edit it to set the required values
-
-```bash
-cp .example.env .env
-```
-```bash
-DATABASE_URL="postgresql://user:password@localhost:5432/videoreview"
-```
-
-### Run docker compose
-```bash
-# Install dependencies
-npm install
-# Start containers
-docker compose up -d --build
 ```
 
 ### Access
@@ -302,6 +207,13 @@ docker compose up -d --build
   http://localhost:3489/api/docs
 
 ---
+
+## 📘 More Setup Options
+
+For detailed instructions, see:
+* 🐳 [Docker Prod / Devlopment Build Guide](./documents/build.run/docker-guide.md)
+* 💻 [Local / On‑premise Build Guide](./documents/build.run/local-guide.md)
+* 🤖 [AI & Advanced Build Guide](./documents/build.run/ai-guide.md)
 
 ## 📄 License
 

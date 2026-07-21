@@ -1,0 +1,32 @@
+name: build-docker
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-docker:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: web-runtime
+            dockerfile: docker/web/Dockerfile
+          - name: web-prod
+            dockerfile: docker/web/Dockerfile.prod
+          - name: video-processing
+            dockerfile: docker/video-processing/Dockerfile
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build ${{ matrix.name }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          provenance: false

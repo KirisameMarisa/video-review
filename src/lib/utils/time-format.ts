@@ -9,7 +9,8 @@ export function formatElapsed(elapsedMs: number): string {
     return `${mm}:${ss}`;
 }
 
-export function formatDate(date: Date): string {
+export function formatDate(date: Date | undefined): string {
+    if (!date) return "unknown";
     const d = new Date(date);
     return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
 }

@@ -9,7 +9,20 @@
         "noSelection": "未選択",
         "revisionInfo": "Rev: {revision} ({uploadedAt})",
         "noRevision": "リビジョン情報なし",
-        "revisionOption": "rev_{revision} ({date})"
+        "revisionOption": "rev_{revision} ({date})",
+        "tagsLabel": "タグ",
+        "noTags": "なし",
+        "addTag": "タグを追加",
+        "tagInputPlaceholder": "タグを入力...",
+        "summaryLabel": "要約",
+        "noSummary": "なし"
+    },
+    "video-download": {
+        "title": "動画ダウンロード",
+        "selectRes": "解像度を選択",
+        "cancel": "キャンセル",
+        "downloading": "ダウンロード中...",
+        "prepare": "ダウンロード"
     },
     "video-upload": {
         "title": "動画アップロード",
@@ -47,13 +60,43 @@
         "playMode": "再生モード"
     },
     "video-comment-panel": {
-        "title": "コメント",
+        "title": "Comments",
         "newBadge": "NEW",
         "commentItemCopyLink": "リンクコピー",
         "commentItemTask": "タスク化",
         "commentItemBug": "バグ化",
         "commentItemEdit": "編集",
         "commentItemRemove": "削除"
+    },
+    "vcs-changes-panel": {
+        "tab": "Changes",
+        "loading": "コード変更を取得中...",
+        "empty": "この期間にマージされた PR・コミットはありません",
+        "not-configured": "VCS連携が設定されていません",
+        "error": "エラー",
+        "no-revision": "前リビジョンがありません",
+        "section-prs": "マージ済み PR",
+        "section-commits": "コミット",
+        "show-unlikely": "関連性の低い変更を表示",
+        "hide-unlikely": "関連性の低い変更を隠す",
+        "unit-items": "件",
+        "unit-days": "日間",
+        "commits": "コミット",
+        "summary-loading": "要約を生成中...",
+        "refresh": "再取得"
+    },
+    "video-event-panel": {
+        "tab": "Events",
+        "openLink": "リンクを開く",
+        "empty": "イベントはありません"
+    },
+    "video-event-search": {
+        "title": "イベント検索",
+        "searchFilter": "イベントテキスト",
+        "kind": "イベント種別",
+        "hasLink": "リンク付き",
+        "ok": "検索",
+        "cancel": "キャンセル"
     },
     "comment-confirmed": {
         "commentUpdate": "コメント更新",
@@ -66,6 +109,10 @@
         "title": "共有リンク",
         "helperText": "Ctrl+Cでコピーして共有してね",
         "close": "閉じる"
+    },
+    "prompt-edit": {
+        "title": "プロンプト編集",
+        "save": "更新"
     },
     "comment-search": {
         "title": "コメント検索",
@@ -95,7 +142,8 @@
         "languageOptionEn": "英語 (English)",
         "languageOptionJa": "日本語 (Japanese)",
         "logout": "ログアウト",
-        "editProfile": "プロフィール編集"
+        "editProfile": "プロフィール編集",
+        "editPrompt": "プロンプト編集"
     },
     "calendar-date-radio": {
         "today": "今日",

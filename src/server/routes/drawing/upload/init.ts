@@ -62,6 +62,7 @@ initRouter.openapi({
         title: "",
         folderKey: "",
         scenePath: "",
+        vcsWatchPaths: [],
         storageKey,
         storage: type as UploadStorageType,
     });

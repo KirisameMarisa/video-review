@@ -61,10 +61,17 @@ initRouter.openapi({
         const contentType = c.req.header("content-type") || "";
         const busboy = Busboy({ headers: { "content-type": contentType } });
         const fields: { [key: string]: string } = {};
+        let settled = false;
+
+        const complete = (response: Response) => {
+            if (settled) return;
+            settled = true;
+            resolve(response);
+        };
 
         const fail = (err: any) => {
             console.error("[upload.init] failed", err);
-            return c.json({ error: "Upload failed" }, { status: 500 });
+            complete(c.json({ error: "Upload failed" }, { status: 500 }));
         };
 
         busboy.on("field", (name, val) => {
@@ -72,79 +79,90 @@ initRouter.openapi({
         });
 
         busboy.on('finish', async function () {
-            const title = fields["title"];
-            const folderKey = fields["folderKey"];
-            const scenePath = fields["scenePath"];
-            console.log("[upload.init] fields", { title, folderKey, scenePath });
+            try {
+                const title = fields["title"];
+                const folderKey = fields["folderKey"];
+                const scenePath = fields["scenePath"];
+                const vcsWatchPaths = fields["vcsWatchPaths"]
+                    ? fields["vcsWatchPaths"].split(",").map(p => p.trim()).filter(Boolean)
+                    : [];
+                console.log("[upload.init] fields", { title, folderKey, scenePath, vcsWatchPaths });
 
-            if (!title || !folderKey) {
-                return c.json({ error: "missing parameter" }, { status: 400 });
-            }
+                if (!title || !folderKey) {
+                    complete(c.json({ error: "missing parameter" }, { status: 400 }));
+                    return;
+                }
 
-            let nextRev = 1;
-            let video = await prisma.video.findFirst({ where: { title, folderKey } });
-            if (!video) {
-                console.log("[upload.init] create video (draft)", { title, folderKey });
-                await prisma.video.create({
-                    data: {
-                        title,
-                        folderKey,
-                        scenePath,
-                        /**
-                         * NOTE:
-                         * deleted = true means this video is NOT yet published.
-                         * This record is created at upload initialization time
-                         * to obtain a stable video.id for:
-                         * - thumbnail generation
-                         * - storage key resolution
-                         *
-                         * The flag will be set to false on upload finish.
-                         */
-                        deleted: true,
-                    },
-                });
-            } else {
-                nextRev = await prisma.$transaction(async (tx) => {
-                    const latest = await tx.videoRevision.findFirst({
-                        where: { videoId: video.id },
-                        orderBy: { revision: "desc" },
+                let nextRev = 1;
+                let video = await prisma.video.findFirst({ where: { title, folderKey } });
+                if (!video) {
+                    console.log("[upload.init] create video (draft)", { title, folderKey });
+                    await prisma.video.create({
+                        data: {
+                            title,
+                            folderKey,
+                            scenePath,
+                            vcsWatchPaths,
+                            latestRevisionNum: null,
+                            /**
+                             * NOTE:
+                             * deleted = true means this video is NOT yet published.
+                             * This record is created at upload initialization time
+                             * to obtain a stable video.id for:
+                             * - thumbnail generation
+                             * - storage key resolution
+                             *
+                             * The flag will be set to false on upload finish.
+                             */
+                            deleted: true,
+                        },
                     });
-                    return (latest?.revision ?? 0) + 1;
-                });
+                } else {
+                    nextRev = await prisma.$transaction(async (tx) => {
+                        const latest = await tx.videoRevision.findFirst({
+                            where: { videoId: video.id },
+                            orderBy: { revision: "desc" },
+                        });
+                        return (latest?.revision ?? 0) + 1;
+                    });
 
-                console.log("[upload.init] existing video", {
-                    videoId: video.id,
+                    console.log("[upload.init] existing video", {
+                        videoId: video.id,
+                        nextRev,
+                    });
+                }
+
+                const filenameOut = `rev_${String(nextRev).padStart(3, "0")}.mp4`;
+                const storageKey = path.join(
+                    "videos",
+                    folderKey,
+                    title,
+                    filenameOut
+                ).replace(/\\/g, "/");
+
+                const type = VideoReviewStorage.type();
+                const session = await createSession({
                     nextRev,
+                    title,
+                    folderKey,
+                    scenePath,
+                    vcsWatchPaths,
+                    storageKey,
+                    storage: type as UploadStorageType,
                 });
+
+                console.log("[upload.init] session created", {
+                    sessionId: session.id,
+                    storageKey,
+                    storage: type,
+                });
+
+                const url = await VideoReviewStorage.uploadURL(session.id, storageKey, "video/mp4");
+                console.log("[upload.init] upload url issued");
+                complete(c.json({ url, session }));
+            } catch (err) {
+                fail(err);
             }
-
-            const filenameOut = `rev_${String(nextRev).padStart(3, "0")}.mp4`;
-            const storageKey = path.join(
-                "videos",
-                folderKey,
-                title,
-                filenameOut
-            ).replace(/\\/g, "/");
-
-            const type = VideoReviewStorage.type();
-            const session = await createSession({
-                nextRev,
-                title,
-                folderKey,
-                scenePath,
-                storageKey,
-                storage: type as UploadStorageType,
-            });
-
-            console.log("[upload.init] session created", {
-                sessionId: session.id,
-                storageKey,
-                storage: type,
-            });
-
-            const url = await VideoReviewStorage.uploadURL(session.id, storageKey, "video/mp4");
-            console.log("[upload.init] upload url issued");
-            resolve(c.json({ url, session }));
         });
 
         busboy.on("error", err => fail(err));

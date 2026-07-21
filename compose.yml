@@ -10,9 +10,11 @@ services:
       - "3489:3489"
     environment:
       DATABASE_URL: postgres://videoreview:videoreview@db:5432/videoreview
-      LOCAL_ROOTDIR: /app/uploads
+      VIDEO_REVIEW_LOCAL_ROOTDIR: /app/uploads
+      NEXT_PUBLIC_VIDEO_REVIEW_USE_AI_SUPPORT: "true"
     volumes:
       - .:/app
+      - videoreview-storage:/app/uploads
       # If you want to specify Local Storage
       # - /mnt/d/data/videoreview:/storage
     depends_on:
@@ -29,6 +31,51 @@ services:
       POSTGRES_DB: videoreview
     volumes:
       - videoreview-db:/var/lib/postgresql/data
+
+
+  mcp:
+    env_file:
+      - .env
+    build:
+      context: ./
+      dockerfile: ./docker/mcp/Dockerfile
+    container_name: videoreview-mcp
+    environment:
+      MCP_TRANSPORT: http
+      MCP_PORT: "3490"
+      VIDEO_REVIEW_SERVER_URL: http://web:3489
+      VIDEO_REVIEW_LLM_PROVIDER: ollama
+      VIDEO_REVIEW_LLM_BASE_URL: http://ollama:11434
+    ports:
+      - "3490:3490"
+    depends_on:
+      - web
+      - ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: videoreview-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./llm_models:/root/.ollama/models
+
+  video-processing:
+    env_file:
+      - .env
+    build:
+      context: ./
+      dockerfile: ./docker/video-processing/Dockerfile
+    container_name: videoreview-video-processing
+    environment:
+      DATABASE_URL: postgres://videoreview:videoreview@db:5432/videoreview
+      VIDEO_REVIEW_LOCAL_ROOTDIR: /app/uploads
+    volumes:
+      - videoreview-storage:/app/uploads
+      # If you want to specify Local Storage
+      # - /mnt/d/data/videoreview:/storage
+    depends_on:
+      - db
 
   localstack:
       env_file:
@@ -89,5 +136,6 @@ services:
 
 volumes:
   videoreview-db:
+  videoreview-storage:
   nextcloud-db:
   nextcloud-data:

@@ -12,6 +12,7 @@ import { ControlRow } from "@/ui/control-row";
 import { useEffect, useState } from "react";
 import EditUserProfileDialog from "@/components/dialog/edit-user-profile";
 import { Separator } from "@/ui/separator";
+import { env } from "@/lib/env";
 
 export function SettingPopover() {
     const t = useTranslations("setting");
@@ -19,6 +20,7 @@ export function SettingPopover() {
     const [ isLogged, setLogged ] = useState(false);
     const { locale, setLocale } = useLocale();
     const [ editProfileOpen, setEditProfileOpen] = useState(false);
+
     const { verifyAuth } = useAuthStore();
 
     useEffect(() => {

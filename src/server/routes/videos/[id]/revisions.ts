@@ -36,7 +36,7 @@ revisionsRouter.openapi({
 
     try {
         const revisions = await prisma.videoRevision.findMany({
-            where: { videoId: id },
+            where: { videoId: id, deleted: false },
             orderBy: { revision: "desc" },
         });
 

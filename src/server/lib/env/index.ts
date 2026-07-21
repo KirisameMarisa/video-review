@@ -1,12 +1,12 @@
-import { UploadStorageType } from "@prisma/client";
-import { booleanEnv, resolveEnv, typeEnv } from "@/lib/env";
+import { booleanEnv, resolveEnv } from "@/lib/env/helpers";
+import { env as StorageEnv } from "./storage-env";
+
 import "server-only"
 
 export const env = {
+    ...StorageEnv,
     DATABASE_URL: process.env.DATABASE_URL,
     VIDEO_REVIEW_API_TOKEN: process.env.VIDEO_REVIEW_API_TOKEN,
-    VIDEO_REVIEW_STORAGE: typeEnv<UploadStorageType>(process.env.VIDEO_REVIEW_STORAGE, UploadStorageType.local),
-    VIDEO_REVIEW_LOCAL_ROOTDIR: resolveEnv(process.env.VIDEO_REVIEW_LOCAL_ROOTDIR, process.env.LOCAL_ROOTDIR),
     EMAIL_ENABLE: booleanEnv(process.env.VIDEO_REVIEW_EMAIL_ENABLE),
     SMTP_HOST: process.env.VIDEO_REVIEW_SMTP_HOST,
     SMTP_PORT: process.env.VIDEO_REVIEW_SMTP_PORT,
@@ -21,13 +21,17 @@ export const env = {
     WEBHOOK_TARGET: process.env.VIDEO_REVIEW_WEBHOOK_TARGET,
     WEBHOOK_URL: process.env.VIDEO_REVIEW_WEBHOOK_URL,
     SMTP_TLS_STRICT: booleanEnv(process.env.VIDEO_REVIEW_SMTP_TLS_STRICT),
-    S3_BUCKET: process.env.S3_BUCKET,
-    S3_REGION: process.env.S3_REGION,
-    S3_LOCALSTACK_ENDPOINT: process.env.S3_LOCALSTACK_ENDPOINT === "" ? undefined : process.env.S3_LOCALSTACK_ENDPOINT,
-    NEXTCLOUD_BASE_URL: process.env.VIDEO_REVIEW_NEXTCLOUD_BASE_URL,
-    NEXTCLOUD_USERNAME: process.env.VIDEO_REVIEW_NEXTCLOUD_USERNAME,
-    NEXTCLOUD_PASSWORD: process.env.VIDEO_REVIEW_NEXTCLOUD_PASSWORD,
-    NEXTCLOUD_ROOTDIR: process.env.VIDEO_REVIEW_NEXTCLOUD_ROOTDIR,
     VIDEO_REVIEW_ADMIN_MAINTENANCE_TOKEN_deprecated: process.env.ADMIN_MAINTENANCE_TOKEN,
     JWT_SECRET_deprecated: process.env.JWT_SECRET,
+    // LLM provider: "claude" | "ollama" | "gemini" (unset = disabled)
+    LLM_PROVIDER: process.env.VIDEO_REVIEW_LLM_PROVIDER as "claude" | "ollama" | "gemini" | undefined,
+    LLM_API_KEY: process.env.VIDEO_REVIEW_LLM_API_KEY,
+    LLM_BASE_URL: process.env.VIDEO_REVIEW_LLM_BASE_URL,
+    LLM_MODEL: process.env.VIDEO_REVIEW_LLM_MODEL,
+    // VCS integration (Phase 1: env-based config)
+    VCS_PROVIDER: process.env.VIDEO_REVIEW_VCS_PROVIDER as "github" | "gitlab" | "svn" | "perforce" | undefined,
+    VCS_GITHUB_OWNER: process.env.VIDEO_REVIEW_VCS_GITHUB_OWNER,
+    VCS_GITHUB_REPO: process.env.VIDEO_REVIEW_VCS_GITHUB_REPO,
+    VCS_GITHUB_TOKEN: process.env.VIDEO_REVIEW_VCS_GITHUB_TOKEN,
+    VCS_BRANCH: process.env.VIDEO_REVIEW_VCS_BRANCH,
 } as const;

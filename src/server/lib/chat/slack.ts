@@ -1,5 +1,5 @@
-import { ChatType } from "@/server/lib/utils/chat-type";
-import { SlackClient } from "@/server/lib/utils/slack-client";
+import { ChatType } from "@/server/lib/chat/chat-type";
+import { SlackClient } from "@/server/lib/integration-clients/slack-client";
 import { prisma } from "@/server/lib/db";
 import { env } from "@/server/lib/env";
 

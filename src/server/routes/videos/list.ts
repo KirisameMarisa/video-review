@@ -31,6 +31,13 @@ const QuerySchema = z.object({
         .string()
         .transform(v => v === "true")
         .optional(),
+    tags: z
+        .string()
+        .transform((v) => v
+            .split(",")
+            .map((tag) => tag.trim())
+            .filter((tag) => tag.length > 0)
+        ).optional(),
 });
 
 listRouter.openapi({
@@ -65,6 +72,7 @@ listRouter.openapi({
         hasComment,
         user,
         includeRevisions,
+        tags,
     } = query;
 
     const videoDateRange = toDateRange(new Date(Number(videoFrom)), new Date(Number(videoTo)));
@@ -72,6 +80,7 @@ listRouter.openapi({
 
     const whereVideoComment: PrismaTypes.VideoCommentWhereInput = { deleted: false };
     const whereVideo: PrismaTypes.VideoWhereInput = { deleted: false };
+    const latestRevisionIs: PrismaTypes.VideoRevisionWhereInput = { deleted: false };
 
     if (user) {
         whereVideoComment.userName = user;
@@ -82,7 +91,7 @@ listRouter.openapi({
     }
 
     if (videoDateRange.from !== undefined && videoDateRange.to !== undefined) {
-        whereVideo.latestUpdatedAt = { gte: videoDateRange.from, lte: videoDateRange.to };
+        latestRevisionIs.uploadedAt = { gte: videoDateRange.from, lte: videoDateRange.to };
     }
 
     if (hasDrawing) {
@@ -104,23 +113,38 @@ listRouter.openapi({
         ];
     }
 
+    if (tags && tags.length > 0) {
+        latestRevisionIs.tags = { hasSome: tags };
+    }
+
+    if (latestRevisionIs.uploadedAt !== undefined || latestRevisionIs.tags !== undefined) {
+        whereVideo.latestRevision = { is: latestRevisionIs };
+    }
+
     try {
         const videos = await prisma.video.findMany({
             where: whereVideo,
-            ...(includeRevisions ? {
-                include: {
+            include: {
+                latestRevision: {
+                    select: {
+                        revision: true,
+                        uploadedAt: true,
+                        tags: true,
+                    },
+                },
+                ...(includeRevisions ? {
                     revisions: {
                         where: { deleted: false },
                         orderBy: { revision: "asc" },
                     },
-                },
-            } : {}),
+                } : {}),
+            },
             orderBy: [
                 { folderKey: "asc" },
                 { title: "asc" },
             ]
         });
-        
+
         const previewCount = Math.min(videos.length, 30);
         const preview = videos.slice(0, previewCount).map(v => ({
             folderKey: v.folderKey,
@@ -135,4 +159,70 @@ listRouter.openapi({
     } catch (err) {
         return c.json({ error: "Failed to fetch videos" }, { status: 500 });
     }
+});
+
+listRouter.openapi({
+    method: "get",
+    summary: "Get all video tags",
+    description: "Returns a deduplicated list of tags from all non-deleted videos.",
+    path: "/tags",
+    responses: {
+        200: {
+            description: "List of tags",
+            content: {
+                "application/json": {
+                    schema: z.array(z.string()),
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+        },
+    },
+}, async (c) => {
+    try {
+        const videos = await prisma.video.findMany({
+            where: { deleted: false },
+            include: {
+                latestRevision: {
+                    select: {
+                        revision: true,
+                        uploadedAt: true,
+                        tags: true,
+                    },
+                },
+            },
+            orderBy: [
+                { folderKey: "asc" },
+                { title: "asc" },
+            ]
+        });
+
+        const tags = Array.from(
+            new Set(
+                videos
+                    .flatMap((video) => video.latestRevision ? video.latestRevision.tags : [])
+                    .map((tag) => tag.trim())
+                    .filter((tag) => tag.length > 0)
+            )
+        ).sort((a, b) => a.localeCompare(b));
+
+        return c.json(tags);
+    } catch {
+        return c.json({ error: "Failed to fetch video tags" }, { status: 500 });
+    }
+});
+
+listRouter.openapi({
+    method: "get",
+    summary: "",
+    path: "/event-kinds",
+    responses: {
+        200: {
+            description: "",
+        }
+    },
+}, async (c) => {
+    const items = await prisma.videoEventKind.findMany({ select: { label: true } })
+    return c.json({ items: items.map(x => x.label) });
 });

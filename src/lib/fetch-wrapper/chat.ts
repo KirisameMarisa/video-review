@@ -48,10 +48,11 @@ export async function chat(commentId: string, screenshot: Blob | null)
         },
     });
 
-    if (!res.ok) {
-        return ApiError(res);
+    if (res.ok) {
+        const data = await res.json();
+        return { ok: true, data: { notifiedProviders: data.notifiedProviders, toastData: data.toastData } };
+
     }
 
-    const data = await res.json();
-    return { ok: true, data: { notifiedProviders: data.notifiedProviders, toastData: data.toastData } };
+    return ApiError(res);
 }

@@ -36,3 +36,10 @@ export function OpenScene(scenePath: string): void {
     }
     window.location.href = link;
 }
+
+export function createVideoEventLink(baseURL: string, videoId: string | null, videoRevId: string | null, eventId: string | null): string | null {
+    if (videoId === null || videoRevId === null || eventId === null) {
+        return null;
+    }
+    return `${baseURL}/video-review/review/${videoId}?revision=${videoRevId}&event=${eventId}`;
+}

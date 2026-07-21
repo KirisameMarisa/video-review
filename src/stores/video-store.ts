@@ -1,10 +1,11 @@
 import { create } from "zustand";
-import { Video, VideoRevision } from "@/lib/db-types";
+import { Video, VideoRevision, VideoWithRevision } from "@/lib/db-types";
 import { useVideoSearchStore } from "@/stores/video-search-store";
 import * as api from '@/lib/fetch-wrapper';
 
 interface VideoState {
-    videos: Video[];
+    videos: VideoWithRevision[];
+    allVideoTags: string[],
     selectedVideo: Video | null;
     revisions: VideoRevision[],
     selectedRevision: VideoRevision | null;
@@ -14,10 +15,12 @@ interface VideoState {
     selectVideo: (video: Video) => Promise<void>;
     nextVideo:() => Promise<boolean>;
     selectVideoRevision: (revision: VideoRevision) => void;
+    updateRevisionTags: (revisionId: string, tags: string[]) => Promise<void>;
 }
 
 export const useVideoStore = create<VideoState>((set, get) => ({
     videos: [],
+    allVideoTags: [],
     selectedVideo: null,
     revisions: [],
     selectedRevision: null,
@@ -35,8 +38,10 @@ export const useVideoStore = create<VideoState>((set, get) => ({
             hasIssue: s.hasIssue,
             hasDrawing: s.hasDrawing,
             hasComment: s.hasComment,
+            tags: s.tags
         });
-        set({ videos: data, loading: false });
+        const tags = await api.fetchAllVideoTags();
+        set({ videos: data, loading: false, allVideoTags: tags.ok ? tags.data : [] });
     },
 
     async selectVideo(video) {
@@ -64,5 +69,19 @@ export const useVideoStore = create<VideoState>((set, get) => ({
 
     selectVideoRevision(revision) {
         set({ selectedRevision: revision });
+    },
+
+    async updateRevisionTags(revisionId, tags) {
+        const result = await api.annotateRevision(revisionId, { tags });
+        if (!result.ok) return;
+        set((state) => ({
+            selectedRevision:
+                state.selectedRevision?.id === revisionId
+                    ? { ...state.selectedRevision, tags }
+                    : state.selectedRevision,
+            revisions: state.revisions.map((r) =>
+                r.id === revisionId ? { ...r, tags } : r
+            ),
+        }));
     },
 }));

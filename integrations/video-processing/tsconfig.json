@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "lib": ["ES2022", "DOM"],
+        "module": "ES2022",
+        "moduleResolution": "bundler",
+        "baseUrl": "../../",
+        "paths": {
+            "@/*": ["./src/*"]
+        },
+        "strict": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "noEmit": false,
+        "declaration": false,
+        "outDir": "./dist",
+        "rootDir": "../../",
+        "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
+    },
+    "files": [
+        "./core.ts",
+        "./main-local.ts",
+        "./main-lambda.ts",
+        "../../src/server/lib/storage/drivers/index.ts",
+        "../../src/server/lib/storage/drivers/local.ts",
+        "../../src/server/lib/storage/drivers/s3.ts",
+        "../../src/server/lib/storage/drivers/nextcloud.ts",
+        "../../src/server/lib/env/storage-env.ts",
+        "../../src/lib/env/helpers.ts"
+    ]
+}

@@ -25,13 +25,12 @@ export default function ComboBox<T>({
     const [open, setOpen] = React.useState(false);
 
     if (!options) return <> </>
+    const currentItem = options.find((option) => option.value === value);
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button className={`${className} bg-[#181818] text-[#888]`} variant="outline" role="combobox" aria-expanded={open} >
-                    {value
-                        ? options.find((option) => option.value === value)?.label
-                        : placeholder ?? ""}
+                    {currentItem ? currentItem.label : placeholder ?? ""}
                     <ChevronsUpDown className="opacity-50" />
                 </Button>
             </PopoverTrigger>

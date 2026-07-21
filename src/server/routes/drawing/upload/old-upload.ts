@@ -11,7 +11,7 @@ oldUploadRouter.post('/', async (c) => {
         const file = formData.get("file") as File | null;
         const savePath = formData.get("path") as string;
 
-        // 400
+        // Reject missing or non-image payloads early.
         if (!file) {
             return c.json({ error: "missing file" }, { status: 400 });
         }
@@ -20,7 +20,8 @@ oldUploadRouter.post('/', async (c) => {
             return c.json({ error: "invalid file type" }, { status: 400 });
         }
 
-        // 保存先決定
+        // Write to a temporary file first, then move into final storage path.
+        // This avoids exposing partially written files if upload/write fails.
         const tmpDir = path.join(process.cwd(), "uploads", "tmp");
         fs.promises.mkdir(tmpDir, { recursive: true });
 

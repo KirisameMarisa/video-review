@@ -12,6 +12,7 @@ interface VideoSearchState {
     filterIssue: string;
     user: string | undefined;
     filterTree: string;
+    tags: string[];
 
     setHasComment: (x: boolean) => void;
     setHasDrawing: (x: boolean) => void;
@@ -21,6 +22,7 @@ interface VideoSearchState {
     setVideoDateRange: (x: DateRange | undefined) => void;
     setCommentsDateRange: (x: DateRange | undefined) => void;
     setFilterTree: (x: string) => void;
+    setTags: (x: string[]) => void;
     clear: () => void;
     isFiltering: () => boolean;
 }
@@ -33,7 +35,8 @@ const InitVideoSearchState = {
     hasIssue: false,
     filterIssue: "",
     filterTree: "",
-    user: ""
+    user: "",
+    tags: []
 };
 
 export const useVideoSearchStore = create<VideoSearchState>()(
@@ -49,6 +52,7 @@ export const useVideoSearchStore = create<VideoSearchState>()(
             setVideoDateRange: (x: DateRange | undefined) => set({ videoDateRange: x }),
             setCommentsDateRange: (x: DateRange | undefined) => set({ commentsDateRange: x }),
             setFilterTree: (x: string) => set({ filterTree: x }),
+            setTags: (x: string[]) => set({ tags: x }),
             clear: () => set(InitVideoSearchState),
             isFiltering: () => {
                 const state = get();
