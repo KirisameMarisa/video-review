@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useVideoStore } from "@/stores/video-store";
 import { useVideoReviewStore } from "@/stores/video-review-store";
 import { useCommentSearchStore } from "@/stores/comment-search-store";
+import { useCommentSearchDateFilterStore } from "@/stores/date-filter-store";
 
 interface CommentState {
     comments: VideoComment[];
@@ -40,7 +41,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
             videoId: videoRevision.videoId,
             selectRevision: videoRevision.revision,
             user: s.user,
-            dateRange: s.dateRange,
+            dateRange: useCommentSearchDateFilterStore.getState().resolve(),
             hasDrawing: s.hasDrawing,
             hasIssue: s.hasIssue,
             fetchAllComments: s.fetchAllComments,
