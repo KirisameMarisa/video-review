@@ -11,6 +11,8 @@
         "start": "next start -p 3489",
         "test": "set -a && . ./.env.test && set +a && npx tsx run-test.ts",
         "test:hono": "set -a && . ./.env.test && set +a && npx tsx run-test.ts tests/server",
+        "test:e2e": "set -a && . ./.env.test && set +a && npx tsx run-e2e.ts",
+        "test:e2e:install": "npx playwright install chromium --with-deps",
         "video-processing:build": "npx tsx integrations/video-processing/build.ts",
         "video-processing:run": "node integrations/video-processing/dist/main-local.js",
         "mcp:build": "npx tsx integrations/mcp/build.ts",
@@ -91,6 +93,7 @@
         "zustand": "^5.0.6"
     },
     "devDependencies": {
+        "@playwright/test": "^1.62.0",
         "@tailwindcss/postcss": "^4",
         "@types/bcrypt": "^6.0.0",
         "@types/busboy": "^1.5.4",
