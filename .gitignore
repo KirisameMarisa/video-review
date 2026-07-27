@@ -55,3 +55,7 @@ prisma/schemas/**
 src/schema/**
 
 llm_models/
+
+# playwright html/blob reports (junit + artifacts live under tests/test-results/)
+/playwright-report/
+/blob-report/

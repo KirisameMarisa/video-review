@@ -6,6 +6,7 @@ import "server-only"
 export const env = {
     ...StorageEnv,
     DATABASE_URL: process.env.DATABASE_URL,
+    DB_IDLE_DISCONNECT_MS: process.env.VIDEO_REVIEW_DB_IDLE_DISCONNECT_MS,
     VIDEO_REVIEW_API_TOKEN: process.env.VIDEO_REVIEW_API_TOKEN,
     EMAIL_ENABLE: booleanEnv(process.env.VIDEO_REVIEW_EMAIL_ENABLE),
     SMTP_HOST: process.env.VIDEO_REVIEW_SMTP_HOST,
