@@ -28,10 +28,6 @@
       "name": "maintenance",
       "path": "./maintenance"
     },
-        {
-      "name": "video-analysis",
-      "path": "./integrations/video-analysis"
-    },
   ],
   "settings": {
     "search.exclude": {
