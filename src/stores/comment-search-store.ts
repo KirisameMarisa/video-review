@@ -1,17 +1,13 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { DateRange } from "react-day-picker";
-import { normalizePersistedDateRange } from "@/lib/utils/date-helper";
 
 interface CommentSearchState {
-    dateRange: DateRange | undefined;
     hasDrawing: boolean;
     hasIssue: boolean;
     fetchAllComments: boolean;
     user: string | undefined;
     filterText: string;
 
-    setDateRange: (x: DateRange | undefined) => void;
     setHasDrawing: (x: boolean) => void;
     setHasIssue: (x: boolean) => void;
     setFetchAllComments: (x: boolean) => void;
@@ -22,7 +18,6 @@ interface CommentSearchState {
 }
 
 const InitCommentSearchState = {
-    dateRange: undefined,
     hasDrawing: false,
     hasIssue: false,
     fetchAllComments: true,
@@ -35,7 +30,6 @@ export const useCommentSearchStore = create<CommentSearchState>()(
         (set, get) => ({
             ...InitCommentSearchState,
 
-            setDateRange: (x: DateRange | undefined) => set({ dateRange: x }),
             setHasDrawing: (x: boolean) => set({ hasDrawing: x }),
             setHasIssue: (x: boolean) => set({ hasIssue: x }),
             setFetchAllComments: (x: boolean) => set({ fetchAllComments: x }),
@@ -53,10 +47,6 @@ export const useCommentSearchStore = create<CommentSearchState>()(
         }),
         {
             name: "comment-search-store",
-            onRehydrateStorage: () => (state) => {
-                if (!state) return;
-                state.dateRange = normalizePersistedDateRange(state.dateRange);
-            },
         },
     ),
 );

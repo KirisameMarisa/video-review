@@ -9,6 +9,7 @@ import { X, Search } from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarInput } from "@/ui/sidebar";
 import VideoCommentContent from "@/components/video-side-panel/panels/video-comment-panel/content";
 import { useCommentSearchStore } from "@/stores/comment-search-store";
+import { useCommentSearchDateFilterStore } from "@/stores/date-filter-store";
 import { useCommentStore } from "@/stores/comment-store";
 import { useVideoStore } from "@/stores/video-store";
 import { VideoSidePanelDefinition } from "@/components/video-side-panel/types";
@@ -18,6 +19,10 @@ export function useVideoCommentPanelDefinition(): VideoSidePanelDefinition {
     const { selectedRevision } = useVideoStore();
     const { fetchComments } = useCommentStore();
     const commentSearch = useCommentSearchStore();
+    const dateFilter = useCommentSearchDateFilterStore();
+
+    // The date filter lives in its own store, so fold it into the indicator.
+    const filtering = commentSearch.isFiltering() || dateFilter.mode !== "none";
 
     return {
         key: "comments",
@@ -30,16 +35,17 @@ export function useVideoCommentPanelDefinition(): VideoSidePanelDefinition {
                     className={`
                         inline-flex items-center justify-center
                         text-lg px-1 leading-none hover:text-[#ff5500]
-                        ${commentSearch.isFiltering() ? "text-[#15fa34ff]" : ""}
+                        ${filtering ? "text-[#15fa34ff]" : ""}
                     `}
                 >
                     <FontAwesomeIcon icon={faSearch} />
                 </button>
-                {commentSearch.isFiltering()
+                {filtering
                     ? (
                         <button
                             onClick={() => {
                                 commentSearch.clear();
+                                dateFilter.clear();
                                 if (selectedRevision) {
                                     fetchComments(selectedRevision);
                                 }
@@ -55,8 +61,14 @@ export function useVideoCommentPanelDefinition(): VideoSidePanelDefinition {
         renderHeaderBody: () => (
             <SidebarGroup className="py-0">
                 <CalendarDateRadio
-                    value={commentSearch.dateRange}
-                    onSetValue={commentSearch.setDateRange}
+                    mode={dateFilter.mode}
+                    range={dateFilter.mode === "range" && dateFilter.from && dateFilter.to
+                        ? { from: new Date(dateFilter.from), to: new Date(dateFilter.to) }
+                        : undefined}
+                    onToday={dateFilter.setToday}
+                    onRecent={dateFilter.setRecent}
+                    onSetRange={dateFilter.setRange}
+                    onClear={dateFilter.clear}
                     className="size-10"
                 />
 

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/ui/dialog";
 import { ControlRow } from "@/ui/control-row";
 import { useCommentSearchStore } from "@/stores/comment-search-store";
+import { useCommentSearchDateFilterStore } from "@/stores/date-filter-store";
 import { Checkbox } from "@/ui/checkbox";
 import ComboBox from "@/ui/combo-box";
 import { Button } from "@/ui/button";
@@ -22,20 +23,19 @@ export function CommentSearchDialog({ open, onClose }: { open: boolean; onClose:
     const { selectedRevision, revisions } = useVideoStore();
     const { fetchComments } = useCommentStore();
     const {
-        dateRange,
         hasDrawing,
         hasIssue,
         fetchAllComments,
         user,
         filterText,
 
-        setDateRange,
         setHasDrawing,
         setHasIssue,
         setFetchAllComments,
         setCommentUser,
         setFilterText,
     } = useCommentSearchStore();
+    const dateFilter = useCommentSearchDateFilterStore();
 
     useEffect(() => {
         void (async () => {
@@ -69,7 +69,7 @@ export function CommentSearchDialog({ open, onClose }: { open: boolean; onClose:
                                     className="border-[#ccc] w-full h-8 rounded bg-[#181818] border px-2 text-sm text-white mx-2"
                                     placeholder="Filter tree..."
                                 />
-                                <Button onClick={() => { setDateRange(undefined) }} variant="outline" className="border-[#ccc] bg-[#181818] border h-8.2">
+                                <Button onClick={() => { dateFilter.clear() }} variant="outline" className="border-[#ccc] bg-[#181818] border h-8.2">
                                     <X />
                                 </Button>
                             </div>
@@ -79,7 +79,15 @@ export function CommentSearchDialog({ open, onClose }: { open: boolean; onClose:
                     {ControlRow(t("dateRange"), () => {
                         return (
                             <div className="flex justify-between">
-                                <CalendarDateRadio value={dateRange} onSetValue={setDateRange} />
+                                <CalendarDateRadio
+                                    mode={dateFilter.mode}
+                                    range={dateFilter.mode === "range" && dateFilter.from && dateFilter.to
+                                        ? { from: new Date(dateFilter.from), to: new Date(dateFilter.to) }
+                                        : undefined}
+                                    onToday={dateFilter.setToday}
+                                    onRecent={dateFilter.setRecent}
+                                    onSetRange={dateFilter.setRange}
+                                    onClear={dateFilter.clear} />
                             </div>
                         );
                     })}

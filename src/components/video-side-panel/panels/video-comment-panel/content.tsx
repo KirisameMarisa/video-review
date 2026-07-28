@@ -13,6 +13,7 @@ import { RefObject, useEffect, useRef } from "react";
 import { readVideoComment } from "@/lib/fetch-wrapper";
 import CommentCard from "@/components/video-side-panel/panels/video-comment-panel/comment-card";
 import { useCommentSearchStore } from "@/stores/comment-search-store";
+import { useCommentSearchDateFilterStore } from "@/stores/date-filter-store";
 import { chatToast } from "@/components/chat-notice";
 
 export default function VideoCommentContent(props: {
@@ -23,7 +24,8 @@ export default function VideoCommentContent(props: {
     const { displayName, email, userId } = useAuthStore();
     const { selectedVideo, selectedRevision } = useVideoStore();
     const { setDisplayComments, comments, addComment, fetchComments } = useCommentStore();
-    const { dateRange, filterText } = useCommentSearchStore();
+    const { filterText } = useCommentSearchStore();
+    const dateFilter = useCommentSearchDateFilterStore();
     const { canvasSave } = useDrawingStore();
     const { videoRefElement, currentTime } = useVideoReviewStore();
     const {
@@ -117,7 +119,7 @@ export default function VideoCommentContent(props: {
         if (selectedRevision) {
             fetchComments(selectedRevision);
         }
-    }, [dateRange, filterText]);
+    }, [dateFilter.mode, dateFilter.from, dateFilter.to, dateFilter.days, filterText]);
 
     return (
         <div 

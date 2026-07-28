@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { Video, VideoRevision, VideoWithRevision } from "@/lib/db-types";
 import { useVideoSearchStore } from "@/stores/video-search-store";
+import { useVideoDateFilterStore, useVideoCommentsDateFilterStore } from "@/stores/date-filter-store";
 import * as api from '@/lib/fetch-wrapper';
 
 interface VideoState {
@@ -31,8 +32,8 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         const s = useVideoSearchStore.getState();
         const data = await api.fetchVideos({
             user: s.user,
-            videoDateRange: s.videoDateRange,
-            commentsDateRange: s.commentsDateRange,
+            videoDateRange: useVideoDateFilterStore.getState().resolve(),
+            commentsDateRange: useVideoCommentsDateFilterStore.getState().resolve(),
             filterIssue: s.filterIssue,
             filterTree: s.filterTree,
             hasIssue: s.hasIssue,
