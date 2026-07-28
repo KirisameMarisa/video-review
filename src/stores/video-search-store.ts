@@ -1,11 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { DateRange } from "react-day-picker";
-import { normalizePersistedDateRange } from "@/lib/utils/date-helper";
 
 interface VideoSearchState {
-    videoDateRange: DateRange | undefined;
-    commentsDateRange: DateRange | undefined;
     hasComment: boolean;
     hasDrawing: boolean;
     hasIssue: boolean;
@@ -19,8 +15,6 @@ interface VideoSearchState {
     setHasIssue: (x: boolean) => void;
     setFilterIssue: (x: string) => void;
     setCommentUser: (x: string | undefined) => void;
-    setVideoDateRange: (x: DateRange | undefined) => void;
-    setCommentsDateRange: (x: DateRange | undefined) => void;
     setFilterTree: (x: string) => void;
     setTags: (x: string[]) => void;
     clear: () => void;
@@ -28,8 +22,6 @@ interface VideoSearchState {
 }
 
 const InitVideoSearchState = {
-    videoDateRange: undefined,
-    commentsDateRange: undefined,
     hasComment: false,
     hasDrawing: false,
     hasIssue: false,
@@ -49,8 +41,6 @@ export const useVideoSearchStore = create<VideoSearchState>()(
             setHasIssue: (x: boolean) => set({ hasIssue: x }),
             setFilterIssue: (x: string) => set({ filterIssue: x }),
             setCommentUser: (x: string | undefined) => set({ user: x }),
-            setVideoDateRange: (x: DateRange | undefined) => set({ videoDateRange: x }),
-            setCommentsDateRange: (x: DateRange | undefined) => set({ commentsDateRange: x }),
             setFilterTree: (x: string) => set({ filterTree: x }),
             setTags: (x: string[]) => set({ tags: x }),
             clear: () => set(InitVideoSearchState),
@@ -65,11 +55,6 @@ export const useVideoSearchStore = create<VideoSearchState>()(
         }),
         {
             name: "video-search-store",
-            onRehydrateStorage: () => (state) => {
-                if (!state) return;
-                state.videoDateRange = normalizePersistedDateRange(state.videoDateRange);
-                state.commentsDateRange = normalizePersistedDateRange(state.commentsDateRange);
-            },
         },
     ),
 );

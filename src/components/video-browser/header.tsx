@@ -14,6 +14,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useVideoSearchStore } from "@/stores/video-search-store";
+import { useVideoDateFilterStore } from "@/stores/date-filter-store";
 import { useVideoStore } from "@/stores/video-store";
 import CalendarDateRadio from "@/ui/calendar-date-radio";
 import { Separator } from "../ui/separator";
@@ -23,14 +24,20 @@ export default function VideoListPanelHeader(
     const t = useTranslations("video-list-panel");
     const { role } = useAuthStore();
     const { fetchVideos } = useVideoStore();
-    const { filterTree, setFilterTree, isFiltering, clear, videoDateRange, setVideoDateRange } = useVideoSearchStore();
+    const { filterTree, setFilterTree, isFiltering, clear } = useVideoSearchStore();
+    const videoDate = useVideoDateFilterStore();
 
+    // Refetch when the tree text or the date filter changes.
     useEffect(() => {
         fetchVideos();
-    }, [filterTree, videoDateRange]);
+    }, [filterTree, videoDate.mode, videoDate.from, videoDate.to, videoDate.days]);
+
+    // The date filter now lives in its own store, so fold it into the indicator.
+    const filtering = isFiltering() || videoDate.mode !== "none";
 
     const handleClear = () => {
         clear();
+        videoDate.clear();
         fetchVideos();
     }
 
@@ -47,12 +54,12 @@ export default function VideoListPanelHeader(
                         className={`
                             inline-flex items-center justify-center
                             text-lg px-1 leading-none hover:text-[#ff5500]
-                            ${isFiltering() ? "text-[#15fa34ff]" : ""}
+                            ${filtering ? "text-[#15fa34ff]" : ""}
                         `}
                     >
                         <FontAwesomeIcon icon={faSearch} />
                     </button>
-                    {isFiltering()
+                    {filtering
                         ? (
                             <>
                                 <button
@@ -78,7 +85,16 @@ export default function VideoListPanelHeader(
             <Separator className="bg-[#333]" />
 
             <SidebarGroup className="py-0">
-                <CalendarDateRadio value={videoDateRange} onSetValue={setVideoDateRange} className="size-10" />
+                <CalendarDateRadio
+                    mode={videoDate.mode}
+                    range={videoDate.mode === "range" && videoDate.from && videoDate.to
+                        ? { from: new Date(videoDate.from), to: new Date(videoDate.to) }
+                        : undefined}
+                    onToday={videoDate.setToday}
+                    onRecent={videoDate.setRecent}
+                    onSetRange={videoDate.setRange}
+                    onClear={videoDate.clear}
+                    className="size-10" />
 
                 <SidebarGroupContent className="relative mt-1">
                     <SidebarInput

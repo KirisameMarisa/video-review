@@ -8,6 +8,7 @@ import { ControlRow } from "@/ui/control-row";
 import ComboBox from "@/ui/combo-box";
 import { Checkbox } from "@/ui/checkbox";
 import { useVideoSearchStore } from "@/stores/video-search-store";
+import { useVideoDateFilterStore, useVideoCommentsDateFilterStore } from "@/stores/date-filter-store";
 import { Button } from "@/ui/button";
 import { useVideoStore } from "@/stores/video-store";
 import { X } from "lucide-react";
@@ -22,8 +23,6 @@ export function VideoSearchDialog({ open, onClose }: { open: boolean; onClose: (
 
     const {
         user,
-        videoDateRange,
-        commentsDateRange,
         filterIssue,
         filterTree,
         hasComment,
@@ -37,10 +36,10 @@ export function VideoSearchDialog({ open, onClose }: { open: boolean; onClose: (
         setHasIssue,
         setFilterIssue,
         setFilterTree,
-        setVideoDateRange,
-        setCommentsDateRange,
         setTags
     } = useVideoSearchStore();
+    const videoDate = useVideoDateFilterStore();
+    const commentsDate = useVideoCommentsDateFilterStore();
 
     useEffect(() => {
         void (async () => {
@@ -56,11 +55,11 @@ export function VideoSearchDialog({ open, onClose }: { open: boolean; onClose: (
 
     const handleClearUserFilter = () => {
         setCommentUser(undefined);
-        setCommentsDateRange(undefined);
+        commentsDate.clear();
     }
 
     const handleClearTreeFilter = () => {
-        setVideoDateRange(undefined);
+        videoDate.clear();
     }
 
     return (
@@ -104,7 +103,15 @@ export function VideoSearchDialog({ open, onClose }: { open: boolean; onClose: (
                                 {ControlRow(t("commentsDateRange"), () => {
                                     return (
                                         <div className="flex justify-between">
-                                            <CalendarDateRadio value={commentsDateRange} onSetValue={setCommentsDateRange} />
+                                            <CalendarDateRadio
+                                                mode={commentsDate.mode}
+                                                range={commentsDate.mode === "range" && commentsDate.from && commentsDate.to
+                                                    ? { from: new Date(commentsDate.from), to: new Date(commentsDate.to) }
+                                                    : undefined}
+                                                onToday={commentsDate.setToday}
+                                                onRecent={commentsDate.setRecent}
+                                                onSetRange={commentsDate.setRange}
+                                                onClear={commentsDate.clear} />
                                         </div>
                                     );
                                 })}
@@ -168,7 +175,15 @@ export function VideoSearchDialog({ open, onClose }: { open: boolean; onClose: (
                     {ControlRow(t("videoDateRange"), () => {
                         return (
                             <div className="flex justify-between">
-                                <CalendarDateRadio value={videoDateRange} onSetValue={setVideoDateRange} />
+                                <CalendarDateRadio
+                                    mode={videoDate.mode}
+                                    range={videoDate.mode === "range" && videoDate.from && videoDate.to
+                                        ? { from: new Date(videoDate.from), to: new Date(videoDate.to) }
+                                        : undefined}
+                                    onToday={videoDate.setToday}
+                                    onRecent={videoDate.setRecent}
+                                    onSetRange={videoDate.setRange}
+                                    onClear={videoDate.clear} />
                             </div>
                         );
                     })}
