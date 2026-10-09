@@ -9,6 +9,7 @@ import VideoListPanelHeader from "@/components/video-browser/header";
 import { VideoSearchDialog } from "@/components/dialog/video-search";
 import VideoThumbnailsPanel from "@/components/video-browser/video-thumbnails-panel";
 import VideoSections from "@/components/video-browser/sections";
+import { loadNewSince } from "@/components/video-browser/new-since";
 import { useVideoStore } from "@/stores/video-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useVideoSearchStore } from "@/stores/video-search-store";
@@ -25,6 +26,7 @@ export default function VideoListPanel() {
     const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
     const [thumbnailsOpen, setThumbnailsOpen] = useState(false);
     const [unReadVideoIds, setUnReadVideoIds] = useState<string[]>([]);
+    const [newSince] = useState(loadNewSince);
     const canvasEditing = useDrawingStore((s) => s.canvasEditing);
     const searching = useVideoSearchStore((s) => s.isFiltering());
     const dateFiltering = useVideoDateFilterStore((s) => s.mode !== "none");
@@ -75,6 +77,7 @@ export default function VideoListPanel() {
                         <VideoSections
                             videos={videos}
                             unReadVideoIds={unReadVideoIds}
+                            newSince={newSince}
                             selectedVideoId={selectedVideo?.id ?? null}
                             expandAll={searching || dateFiltering}
                             onSelectVideo={(id) => {

@@ -76,7 +76,8 @@
         "upload": "Upload video",
         "thumbnails": "Thumbnails",
         "thumbnailsClose": "Close thumbnails",
-        "unreadCount": "{count} unread"
+        "unreadComments": "Unread comments",
+        "unreadCommentVideos": "{count, plural, one {# video} other {# videos}} with unread comments"
     },
     "chat-search": {
         "title": "Chat search",
