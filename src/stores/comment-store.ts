@@ -11,6 +11,8 @@ interface CommentState {
     comments: VideoComment[];
     displayComments: VideoComment[];
     loading: boolean;
+    // Videos with comments this user hasn't read, across the whole list.
+    unreadVideoIds: ReadonlySet<string>;
 
     setDisplayComments: (comments: VideoComment[]) => void;
     fetchComments: (videoRevision: VideoRevision) => Promise<void>;
@@ -19,6 +21,7 @@ interface CommentState {
     deleteComment: (id: string) => Promise<void>;
     incrementThumbsUpCount: (id: string) => Promise<void>;
     issueLinkedComment: (id: string, email: string, issueType: string, screenshot: Blob | null) => Promise<void>;
+    loadUnread: (userId: string | null) => Promise<void>;
     markRead: (userId: string, videoId: string) => Promise<void>;
 }
 
@@ -26,6 +29,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
     comments: [],
     displayComments: [],
     loading: false,
+    unreadVideoIds: new Set(),
     editingComment: null,
 
     setDisplayComments: (comments: VideoComment[]) => {
@@ -104,6 +108,20 @@ export const useCommentStore = create<CommentState>((set, get) => ({
         set({
             comments: get().comments.map((c) => (c.id === id ? updated : c)),
         });
+    },
+
+    loadUnread: async (userId) => {
+        if (!userId) {
+            set({ unreadVideoIds: new Set() });
+            return;
+        }
+
+        const res = await api.readStatus.unread.$get({ query: { userId } });
+        if (res.status !== 200) {
+            throw new Error("failed to get unread comment info");
+        }
+        const { unreadVideoIds } = await res.json();
+        set({ unreadVideoIds: new Set(unreadVideoIds) });
     },
 
     markRead: async (userId, videoId) => {

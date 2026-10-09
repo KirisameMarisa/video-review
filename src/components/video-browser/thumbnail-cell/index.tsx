@@ -3,7 +3,7 @@ import { VideoWithRevision } from "@/lib/db-types";
 import { cn } from "@/lib/utils";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { ThumbnailDetailCard } from "@/components/video-browser/thumbnail-cell/detail-card";
-import { NewBadge } from "@/components/video-browser/new-badge";
+import { NewBadge } from "@/components/video-browser/marks/parts/new-mark";
 
 type Props = {
     video: VideoWithRevision;

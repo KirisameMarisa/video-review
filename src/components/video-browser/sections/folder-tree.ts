@@ -126,7 +126,3 @@ function shortenFolderPath(folderKey: string): string[] {
 
     return [...parent, leaf];
 }
-
-// The section header's height (SidebarMenuButton's default h-8), so nested headers can stick
-// one header below their parent and rows can scroll clear of the stacked headers.
-export const SECTION_HEADER_REM = 2;

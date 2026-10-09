@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar, SidebarContent, SidebarFooter } from "@/ui/sidebar"
 import { AccountMenu } from "@/components/setting";
@@ -8,56 +8,43 @@ import VideoUploadDialog from "@/components/dialog/video-upload";
 import VideoListPanelHeader from "@/components/video-browser/header";
 import { VideoSearchDialog } from "@/components/dialog/video-search";
 import VideoThumbnailsPanel from "@/components/video-browser/video-thumbnails-panel";
-import VideoSections from "@/components/video-browser/sections";
-import { loadNewSince } from "@/components/video-browser/new-since";
+import { VideoSections } from "@/components/video-browser/sections";
+import { useMarkContext } from "@/components/video-browser/marks/use-mark-context";
 import { useVideoStore } from "@/stores/video-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { useCommentStore } from "@/stores/comment-store";
+import { useVideoListStore } from "@/stores/video-list-store";
 import { useVideoSearchStore } from "@/stores/video-search-store";
 import { useVideoDateFilterStore } from "@/stores/date-filter-store";
-import { api } from "@/lib/api-client";
 import { useDrawingStore } from "@/stores/drawing-store";
 import DrawingToolPanel from "@/components/drawing-tool-panel";
 
 export default function VideoListPanel() {
     const router = useRouter();
     const { userId } = useAuthStore();
+    const loadUnread = useCommentStore((s) => s.loadUnread);
+    const recordVisit = useVideoListStore((s) => s.recordVisit);
     const { videos, reloadOnViewChange, reloadOnDataChange, selectedVideo } = useVideoStore();
     const [searchDialogOpen, setSearchDialogOpen] = useState(false);
     const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
     const [thumbnailsOpen, setThumbnailsOpen] = useState(false);
-    const [unReadVideoIds, setUnReadVideoIds] = useState<string[]>([]);
-    const [newSince] = useState(loadNewSince);
+    const markContext = useMarkContext();
+    const unReadVideoIds = useMemo(() => [...markContext.unreadVideoIds], [markContext.unreadVideoIds]);
     const canvasEditing = useDrawingStore((s) => s.canvasEditing);
     const searching = useVideoSearchStore((s) => s.isFiltering());
     const dateFiltering = useVideoDateFilterStore((s) => s.mode !== "none");
 
     useEffect(() => {
+        recordVisit();
         void (async () => {
             await reloadOnViewChange();
         })();
     }, [])
 
+    // Once per page load and signed-in user; reading a video afterwards updates it in place (markRead).
     useEffect(() => {
-        if (!userId) {
-            setUnReadVideoIds([]);
-            return;
-        }
-
-        let cancelled = false;
-
-        api.readStatus.unread.$get({ query: { userId } }).then(async (res) => {
-            if (res.status !== 200) throw new Error("failed to get unread comment info");
-            const { unreadVideoIds } = await res.json();
-            if (!cancelled) setUnReadVideoIds(unreadVideoIds);
-        }).catch((reason) => {
-            cancelled = true;
-            console.error(reason);
-        });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [userId]);
+        loadUnread(userId).catch((reason) => console.error(reason));
+    }, [userId, loadUnread]);
 
     return (
         <>
@@ -76,10 +63,9 @@ export default function VideoListPanel() {
                     <SidebarContent>
                         <VideoSections
                             videos={videos}
-                            unReadVideoIds={unReadVideoIds}
-                            newSince={newSince}
+                            markContext={markContext}
                             selectedVideoId={selectedVideo?.id ?? null}
-                            expandAll={searching || dateFiltering}
+                            filtering={searching || dateFiltering}
                             onSelectVideo={(id) => {
                                 router.replace(`/video-review/review/${id}`);
                             }}
