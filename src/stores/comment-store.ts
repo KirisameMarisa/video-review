@@ -129,6 +129,13 @@ export const useCommentStore = create<CommentState>((set, get) => ({
         if (latest.status !== 200) return;
         const { latestCommentId } = await latest.json();
         if (!latestCommentId) return;
-        await api.readStatus.index.$post({ json: { userId, videoId, lastReadCommentId: latestCommentId } });
+        const res = await api.readStatus.index.$post({ json: { userId, videoId, lastReadCommentId: latestCommentId } });
+
+        // The sidebar's unread mark goes away without a reload.
+        if (res.ok && get().unreadVideoIds.has(videoId)) {
+            const unreadVideoIds = new Set(get().unreadVideoIds);
+            unreadVideoIds.delete(videoId);
+            set({ unreadVideoIds });
+        }
     },
 }));
