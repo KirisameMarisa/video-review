@@ -2,13 +2,14 @@
 
 import { useMemo, useRef, useState, type ComponentProps } from "react";
 import { useTranslations } from "next-intl";
-import { FolderRoot, Pencil } from "lucide-react";
+import { FolderRoot } from "lucide-react";
 import type { VideoWithRevision } from "@/lib/db-types";
-import { SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { FolderSection } from "@/components/video-browser/sections/folder";
 import { FolderHeaderButton, FolderHeaderField } from "@/components/video-browser/sections/folder/folder-header";
 import { buildNestedFolders, type FolderNode } from "@/components/video-browser/sections/folder-tree";
-import { OrganizeRow } from "@/components/video-browser/organize/row";
+import { OrganizeRowButton, OrganizeRowField } from "@/components/video-browser/organize/row";
+import { RenameAction } from "@/components/video-browser/organize/rename-action";
 import { RenameInput } from "@/components/controls/rename-input";
 import { isRenameShortcut, useRenamers } from "@/components/video-browser/organize/renamers";
 import { useAllVideos } from "@/components/video-browser/organize/use-all-videos";
@@ -58,16 +59,18 @@ export function OrganizeList() {
         const editing = renaming === target;
 
         return (
-            <OrganizeRow
-                key={video.id}
-                video={video}
-                containerRef={containerRef}
-                buttonProps={renameShortcuts(() => setRenaming(target))}
-                onRename={() => setRenaming(target)}
-                replacement={editing && (
-                    <RenameInput renamer={videoRenamer(video)} onRenamed={() => finish(target)} onCancelled={() => close(target)} />
+            <SidebarMenuItem key={video.id}>
+                {editing ? (
+                    <OrganizeRowField video={video} containerRef={containerRef}>
+                        <RenameInput renamer={videoRenamer(video)} onRenamed={() => finish(target)} onCancelled={() => close(target)} />
+                    </OrganizeRowField>
+                ) : (
+                    <>
+                        <OrganizeRowButton {...renameShortcuts(() => setRenaming(target))} video={video} containerRef={containerRef} />
+                        <RenameAction onClick={() => setRenaming(target)} />
+                    </>
                 )}
-            />
+            </SidebarMenuItem>
         );
     };
 
@@ -95,9 +98,7 @@ export function OrganizeList() {
                             open={open}
                             total={folder.allVideos.length}
                         />
-                        <SidebarMenuAction showOnHover title={t("rename.action")} onClick={() => setRenaming(target)}>
-                            <Pencil />
-                        </SidebarMenuAction>
+                        <RenameAction onClick={() => setRenaming(target)} />
                     </>
                 )}
             >
