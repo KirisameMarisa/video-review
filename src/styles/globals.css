@@ -112,12 +112,12 @@
 }
 
 /* Material's trailing text: small, muted text after a name. */
-@utility trailing-text {
+@utility text-trailing {
   @apply text-xs font-normal tabular-nums text-muted-foreground;
 }
 
 /* Material's supporting text: muted text under a headline. */
-@utility supporting-text {
+@utility text-supporting {
   @apply tabular-nums text-muted-foreground;
 }
 

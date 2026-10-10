@@ -14,7 +14,7 @@ export function VideoSummary({ video }: { video: VideoWithRevision }) {
             </div>
 
             {latest && (
-                <div className="flex gap-1.5 supporting-text">
+                <div className="flex gap-1.5 text-supporting">
                     <span className="font-mono">v{latest.revision}</span>
                     <span>{format.relativeTime(new Date(latest.uploadedAt), new Date())}</span>
                 </div>

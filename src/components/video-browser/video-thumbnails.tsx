@@ -60,7 +60,7 @@ export default function VideoThumbnails({ videos, markContext, selectedVideoId, 
                             className="sticky top-0 z-20 flex items-baseline gap-2 py-1.5 mb-1.5 bg-sidebar border-b text-xs font-semibold text-primary"
                         >
                             <span className="truncate">{folderKey || "/"}</span>
-                            <span className="trailing-text">{folderVideos.length}</span>
+                            <span className="text-trailing">{folderVideos.length}</span>
                             <Marks videos={folderVideos} scope="folder" context={markContext} />
                         </h3>
                         <div className="grid gap-1.5 thumbnail-grid" style={{ "--thumb-size": `${thumbSize}px` } as React.CSSProperties}>

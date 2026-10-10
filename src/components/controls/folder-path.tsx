@@ -13,7 +13,7 @@ export function FolderPath({ names, count }: { names: string[]; count?: number }
             )}
             <span className="min-w-0 truncate font-semibold text-primary">{leaf}</span>
             {count !== undefined && (
-                <span className="shrink-0 pl-2 trailing-text">{count}</span>
+                <span className="shrink-0 pl-2 text-trailing">{count}</span>
             )}
         </span>
     );
