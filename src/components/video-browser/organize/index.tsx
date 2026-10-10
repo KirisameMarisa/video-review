@@ -42,12 +42,15 @@ export function OrganizeList() {
     // whose save may end after the second one has opened.
     const close = (target: string) => setRenaming((current) => current === target ? null : current);
 
-    // Reads the result back from the server: this list, then the browsing list and the open video.
+    // Reads this list back from the server. The browsing list catches up when the mode ends, or
+    // here when Done was clicked while this rename was still saving.
     const finish = (target: string) => {
         reload()
             .catch((reason) => console.error(reason))
             .finally(() => close(target));
-        void useVideoStore.getState().reloadOnDataChange();
+        if (!useVideoListStore.getState().organizing) {
+            void useVideoStore.getState().reloadOnDataChange();
+        }
     };
 
     const renderRow = (video: VideoWithRevision) => {
