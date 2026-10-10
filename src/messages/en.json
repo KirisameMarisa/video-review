@@ -90,6 +90,10 @@
                 "failed": "Could not rename",
                 "action": "Rename",
                 "videoClash": "A video in the destination already has the same name"
+            },
+            "move": {
+                "clash": "A video with the same name is already there",
+                "failed": "Could not move"
             }
         }
     },

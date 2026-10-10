@@ -7,12 +7,14 @@ import type { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { FolderSection } from "@/components/video-browser/sections/folder";
 import { FolderHeaderButton, FolderHeaderField } from "@/components/video-browser/sections/folder/folder-header";
-import { buildNestedFolders, type FolderNode } from "@/components/video-browser/sections/folder-tree";
+import { buildNestedFolders, folderAncestors, type FolderNode } from "@/components/video-browser/sections/folder-tree";
 import { OrganizeRowButton, OrganizeRowField } from "@/components/video-browser/organize/row";
 import { RenameAction } from "@/components/video-browser/organize/rename-action";
 import { RenameInput } from "@/components/controls/rename-input";
-import { isRenameShortcut, useRenamers } from "@/components/video-browser/organize/renamers";
+import { isRenameShortcut, useRenamers } from "@/components/video-browser/organize/operations/renamers";
 import { useAllVideos } from "@/components/video-browser/organize/use-all-videos";
+import { useDragMove } from "@/components/video-browser/organize/use-drag-move";
+import { TOP } from "@/components/video-browser/organize/operations/movers";
 import { useVideoListStore } from "@/stores/video-list-store";
 import { useVideoStore } from "@/stores/video-store";
 
@@ -23,10 +25,13 @@ export function OrganizeList() {
     const { videos, reload } = useAllVideos();
     const openPaths = useVideoListStore((s) => s.openPaths);
     const toggleFolder = useVideoListStore((s) => s.toggleFolder);
+    const revealFolders = useVideoListStore((s) => s.revealFolders);
     // Which row is being renamed, as "video:<id>" or "folder:<path>".
     const [renaming, setRenaming] = useState<string | null>(null);
 
     const { videoRenamer, folderRenamer } = useRenamers(videos);
+
+    const reveal = (path: string) => revealFolders(folderAncestors(path));
 
     const root = useMemo(() => buildNestedFolders(videos, { compact: false }), [videos]);
 
@@ -43,16 +48,28 @@ export function OrganizeList() {
     // whose save may end after the second one has opened.
     const close = (target: string) => setRenaming((current) => current === target ? null : current);
 
-    // Reads this list back from the server. The browsing list catches up when the mode ends, or
-    // here when Done was clicked while this rename was still saving.
-    const finish = (target: string) => {
-        reload()
-            .catch((reason) => console.error(reason))
-            .finally(() => close(target));
+    // Reads this list back after a rename or move. The browsing list catches up when the mode
+    // ends, or here when Done was clicked while the change was still saving.
+    const readBack = () => {
+        const reading = reload().catch((reason) => console.error(reason));
         if (!useVideoListStore.getState().organizing) {
             void useVideoStore.getState().reloadOnDataChange();
         }
+        return reading;
     };
+
+    const finish = (target: string) => {
+        void readBack().finally(() => close(target));
+    };
+
+    // Opens where it went, so the moved video or folder is in view.
+    const { dragFrom, dropOn, target: dropTarget } = useDragMove({
+        reveal,
+        onMoved: (path) => {
+            reveal(path);
+            void readBack();
+        },
+    });
 
     const renderRow = (video: VideoWithRevision) => {
         const target = `video:${video.id}`;
@@ -66,7 +83,13 @@ export function OrganizeList() {
                     </OrganizeRowField>
                 ) : (
                     <>
-                        <OrganizeRowButton {...renameShortcuts(() => setRenaming(target))} video={video} containerRef={containerRef} />
+                        <OrganizeRowButton
+                            {...renameShortcuts(() => setRenaming(target))}
+                            {...dragFrom({ video })}
+                            {...dropOn(video.folderKey)}
+                            video={video}
+                            containerRef={containerRef}
+                        />
                         <RenameAction onClick={() => setRenaming(target)} />
                     </>
                 )}
@@ -93,6 +116,9 @@ export function OrganizeList() {
                     <>
                         <FolderHeaderButton
                             {...renameShortcuts(() => setRenaming(target))}
+                            {...dragFrom({ folderPath: folder.path })}
+                            {...dropOn(folder.path)}
+                            data-drop-target={dropTarget === folder.path}
                             names={folder.names}
                             path={folder.path}
                             open={open}
@@ -112,7 +138,7 @@ export function OrganizeList() {
         <div ref={containerRef} data-slot="organize-list" className="min-h-0 flex-1 overflow-y-auto">
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton>
+                    <SidebarMenuButton {...dropOn(TOP)} data-drop-target={dropTarget === TOP}>
                         <FolderRoot className="text-primary" />
                         <span>{t("top")}</span>
                     </SidebarMenuButton>
