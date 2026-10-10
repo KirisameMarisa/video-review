@@ -1,5 +1,5 @@
 // A folder path whose parents fade and give way first, so the folder's own name stays readable.
-export function FolderPath({ names }: { names: string[] }) {
+export function FolderPath({ names, count }: { names: string[]; count?: number }) {
     const parent = names.slice(0, -1);
     const leaf = names[names.length - 1];
 
@@ -12,6 +12,9 @@ export function FolderPath({ names }: { names: string[] }) {
                 </>
             )}
             <span className="min-w-0 truncate font-semibold text-primary">{leaf}</span>
+            {count !== undefined && (
+                <span className="shrink-0 pl-2 text-xs tabular-nums text-muted-foreground">{count}</span>
+            )}
         </span>
     );
 }

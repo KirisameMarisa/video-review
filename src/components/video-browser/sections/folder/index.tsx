@@ -31,9 +31,7 @@ export function FolderSection({ names, path, depth, open, total, marks, onToggle
                         style={{ "--sticky-top": `${depth * FOLDER_HEADER_REM}rem` } as React.CSSProperties}
                     >
                         {open ? <FolderOpen className="text-primary" /> : <Folder className="text-primary" />}
-                        <FolderPath names={names} />
-
-                        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{total}</span>
+                        <FolderPath names={names} count={total} />
 
                         {marks}
                     </SidebarMenuButton>

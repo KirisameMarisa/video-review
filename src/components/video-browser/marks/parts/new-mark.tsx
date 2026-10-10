@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import type { Mark } from "@/components/video-browser/marks/marks";
 
 export const newMark: Mark = {
@@ -11,9 +12,5 @@ export const newMark: Mark = {
 };
 
 function NewBadge() {
-    return (
-        <span className="text-3xs px-1 py-px bg-destructive text-foreground rounded leading-none">
-            NEW
-        </span>
-    );
+    return <Badge variant="destructive" size="xs">NEW</Badge>;
 }
