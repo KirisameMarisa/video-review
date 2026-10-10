@@ -28,7 +28,7 @@ export const ThumbnailCell = forwardRef<HTMLDivElement, Props>(
                     tabIndex={0}
                     aria-label={video.title}
                     className={cn(
-                        "relative rounded-sm overflow-hidden ring-1 cursor-pointer transition-shadow",
+                        "relative thumb-frame ring-1 cursor-pointer transition-shadow",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-muted-foreground",
                         isSelected ? "ring-2 ring-primary" : "ring-accent hover:ring-muted-foreground"
                     )}

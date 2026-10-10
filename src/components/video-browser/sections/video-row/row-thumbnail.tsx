@@ -13,7 +13,7 @@ export function RowThumbnail({ video, containerRef }: Props) {
     const cacheUrl = useThumbnailGridStore((s) => s.cacheUrl);
 
     return (
-        <div className="w-20 shrink-0 overflow-hidden rounded-sm">
+        <div className="w-20 shrink-0 thumb-frame">
             <ThumbnailLazyLoader video={video} containerRef={containerRef} cache={urls} onResolve={cacheUrl} />
         </div>
     );
