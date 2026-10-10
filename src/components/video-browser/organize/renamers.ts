@@ -47,12 +47,12 @@ export function useRenamers(videos: VideoWithRevision[]) {
         const pathFor = (name: string) => parent ? `${parent}/${name}` : name;
 
         return {
-            name: folder.names[0],
+            name: folderName(folder.path),
             check: (name) => {
                 if (name.includes("/")) {
                     return t("slash");
                 }
-                return siblings.some((f) => f !== folder && f.names[0] === name) ? t("folderTaken") : null;
+                return siblings.some((f) => f !== folder && folderName(f.path) === name) ? t("folderTaken") : null;
             },
             commit: async (name) => {
                 const to = pathFor(name);
@@ -68,4 +68,9 @@ export function useRenamers(videos: VideoWithRevision[]) {
     };
 
     return { videoRenamer, folderRenamer };
+}
+
+// The last segment of a folder's path.
+function folderName(path: string): string {
+    return path.slice(path.lastIndexOf("/") + 1);
 }

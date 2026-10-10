@@ -6,6 +6,7 @@ import { FolderRoot, Pencil } from "lucide-react";
 import type { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { FolderSection } from "@/components/video-browser/sections/folder";
+import { FolderHeaderButton, FolderHeaderField } from "@/components/video-browser/sections/folder/folder-header";
 import { buildNestedFolders, type FolderNode } from "@/components/video-browser/sections/folder-tree";
 import { OrganizeRow } from "@/components/video-browser/organize/row";
 import { RenameInput } from "@/components/controls/rename-input";
@@ -70,24 +71,31 @@ export function OrganizeList() {
     const renderFolder = (folder: FolderNode, depth: number, siblings: FolderNode[]) => {
         const target = `folder:${folder.path}`;
         const editing = renaming === target;
+        const open = openPaths.includes(folder.path);
 
         return (
             <FolderSection
                 key={folder.path}
-                names={folder.names}
-                path={folder.path}
                 depth={depth}
-                open={openPaths.includes(folder.path)}
-                total={folder.allVideos.length}
+                open={open}
                 onToggle={() => toggleFolder(folder.path, false)}
-                buttonProps={renameShortcuts(() => setRenaming(target))}
-                action={(
-                    <SidebarMenuAction showOnHover title={t("rename.action")} onClick={() => setRenaming(target)}>
-                        <Pencil />
-                    </SidebarMenuAction>
-                )}
-                replacement={editing && (
-                    <RenameInput renamer={folderRenamer(folder, siblings)} onRenamed={() => finish(target)} onCancelled={() => close(target)} />
+                header={editing ? (
+                    <FolderHeaderField open={open}>
+                        <RenameInput renamer={folderRenamer(folder, siblings)} onRenamed={() => finish(target)} onCancelled={() => close(target)} />
+                    </FolderHeaderField>
+                ) : (
+                    <>
+                        <FolderHeaderButton
+                            {...renameShortcuts(() => setRenaming(target))}
+                            names={folder.names}
+                            path={folder.path}
+                            open={open}
+                            total={folder.allVideos.length}
+                        />
+                        <SidebarMenuAction showOnHover title={t("rename.action")} onClick={() => setRenaming(target)}>
+                            <Pencil />
+                        </SidebarMenuAction>
+                    </>
                 )}
             >
                 {folder.folders.map((child) => renderFolder(child, depth + 1, folder.folders))}
