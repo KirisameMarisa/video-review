@@ -1,8 +1,7 @@
 import { forwardRef, type ReactNode } from "react";
 import { VideoWithRevision } from "@/lib/db-types";
 import { cn } from "@/lib/utils";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { ThumbnailDetailCard } from "@/components/video-browser/thumbnail-cell/detail-card";
+import { VideoDetailHoverCard } from "@/components/video-browser/thumbnail-cell/detail-card";
 
 type Props = {
     video: VideoWithRevision;
@@ -21,52 +20,37 @@ export const ThumbnailCell = forwardRef<HTMLDivElement, Props>(
         const select = () => onSelectVideo?.(video.id);
 
         return (
-            <HoverCard openDelay={300} closeDelay={100}>
-                <HoverCardTrigger asChild>
-                    <div
-                        ref={ref}
-                        data-slot="thumbnail-card"
-                        role="button"
-                        tabIndex={0}
-                        aria-label={video.title}
-                        className={cn(
-                            "relative rounded-sm overflow-hidden ring-1 cursor-pointer transition-shadow",
-                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-muted-foreground",
-                            isSelected ? "ring-2 ring-primary" : "ring-accent hover:ring-muted-foreground"
-                        )}
-                        onClick={select}
-                        // HoverCardTrigger preventDefaults touchstart, which cancels the synthesized click.
-                        onPointerUp={(e) => {
-                            if (e.pointerType === "touch") {
-                                select();
-                            }
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key !== "Enter" && e.key !== " ") {
-                                return;
-                            }
-                            e.preventDefault();
-                            select();
-                        }}
-                    >
-                        <div className="absolute top-1 left-1 z-10">{marks}</div>
-                        {children}
-                    </div>
-                </HoverCardTrigger>
-
-                <HoverCardContent
-                    data-slot="thumbnail-detail"
-                    side="right"
-                    sideOffset={8}
-                    collisionPadding={12}
+            <VideoDetailHoverCard video={video} thumbnailUrl={thumbnailUrl} onSelect={select}>
+                <div
+                    ref={ref}
+                    data-slot="thumbnail-card"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={video.title}
+                    className={cn(
+                        "relative rounded-sm overflow-hidden ring-1 cursor-pointer transition-shadow",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-muted-foreground",
+                        isSelected ? "ring-2 ring-primary" : "ring-accent hover:ring-muted-foreground"
+                    )}
                     onClick={select}
-                    className="w-136 max-w-screen-gutter cursor-pointer"
+                    // HoverCardTrigger preventDefaults touchstart, which cancels the synthesized click.
+                    onPointerUp={(e) => {
+                        if (e.pointerType === "touch") {
+                            select();
+                        }
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key !== "Enter" && e.key !== " ") {
+                            return;
+                        }
+                        e.preventDefault();
+                        select();
+                    }}
                 >
-                    <div className="flex gap-3">
-                        <ThumbnailDetailCard video={video} thumbnailUrl={thumbnailUrl} />
-                    </div>
-                </HoverCardContent>
-            </HoverCard>
+                    <div className="absolute top-1 left-1 z-10">{marks}</div>
+                    {children}
+                </div>
+            </VideoDetailHoverCard>
         );
     }
 );

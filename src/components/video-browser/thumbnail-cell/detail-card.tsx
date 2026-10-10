@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useFormatter } from "next-intl";
 import { CalendarDays, Clock, Folder, Layers, Tag } from "lucide-react";
 import { VideoWithRevision } from "@/lib/db-types";
 import { formatTime } from "@/lib/utils";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { PreviewVideo } from "@/components/video-browser/thumbnail-cell/preview-video";
 
 const MAX_TAGS = 6;
@@ -13,7 +14,7 @@ type Props = {
 };
 
 /** Contents of the hover card: preview on the left, facts on the right. */
-export function ThumbnailDetailCard({ video, thumbnailUrl }: Props) {
+export function VideoDetailCard({ video, thumbnailUrl }: Props) {
     const latest = video.latestRevision;
     const format = useFormatter();
     const [duration, setDuration] = useState<number>();
@@ -85,5 +86,32 @@ export function ThumbnailDetailCard({ video, thumbnailUrl }: Props) {
                 )}
             </div>
         </>
+    );
+}
+
+type HoverProps = Props & {
+    onSelect: () => void;
+    children: ReactNode;
+};
+
+// Opens the detail card beside what it wraps; clicking the card opens the video as well.
+export function VideoDetailHoverCard({ video, thumbnailUrl, onSelect, children }: HoverProps) {
+    return (
+        <HoverCard openDelay={300} closeDelay={100}>
+            <HoverCardTrigger asChild>{children}</HoverCardTrigger>
+
+            <HoverCardContent
+                data-slot="thumbnail-detail"
+                side="right"
+                sideOffset={8}
+                collisionPadding={12}
+                onClick={onSelect}
+                className="w-136 max-w-screen-gutter cursor-pointer"
+            >
+                <div className="flex gap-3">
+                    <VideoDetailCard video={video} thumbnailUrl={thumbnailUrl} />
+                </div>
+            </HoverCardContent>
+        </HoverCard>
     );
 }
