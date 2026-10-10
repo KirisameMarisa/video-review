@@ -13,12 +13,16 @@ interface VideoListState {
     // The first visit on an earlier day, so reopening the list during the day doesn't move it.
     // Null until a second day is recorded.
     previousVisitAt: number | null;
+    // The admin's organize mode, which shows the list for moving and renaming instead. Not kept
+    // across reloads.
+    organizing: boolean;
 
     toggleFolder: (path: string, filtering: boolean) => void;
     // Opens every folder on the way to a video's folder, whichever of them are folded into one row.
     revealFolders: (paths: string[]) => void;
     clearClosedWhileFiltering: () => void;
     recordVisit: (now?: Date) => void;
+    setOrganizing: (organizing: boolean) => void;
 }
 
 const toggleIn = (paths: string[], path: string) =>
@@ -33,6 +37,7 @@ export const useVideoListStore = create<VideoListState>()(
             visitDay: null,
             firstVisitAt: null,
             previousVisitAt: null,
+            organizing: false,
 
             toggleFolder: (path, filtering) =>
                 set((state) => filtering
@@ -51,6 +56,7 @@ export const useVideoListStore = create<VideoListState>()(
                 }
                 set((state) => ({ visitDay: today, firstVisitAt: now.getTime(), previousVisitAt: state.firstVisitAt }));
             },
+            setOrganizing: (organizing) => set({ organizing }),
         }),
         {
             name: "video-list",

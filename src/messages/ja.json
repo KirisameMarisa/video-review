@@ -77,7 +77,13 @@
         "thumbnails": "サムネイル",
         "thumbnailsClose": "サムネイルを閉じる",
         "unreadComments": "未読コメントあり",
-        "unreadCommentVideos": "未読コメント動画 {count} 本"
+        "unreadCommentVideos": "未読コメント動画 {count} 本",
+        "organize": {
+            "open": "整理",
+            "title": "整理",
+            "done": "完了",
+            "top": "Top"
+        }
     },
     "chat-search": {
         "title": "チャット検索",

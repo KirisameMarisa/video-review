@@ -36,8 +36,9 @@ type FolderDraft = {
 
 const folderNames = (folderKey: string) => folderKey.split("/").filter(Boolean);
 
-// The folders as a tree, opened one level at a time while browsing.
-export function buildNestedFolders(videos: VideoWithRevision[]): FolderNode {
+// The folders as a tree, opened one level at a time while browsing. Organizing turns `compact`
+// off, so every folder has its own header to drop onto.
+export function buildNestedFolders(videos: VideoWithRevision[], { compact = true } = {}): FolderNode {
     const root: FolderDraft = { name: "", path: "", folders: new Map(), videos: [] };
 
     for (const video of videos) {
@@ -56,7 +57,7 @@ export function buildNestedFolders(videos: VideoWithRevision[]): FolderNode {
     }
 
     // The root has no header of its own, so it never folds into its only child.
-    return finishFolder(root, []);
+    return finishFolder(root, [], compact);
 }
 
 // One flat section per folder that directly holds videos, for filter results. Sorting by path
@@ -92,13 +93,13 @@ function compactFolder(draft: FolderDraft): FolderNode {
         names.push(draft.name);
     }
 
-    return finishFolder(draft, names);
+    return finishFolder(draft, names, true);
 }
 
-function finishFolder(draft: FolderDraft, names: string[]): FolderNode {
+function finishFolder(draft: FolderDraft, names: string[], compact: boolean): FolderNode {
     const folders = [...draft.folders.values()]
         .sort((a, b) => byName(a.name, b.name))
-        .map(compactFolder);
+        .map((child) => compact ? compactFolder(child) : finishFolder(child, [child.name], false));
     const videos = draft.videos.sort((a, b) => byName(a.title, b.title));
 
     return {

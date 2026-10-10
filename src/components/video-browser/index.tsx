@@ -9,6 +9,8 @@ import VideoListPanelHeader from "@/components/video-browser/header";
 import { VideoSearchDialog } from "@/components/dialog/video-search";
 import VideoThumbnailsPanel from "@/components/video-browser/video-thumbnails-panel";
 import { VideoSections } from "@/components/video-browser/sections";
+import { OrganizeList } from "@/components/video-browser/organize";
+import { useOrganizing } from "@/components/video-browser/organize/use-organizing";
 import { useFolderList } from "@/components/video-browser/sections/use-folder-list";
 import { useMarkContext } from "@/components/video-browser/marks/use-mark-context";
 import { useVideoStore } from "@/stores/video-store";
@@ -34,6 +36,7 @@ export default function VideoListPanel() {
     const searching = useVideoSearchStore((s) => s.isFiltering());
     const dateFiltering = useVideoDateFilterStore((s) => s.mode !== "none");
     const folderList = useFolderList(videos, searching || dateFiltering);
+    const organizing = useOrganizing();
 
     useEffect(() => {
         recordVisit();
@@ -62,14 +65,18 @@ export default function VideoListPanel() {
                     />
 
                     <SidebarContent>
-                        <VideoSections
-                            folderList={folderList}
-                            markContext={markContext}
-                            selectedVideoId={selectedVideo?.id ?? null}
-                            onSelectVideo={(id) => {
-                                router.replace(`/video-review/review/${id}`);
-                            }}
-                        />
+                        {organizing ? (
+                            <OrganizeList />
+                        ) : (
+                            <VideoSections
+                                folderList={folderList}
+                                markContext={markContext}
+                                selectedVideoId={selectedVideo?.id ?? null}
+                                onSelectVideo={(id) => {
+                                    router.replace(`/video-review/review/${id}`);
+                                }}
+                            />
+                        )}
                     </SidebarContent>
 
                     <SidebarFooter>
@@ -96,7 +103,8 @@ export default function VideoListPanel() {
             </Sidebar>
 
             <VideoThumbnailsPanel
-                open={thumbnailsOpen}
+                // It shows the browsing list's open folders, which the mode does not.
+                open={thumbnailsOpen && !organizing}
                 videos={folderList.visible}
                 markContext={markContext}
                 selectedVideoId={selectedVideo?.id}
