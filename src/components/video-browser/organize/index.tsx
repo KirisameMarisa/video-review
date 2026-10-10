@@ -6,7 +6,7 @@ import { FolderRoot } from "lucide-react";
 import type { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { buildNestedFolders, type FolderNode } from "@/components/video-browser/sections/folder-tree";
-import { OrganizeFolder } from "@/components/video-browser/organize/folder";
+import { FolderSection } from "@/components/video-browser/sections/folder";
 import { OrganizeRow } from "@/components/video-browser/organize/row";
 import { useAllVideos } from "@/components/video-browser/organize/use-all-videos";
 import { useVideoListStore } from "@/stores/video-list-store";
@@ -26,9 +26,9 @@ export function OrganizeList() {
     );
 
     const renderFolder = (folder: FolderNode, depth: number) => (
-        <OrganizeFolder
+        <FolderSection
             key={folder.path}
-            name={folder.names[0]}
+            names={folder.names}
             path={folder.path}
             depth={depth}
             open={openPaths.includes(folder.path)}
@@ -37,7 +37,7 @@ export function OrganizeList() {
         >
             {folder.folders.map((child) => renderFolder(child, depth + 1))}
             {folder.videos.map(renderRow)}
-        </OrganizeFolder>
+        </FolderSection>
     );
 
     return (

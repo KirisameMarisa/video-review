@@ -15,7 +15,8 @@ type Props = {
     depth: number;
     open: boolean;
     total: number;
-    marks: ReactNode;
+    // Shown at the right end; organize mode has none.
+    marks?: ReactNode;
     onToggle: () => void;
     children: ReactNode;
 };
