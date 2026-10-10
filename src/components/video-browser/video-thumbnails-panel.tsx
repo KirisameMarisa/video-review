@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { VideoWithRevision } from "@/lib/db-types";
 import { useSidebar } from "@/ui/sidebar";
 import VideoThumbnails from "@/components/video-browser/video-thumbnails";
+import type { MarkContext } from "@/components/video-browser/marks/use-mark-context";
 
 // Radix layers that own Escape while open: dialogs, and anything in the popper wrapper.
 const OTHER_LAYERS = '[role="dialog"], [data-radix-popper-content-wrapper]';
@@ -14,7 +15,7 @@ const OTHER_LAYERS = '[role="dialog"], [data-radix-popper-content-wrapper]';
 type Props = {
     open: boolean;
     videos: VideoWithRevision[];
-    unReadVideoIds: string[];
+    markContext: MarkContext;
     selectedVideoId: string | undefined;
     onSelectVideo: (videoId: string) => void;
     onClose: () => void;
@@ -23,7 +24,7 @@ type Props = {
 export default function VideoThumbnailsPanel({
     open,
     videos,
-    unReadVideoIds,
+    markContext,
     selectedVideoId,
     onSelectVideo,
     onClose,
@@ -82,7 +83,7 @@ export default function VideoThumbnailsPanel({
             <div className="flex-1 min-h-0">
                 <VideoThumbnails
                     videos={videos}
-                    unReadVideoIds={unReadVideoIds}
+                    markContext={markContext}
                     selectedVideoId={selectedVideoId}
                     onSelectVideo={(id) => {
                         onSelectVideo(id);

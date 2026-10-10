@@ -7,20 +7,21 @@ import { ZoomInIcon } from "lucide-react";
 import { ThumbnailCell } from "@/components/video-browser/thumbnail-cell";
 import { ThumbnailLazyLoader, thumbnailKey } from "@/components/video-browser/thumbnail-cell/lazy-loader";
 import { useThumbnailGridStore } from "@/stores/thumbnail-grid-store";
+import { Marks } from "@/components/video-browser/marks/marks";
+import type { MarkContext } from "@/components/video-browser/marks/use-mark-context";
 
 type Props = {
     videos: VideoWithRevision[];
-    unReadVideoIds: string[];
+    markContext: MarkContext;
     selectedVideoId: string | undefined;
     onSelectVideo?: (videoId: string) => void;
 };
 
-export default function VideoThumbnails({ videos, unReadVideoIds, selectedVideoId, onSelectVideo }: Props) {
+export default function VideoThumbnails({ videos, markContext, selectedVideoId, onSelectVideo }: Props) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const { thumbSize, setThumbSize, urls, cacheUrl } = useThumbnailGridStore();
 
-    const unread = useMemo(() => new Set(unReadVideoIds), [unReadVideoIds]);
-    // One section per folder, in the list's (folderKey-sorted) order.
+    // One section per folder, in the order the sidebar shows them.
     const groups = useMemo(() => {
         const byFolder = new Map<string, VideoWithRevision[]>();
         for (const video of videos) {
@@ -55,11 +56,12 @@ export default function VideoThumbnails({ videos, unReadVideoIds, selectedVideoI
                     <section key={folderKey} data-slot="thumbnail-group" className="pt-3">
                         <h3
                             data-slot="thumbnail-group-title"
-                            // Above the cells' NEW badge (z-10) so it does not bleed through the pinned heading.
+                            // Above the cells' marks (z-10) so they do not bleed through the pinned heading.
                             className="sticky top-0 z-20 flex items-baseline gap-2 py-1.5 mb-1.5 bg-sidebar border-b text-xs font-semibold text-primary"
                         >
                             <span className="truncate">{folderKey || "/"}</span>
                             <span className="font-normal text-muted-foreground">{folderVideos.length}</span>
+                            <Marks videos={folderVideos} scope="folder" context={markContext} />
                         </h3>
                         <div className="grid gap-1.5 thumbnail-grid" style={{ "--thumb-size": `${thumbSize}px` } as React.CSSProperties}>
                             {folderVideos.map(video => (
@@ -74,7 +76,7 @@ export default function VideoThumbnails({ videos, unReadVideoIds, selectedVideoI
                                     }}
                                     video={video}
                                     selectedVideoId={selectedVideoId}
-                                    unread={unread.has(video.id)}
+                                    marks={<Marks videos={[video]} scope="video" context={markContext} />}
                                     thumbnailUrl={urls.get(thumbnailKey(video.id))}
                                     onSelectVideo={onSelectVideo}
                                 >

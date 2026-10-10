@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar, SidebarContent, SidebarFooter } from "@/ui/sidebar"
 import { AccountMenu } from "@/components/setting";
@@ -9,6 +9,7 @@ import VideoListPanelHeader from "@/components/video-browser/header";
 import { VideoSearchDialog } from "@/components/dialog/video-search";
 import VideoThumbnailsPanel from "@/components/video-browser/video-thumbnails-panel";
 import { VideoSections } from "@/components/video-browser/sections";
+import { useFolderList } from "@/components/video-browser/sections/use-folder-list";
 import { useMarkContext } from "@/components/video-browser/marks/use-mark-context";
 import { useVideoStore } from "@/stores/video-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -29,10 +30,10 @@ export default function VideoListPanel() {
     const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
     const [thumbnailsOpen, setThumbnailsOpen] = useState(false);
     const markContext = useMarkContext();
-    const unReadVideoIds = useMemo(() => [...markContext.unreadVideoIds], [markContext.unreadVideoIds]);
     const canvasEditing = useDrawingStore((s) => s.canvasEditing);
     const searching = useVideoSearchStore((s) => s.isFiltering());
     const dateFiltering = useVideoDateFilterStore((s) => s.mode !== "none");
+    const folderList = useFolderList(videos, searching || dateFiltering);
 
     useEffect(() => {
         recordVisit();
@@ -62,10 +63,9 @@ export default function VideoListPanel() {
 
                     <SidebarContent>
                         <VideoSections
-                            videos={videos}
+                            folderList={folderList}
                             markContext={markContext}
                             selectedVideoId={selectedVideo?.id ?? null}
-                            filtering={searching || dateFiltering}
                             onSelectVideo={(id) => {
                                 router.replace(`/video-review/review/${id}`);
                             }}
@@ -97,8 +97,8 @@ export default function VideoListPanel() {
 
             <VideoThumbnailsPanel
                 open={thumbnailsOpen}
-                videos={videos}
-                unReadVideoIds={unReadVideoIds}
+                videos={folderList.visible}
+                markContext={markContext}
                 selectedVideoId={selectedVideo?.id}
                 onSelectVideo={(id) => {
                     router.replace(`/video-review/review/${id}`);

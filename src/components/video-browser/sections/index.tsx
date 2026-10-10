@@ -1,34 +1,30 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenu } from "@/components/ui/sidebar";
 import { Marks } from "@/components/video-browser/marks/marks";
 import type { MarkContext } from "@/components/video-browser/marks/use-mark-context";
 import { FolderSection } from "@/components/video-browser/sections/folder";
 import { VideoRow } from "@/components/video-browser/sections/video-row";
-import { FolderNode, buildFlatFolders, buildNestedFolders } from "@/components/video-browser/sections/folder-tree";
-import { useOpenFolders } from "@/components/video-browser/sections/use-open-folders";
+import type { FolderNode } from "@/components/video-browser/sections/folder-tree";
+import type { FolderList } from "@/components/video-browser/sections/use-folder-list";
 
 type Props = {
-    videos: VideoWithRevision[];
+    folderList: FolderList;
     markContext: MarkContext;
     selectedVideoId: string | null;
-    filtering: boolean;
     onSelectVideo: (videoId: string) => void;
 };
 
-export function VideoSections({ videos, markContext, selectedVideoId, filtering, onSelectVideo }: Props) {
+export function VideoSections({ folderList, markContext, selectedVideoId, onSelectVideo }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const rowRefs = useRef(new Map<string, HTMLButtonElement>());
-    const { isOpen, toggle, reveal } = useOpenFolders(filtering);
-
-    // Filter results read best as flat paths; browsing walks the folders one level at a time.
-    const root = useMemo(() => filtering ? buildFlatFolders(videos) : buildNestedFolders(videos), [filtering, videos]);
+    const { root, isOpen, toggle, reveal } = folderList;
 
     // A video opened from elsewhere (URL, auto-play next, upload) is revealed and scrolled to.
     useEffect(() => {
-        const video = videos.find((v) => v.id === selectedVideoId);
+        const video = root.allVideos.find((v) => v.id === selectedVideoId);
         if (!video) {
             return;
         }
@@ -37,7 +33,7 @@ export function VideoSections({ videos, markContext, selectedVideoId, filtering,
         requestAnimationFrame(() => {
             rowRefs.current.get(video.id)?.scrollIntoView({ block: "nearest" });
         });
-    }, [selectedVideoId, videos, reveal]);
+    }, [selectedVideoId, root, reveal]);
 
     const renderRow = (video: VideoWithRevision, depth: number) => (
         <VideoRow

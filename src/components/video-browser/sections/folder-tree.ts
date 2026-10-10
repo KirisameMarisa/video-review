@@ -110,6 +110,12 @@ function finishFolder(draft: FolderDraft, names: string[]): FolderNode {
     };
 }
 
+// The videos the list shows, in its order: under open folders only, subfolders before videos.
+export function visibleVideos(folder: FolderNode, isOpen: (path: string) => boolean): VideoWithRevision[] {
+    const nested = folder.folders.filter((f) => isOpen(f.path)).flatMap((f) => visibleVideos(f, isOpen));
+    return [...nested, ...folder.videos];
+}
+
 // Every folder on the way to a video, so opening them all reveals it whichever rows were folded.
 export function folderAncestors(folderKey: string): string[] {
     const names = folderNames(folderKey);

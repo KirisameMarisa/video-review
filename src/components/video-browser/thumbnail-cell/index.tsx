@@ -1,14 +1,13 @@
-import { forwardRef } from "react";
+import { forwardRef, type ReactNode } from "react";
 import { VideoWithRevision } from "@/lib/db-types";
 import { cn } from "@/lib/utils";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { ThumbnailDetailCard } from "@/components/video-browser/thumbnail-cell/detail-card";
-import { NewBadge } from "@/components/video-browser/marks/parts/new-mark";
 
 type Props = {
     video: VideoWithRevision;
     selectedVideoId: string | undefined;
-    unread: boolean;
+    marks: ReactNode;
     /** Resolved by the lazy loader; reused by the hover card. */
     thumbnailUrl: string | undefined;
     children?: React.ReactNode;
@@ -17,7 +16,7 @@ type Props = {
 
 /** Picture-only grid cell; hovering it opens the detail card beside it. */
 export const ThumbnailCell = forwardRef<HTMLDivElement, Props>(
-    function ThumbnailCell({ video, selectedVideoId, unread, thumbnailUrl, onSelectVideo, children }, ref) {
+    function ThumbnailCell({ video, selectedVideoId, marks, thumbnailUrl, onSelectVideo, children }, ref) {
         const isSelected = video.id === selectedVideoId;
         const select = () => onSelectVideo?.(video.id);
 
@@ -37,14 +36,20 @@ export const ThumbnailCell = forwardRef<HTMLDivElement, Props>(
                         )}
                         onClick={select}
                         // HoverCardTrigger preventDefaults touchstart, which cancels the synthesized click.
-                        onPointerUp={(e) => { if (e.pointerType === "touch") select(); }}
+                        onPointerUp={(e) => {
+                            if (e.pointerType === "touch") {
+                                select();
+                            }
+                        }}
                         onKeyDown={(e) => {
-                            if (e.key !== "Enter" && e.key !== " ") return;
+                            if (e.key !== "Enter" && e.key !== " ") {
+                                return;
+                            }
                             e.preventDefault();
                             select();
                         }}
                     >
-                        {unread && <NewBadge className="absolute top-1 left-1 z-10" />}
+                        <div className="absolute top-1 left-1 z-10">{marks}</div>
                         {children}
                     </div>
                 </HoverCardTrigger>

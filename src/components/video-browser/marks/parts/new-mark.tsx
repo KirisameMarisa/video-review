@@ -10,10 +10,9 @@ export const newMark: Mark = {
     render: () => <NewBadge />,
 };
 
-// The thumbnail grid uses this badge for unread comments.
-export function NewBadge({ className }: { className?: string }) {
+function NewBadge() {
     return (
-        <span className={`text-3xs px-1 py-px bg-destructive text-foreground rounded leading-none ${className ?? ""}`}>
+        <span className="text-3xs px-1 py-px bg-destructive text-foreground rounded leading-none">
             NEW
         </span>
     );
