@@ -6,27 +6,52 @@ import { useVideoListStore } from "@/stores/video-list-store";
 // What is being dragged: a video, or a folder by its path.
 export type MoveSource = { video: VideoWithRevision } | { folderPath: string };
 
+// The body of POST /videos/move.
+export type MoveRequest = { videos: { id: string; folderKey: string }[]; folders: { from: string; to: string }[] };
+
 // The folder path for the top level, where only folders can go: videos always live in a folder.
 export const TOP = "";
 
 const isIn = (key: string, folder: string) => key === folder || key.startsWith(`${folder}/`);
 
-// Where the source lands when dropped on the folder at `path`, or null when the drop is refused:
-// a video on the top level, a folder into itself, or anything onto where it already is.
-export function destination(source: MoveSource, path: string): string | null {
-    if ("video" in source) {
-        return path === TOP || path === source.video.folderKey ? null : path;
+// What dropping the sources on the folder at `path` asks the server, or null when the drop is
+// refused. One video on the top level or one folder into itself refuses all of them, since the
+// move is all or nothing; those already there stay, and with nothing left the drop is refused too.
+export function planMove(sources: MoveSource[], path: string): MoveRequest | null {
+    const request: MoveRequest = { videos: [], folders: [] };
+
+    // What is inside a picked folder goes with it, so it stays where it is when the folder does.
+    const folders = sources.flatMap((s) => "folderPath" in s ? [s.folderPath] : []);
+    const inPicked = (key: string, self?: string) => folders.some((f) => f !== self && isIn(key, f));
+    const outermost = sources.filter((s) => "video" in s
+        ? !inPicked(s.video.folderKey)
+        : !inPicked(s.folderPath, s.folderPath));
+
+    for (const source of outermost) {
+        if ("video" in source) {
+            if (path === TOP) {
+                return null;
+            }
+            if (path !== source.video.folderKey) {
+                request.videos.push({ id: source.video.id, folderKey: path });
+            }
+            continue;
+        }
+
+        const from = source.folderPath;
+        if (path !== TOP && isIn(path, from)) {
+            return null;
+        }
+
+        const slash = from.lastIndexOf("/");
+        const parent = slash < 0 ? TOP : from.slice(0, slash);
+        const name = from.slice(slash + 1);
+        if (path !== parent) {
+            request.folders.push({ from, to: path === TOP ? name : `${path}/${name}` });
+        }
     }
 
-    const from = source.folderPath;
-    const slash = from.lastIndexOf("/");
-    const parent = slash < 0 ? TOP : from.slice(0, slash);
-    const name = from.slice(slash + 1);
-    if (path === parent || (path !== TOP && isIn(path, from))) {
-        return null;
-    }
-
-    return path === TOP ? name : `${path}/${name}`;
+    return request.videos.length + request.folders.length === 0 ? null : request;
 }
 
 // How organize mode moves videos and folders: the request, and how a refusal reads.
@@ -34,15 +59,10 @@ export function useMovers() {
     const t = useTranslations("video-list-panel.organize.move");
     const renameFolderPaths = useVideoListStore((s) => s.renameFolderPaths);
 
-    // Moves the source to `to`, a destination() result, and returns a reason it was refused, or
-    // null once it is moved.
-    const move = async (source: MoveSource, to: string): Promise<string | null> => {
+    // Sends a planMove() result and returns a reason it was refused, or null once it is moved.
+    const move = async (request: MoveRequest): Promise<string | null> => {
         try {
-            const res = await api.videos.move.$post({
-                json: "video" in source
-                    ? { videos: [{ id: source.video.id, folderKey: to }] }
-                    : { folders: [{ from: source.folderPath, to }] },
-            });
+            const res = await api.videos.move.$post({ json: request });
             if (res.status === 409) {
                 const { titles } = await res.json();
                 return `${t("clash")}: ${titles.join(", ")}`;
@@ -55,8 +75,8 @@ export function useMovers() {
         }
 
         // A moved folder stays open, with the folders under it, as after a rename.
-        if (!("video" in source)) {
-            renameFolderPaths(source.folderPath, to);
+        for (const folder of request.folders) {
+            renameFolderPaths(folder.from, folder.to);
         }
         return null;
     };

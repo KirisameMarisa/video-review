@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type ComponentProps } from "react";
+import { useMemo, useRef, useState, type ComponentProps, type MouseEvent } from "react";
 import { useTranslations } from "next-intl";
 import { FolderRoot } from "lucide-react";
 import type { VideoWithRevision } from "@/lib/db-types";
@@ -14,7 +14,8 @@ import { RenameInput } from "@/components/controls/rename-input";
 import { isRenameShortcut, useRenamers } from "@/components/video-browser/organize/operations/renamers";
 import { useAllVideos } from "@/components/video-browser/organize/use-all-videos";
 import { useFolderDrop } from "@/components/video-browser/organize/use-folder-drop";
-import { TOP } from "@/components/video-browser/organize/operations/movers";
+import { TOP, type MoveSource } from "@/components/video-browser/organize/operations/movers";
+import { isPickClick, useSelection } from "@/components/video-browser/organize/use-selection";
 import { useVideoListStore } from "@/stores/video-list-store";
 import { useVideoStore } from "@/stores/video-store";
 
@@ -34,6 +35,50 @@ export function OrganizeList() {
     const reveal = (path: string) => revealFolders(folderAncestors(path));
 
     const root = useMemo(() => buildNestedFolders(videos, { compact: false }), [videos]);
+
+    // Every row and folder as shown, top to bottom, for a Shift range.
+    const order = useMemo(() => {
+        const keys: string[] = [];
+        const walk = (folder: FolderNode) => {
+            keys.push(`folder:${folder.path}`);
+            if (openPaths.includes(folder.path)) {
+                folder.folders.forEach(walk);
+                keys.push(...folder.videos.map((v) => `video:${v.id}`));
+            }
+        };
+        root.folders.forEach(walk);
+        keys.push(...root.videos.map((v) => `video:${v.id}`));
+        return keys;
+    }, [root, openPaths]);
+
+    const { selected, click, clear } = useSelection(order);
+
+    // Only what is in view moves, as in Finder: closing a folder leaves what was picked inside it.
+    const pickedSources = useMemo(() => {
+        const byId = new Map(videos.map((v) => [v.id, v]));
+        const shown = new Set(order);
+        return selected.filter((k) => shown.has(k)).flatMap((k): MoveSource[] => {
+            if (k.startsWith("folder:")) {
+                return [{ folderPath: k.slice("folder:".length) }];
+            }
+
+            const video = byId.get(k.slice("video:".length));
+            return video ? [{ video }] : [];
+        });
+    }, [selected, videos, order]);
+
+    // Dragging a picked row takes everything picked along; any other row goes alone.
+    const dragged = (key: string, alone: MoveSource): MoveSource[] => selected.includes(key) ? pickedSources : [alone];
+
+    // Shift+click would also select the page's text between the clicks.
+    const pickOnClick = (onClick: (e: MouseEvent<HTMLButtonElement>) => void): ComponentProps<"button"> => ({
+        onMouseDown: (e) => {
+            if (e.shiftKey) {
+                e.preventDefault();
+            }
+        },
+        onClick,
+    });
 
     const renameShortcuts = (start: () => void): ComponentProps<"button"> => ({
         onKeyDown: (e) => {
@@ -58,7 +103,9 @@ export function OrganizeList() {
         return reading;
     };
 
+    // A renamed folder's key is stale, and so would be those of everything picked inside it.
     const finish = (target: string) => {
+        clear();
         void readBack().finally(() => close(target));
     };
 
@@ -66,6 +113,7 @@ export function OrganizeList() {
     const { dragFrom, dropOn, target: dropTarget } = useFolderDrop({
         reveal,
         onMoved: (path) => {
+            clear();
             reveal(path);
             void readBack();
         },
@@ -85,7 +133,9 @@ export function OrganizeList() {
                     <>
                         <OrganizeRowButton
                             {...renameShortcuts(() => setRenaming(target))}
-                            {...dragFrom({ video })}
+                            {...pickOnClick((e) => click(target, e))}
+                            {...dragFrom(dragged(target, { video }))}
+                            data-selected={selected.includes(target)}
                             {...dropOn(video.folderKey)}
                             video={video}
                             containerRef={containerRef}
@@ -116,7 +166,15 @@ export function OrganizeList() {
                     <>
                         <FolderHeaderButton
                             {...renameShortcuts(() => setRenaming(target))}
-                            {...dragFrom({ folderPath: folder.path })}
+                            {...pickOnClick((e) => {
+                                // A plain click opens and closes the folder; picking leaves it as it is.
+                                if (isPickClick(e)) {
+                                    e.preventDefault();
+                                    click(target, e);
+                                }
+                            })}
+                            {...dragFrom(dragged(target, { folderPath: folder.path }))}
+                            data-selected={selected.includes(target)}
                             {...dropOn(folder.path)}
                             data-drop-target={dropTarget === folder.path}
                             names={folder.names}

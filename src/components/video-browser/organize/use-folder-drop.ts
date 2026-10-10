@@ -1,11 +1,11 @@
 import { toast } from "sonner";
 import { useDragDrop } from "@/lib/hooks/use-drag-drop";
-import { destination, useMovers, type MoveSource } from "@/components/video-browser/organize/operations/movers";
+import { planMove, useMovers, type MoveSource } from "@/components/video-browser/organize/operations/movers";
 
 type Options = {
     // Opens a folder and the folders above it, so a closed one can be dropped into.
     reveal: (path: string) => void;
-    // Called with the folder the moved video or folder ended up in.
+    // Called with the folder the moved videos and folders ended up in.
     onMoved: (folderKey: string) => void;
 };
 
@@ -14,10 +14,10 @@ type Options = {
 export function useFolderDrop({ reveal, onMoved }: Options) {
     const { move } = useMovers();
 
-    return useDragDrop<MoveSource>({
-        accepts: (source, path) => destination(source, path) !== null,
-        onDrop: (source, path) => {
-            void move(source, destination(source, path)!).then((refused) => {
+    return useDragDrop<MoveSource[]>({
+        accepts: (sources, path) => planMove(sources, path) !== null,
+        onDrop: (sources, path) => {
+            void move(planMove(sources, path)!).then((refused) => {
                 if (refused) {
                     toast.error(refused);
                     return;
