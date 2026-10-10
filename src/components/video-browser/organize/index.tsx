@@ -13,7 +13,7 @@ import { RenameAction } from "@/components/video-browser/organize/rename-action"
 import { RenameInput } from "@/components/controls/rename-input";
 import { isRenameShortcut, useRenamers } from "@/components/video-browser/organize/operations/renamers";
 import { useAllVideos } from "@/components/video-browser/organize/use-all-videos";
-import { useDragMove } from "@/components/video-browser/organize/use-drag-move";
+import { useFolderDrop } from "@/components/video-browser/organize/use-folder-drop";
 import { TOP } from "@/components/video-browser/organize/operations/movers";
 import { useVideoListStore } from "@/stores/video-list-store";
 import { useVideoStore } from "@/stores/video-store";
@@ -63,7 +63,7 @@ export function OrganizeList() {
     };
 
     // Opens where it went, so the moved video or folder is in view.
-    const { dragFrom, dropOn, target: dropTarget } = useDragMove({
+    const { dragFrom, dropOn, target: dropTarget } = useFolderDrop({
         reveal,
         onMoved: (path) => {
             reveal(path);
