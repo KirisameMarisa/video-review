@@ -82,7 +82,15 @@
             "open": "整理",
             "title": "整理",
             "done": "完了",
-            "top": "Top"
+            "top": "Top",
+            "rename": {
+                "videoTaken": "このフォルダには同じ名前の動画があります",
+                "folderTaken": "同じ名前のフォルダがあります",
+                "slash": "フォルダ名に / は使えません",
+                "failed": "名前を変更できませんでした",
+                "action": "名前を変更",
+                "videoClash": "移した先に同じ名前の動画があります"
+            }
         }
     },
     "chat-search": {

@@ -484,10 +484,6 @@ const sidebarMenuButtonVariants = cva(
         default: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         outline:
           "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
-        // A header that stays on screen while its contents scroll; nested ones set --sticky-top
-        // to stack below their parents.
-        sticky:
-          "sticky top-(--sticky-top) z-10 bg-sidebar hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
       },
       size: {
         default: "h-8 text-sm",
@@ -554,6 +550,19 @@ function SidebarMenuButton({
   )
 }
 
+// A row that stays on screen while the items under it scroll, holding a menu button and the
+// actions beside it so both stay; nested ones set --sticky-top to stack below their parents.
+function SidebarMenuHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="sidebar-menu-header"
+      data-sidebar="menu-header"
+      className={cn("sticky top-(--sticky-top) z-10 bg-sidebar", className)}
+      {...props}
+    />
+  )
+}
+
 function SidebarMenuAction({
   className,
   asChild = false,
@@ -577,8 +586,10 @@ function SidebarMenuAction({
         "peer-data-[size=default]/menu-button:top-1.5",
         "peer-data-[size=lg]/menu-button:top-2.5",
         "group-data-[collapsible=icon]:hidden",
+        // Follows the button just before it rather than the menu item, since a folder's menu item
+        // wraps the items inside it and would show every action under the pointer.
         showOnHover &&
-          "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0",
+          "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground peer-hover/menu-button:opacity-100 peer-focus-visible/menu-button:opacity-100 hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 md:opacity-0",
         className
       )}
       {...props}
@@ -738,6 +749,7 @@ export {
   SidebarMenuAction,
   SidebarMenuBadge,
   SidebarMenuButton,
+  SidebarMenuHeader,
   SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarMenuSub,

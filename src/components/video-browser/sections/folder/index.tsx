@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Folder, FolderOpen } from "lucide-react";
 import { FolderPath } from "@/components/controls/folder-path";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { SidebarMenuButton, SidebarMenuItem, SidebarMenuSub } from "@/components/ui/sidebar";
+import { SidebarMenuButton, SidebarMenuHeader, SidebarMenuItem, SidebarMenuSub } from "@/components/ui/sidebar";
 
 // The header's height (SidebarMenuButton's default h-8), so nested headers can stick one
 // header below their parent and rows can scroll clear of the stacked headers.
@@ -17,26 +17,44 @@ type Props = {
     total: number;
     // Shown at the right end; organize mode has none.
     marks?: ReactNode;
+    // Handlers the caller adds to the header button, such as organize mode's rename keys.
+    buttonProps?: ComponentProps<"button">;
+    // Shown instead of the name and count, with the header as a plain element so it can hold a field.
+    replacement?: ReactNode;
+    // A SidebarMenuAction beside the header, which stays on screen with it.
+    action?: ReactNode;
     onToggle: () => void;
     children: ReactNode;
 };
 
-export function FolderSection({ names, path, depth, open, total, marks, onToggle, children }: Props) {
+export function FolderSection({ names, path, depth, open, total, marks, buttonProps, replacement, action, onToggle, children }: Props) {
+    const icon = open ? <FolderOpen className="text-primary" /> : <Folder className="text-primary" />;
+
     return (
         <SidebarMenuItem>
             <Collapsible open={open} onOpenChange={onToggle}>
-                <CollapsibleTrigger asChild>
-                    <SidebarMenuButton
-                        variant="sticky"
-                        title={path || "/"}
-                        style={{ "--sticky-top": `${depth * FOLDER_HEADER_REM}rem` } as React.CSSProperties}
-                    >
-                        {open ? <FolderOpen className="text-primary" /> : <Folder className="text-primary" />}
-                        <FolderPath names={names} count={total} />
+                <SidebarMenuHeader style={{ "--sticky-top": `${depth * FOLDER_HEADER_REM}rem` } as React.CSSProperties}>
+                    {replacement ? (
+                        <SidebarMenuButton asChild size="auto">
+                            <div>
+                                {icon}
+                                {replacement}
+                            </div>
+                        </SidebarMenuButton>
+                    ) : (
+                        <>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton {...buttonProps} title={path || "/"}>
+                                    {icon}
+                                    <FolderPath names={names} count={total} />
 
-                        {marks}
-                    </SidebarMenuButton>
-                </CollapsibleTrigger>
+                                    {marks}
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            {action}
+                        </>
+                    )}
+                </SidebarMenuHeader>
 
                 <CollapsibleContent>
                     <SidebarMenuSub inset="start">{children}</SidebarMenuSub>

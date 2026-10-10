@@ -20,6 +20,8 @@ interface VideoListState {
     toggleFolder: (path: string, filtering: boolean) => void;
     // Opens every folder on the way to a video's folder, whichever of them are folded into one row.
     revealFolders: (paths: string[]) => void;
+    // Follows a renamed folder, so it and the folders under it stay open.
+    renameFolderPaths: (from: string, to: string) => void;
     clearClosedWhileFiltering: () => void;
     recordVisit: (now?: Date) => void;
     setOrganizing: (organizing: boolean) => void;
@@ -48,6 +50,11 @@ export const useVideoListStore = create<VideoListState>()(
                     const closed = paths.filter((path) => !state.openPaths.includes(path));
                     return closed.length ? { openPaths: [...state.openPaths, ...closed] } : state;
                 }),
+            renameFolderPaths: (from, to) =>
+                set((state) => ({
+                    openPaths: state.openPaths.map((path) =>
+                        path === from || path.startsWith(`${from}/`) ? to + path.slice(from.length) : path),
+                })),
             clearClosedWhileFiltering: () => set({ closedWhileFiltering: [] }),
             recordVisit: (now = new Date()) => {
                 const today = now.toDateString();
