@@ -38,6 +38,8 @@ export default function VideoListPanel() {
     const folderList = useFolderList(videos, { filtering: searching || dateFiltering });
     const organizing = useOrganizing();
 
+    const openVideo = (id: string) => router.replace(`/video-review/review/${id}`);
+
     useEffect(() => {
         recordVisit();
         void (async () => {
@@ -72,9 +74,7 @@ export default function VideoListPanel() {
                                 folderList={folderList}
                                 markContext={markContext}
                                 selectedVideoId={selectedVideo?.id ?? null}
-                                onSelectVideo={(id) => {
-                                    router.replace(`/video-review/review/${id}`);
-                                }}
+                                onSelectVideo={openVideo}
                             />
                         )}
                     </SidebarContent>
@@ -97,7 +97,7 @@ export default function VideoListPanel() {
 
                     // A new folder can land in a closed section, so selecting the video reveals it.
                     if (uploadedVideoId) {
-                        router.replace(`/video-review/review/${uploadedVideoId}`);
+                        openVideo(uploadedVideoId);
                     }
                 }} />
             </Sidebar>
@@ -108,9 +108,7 @@ export default function VideoListPanel() {
                 videos={folderList.visible}
                 markContext={markContext}
                 selectedVideoId={selectedVideo?.id}
-                onSelectVideo={(id) => {
-                    router.replace(`/video-review/review/${id}`);
-                }}
+                onSelectVideo={openVideo}
                 onClose={() => setThumbnailsOpen(false)}
             />
         </>
