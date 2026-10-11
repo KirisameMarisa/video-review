@@ -43,15 +43,17 @@ export function useRenamers(videos: VideoWithRevision[]) {
     });
 
     // Only the folder's own name changes; a "/" would move it.
+    const checkFolderName = (folder: FolderNode, siblings: FolderNode[]) => (name: string) => {
+        if (name.includes("/")) {
+            return t("slash");
+        }
+        return siblings.some((f) => f !== folder && folderName(f.path) === name) ? t("folderTaken") : null;
+    };
+
     const folderRenamer = (folder: FolderNode, siblings: FolderNode[]): Renamer => {
         return {
             name: folderName(folder.path),
-            check: (name) => {
-                if (name.includes("/")) {
-                    return t("slash");
-                }
-                return siblings.some((f) => f !== folder && folderName(f.path) === name) ? t("folderTaken") : null;
-            },
+            check: checkFolderName(folder, siblings),
             commit: async (name) => {
                 const to = childPath(parentPath(folder.path), name);
                 // Sibling folders are checked as the name is typed, so a 409 here means a video
@@ -65,5 +67,5 @@ export function useRenamers(videos: VideoWithRevision[]) {
         };
     };
 
-    return { videoRenamer, folderRenamer };
+    return { videoRenamer, folderRenamer, checkFolderName };
 }

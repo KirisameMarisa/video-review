@@ -83,6 +83,7 @@
             "title": "정리",
             "done": "완료",
             "top": "최상위",
+            "newFolder": "새 폴더",
             "rename": {
                 "videoTaken": "이 폴더에 같은 이름의 동영상이 이미 있습니다",
                 "folderTaken": "같은 이름의 폴더가 이미 있습니다",

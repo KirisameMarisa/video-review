@@ -33,6 +33,8 @@ export function RenameInput({ renamer, onRenamed, onCancelled }: Props) {
     useEffect(() => {
         // Set here as well as in the ref's initial value: StrictMode mounts twice in development.
         mounted.current = true;
+        // It can open out of view, such as for a folder just made below open folders.
+        ref.current?.scrollIntoView({ block: "nearest" });
         ref.current?.select();
 
         return () => {

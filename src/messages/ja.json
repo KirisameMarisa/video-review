@@ -83,6 +83,7 @@
             "title": "整理",
             "done": "完了",
             "top": "Top",
+            "newFolder": "新しいフォルダ",
             "rename": {
                 "videoTaken": "このフォルダには同じ名前の動画があります",
                 "folderTaken": "同じ名前のフォルダがあります",

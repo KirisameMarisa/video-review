@@ -14,11 +14,12 @@ type Options = {
     filtering?: boolean;
     // Whether a chain of folders that only hold one folder folds into one node.
     compact?: boolean;
+    emptyFolders?: string[];
 };
 
 // The folders of a video list and which of them are open. The browsing list shares one with the
 // thumbnail panel so both show the same videos.
-export function useFolderList(videos: VideoWithRevision[], { filtering = false, compact = true }: Options = {}) {
+export function useFolderList(videos: VideoWithRevision[], { filtering = false, compact = true, emptyFolders }: Options = {}) {
     const openPaths = useVideoListStore((s) => s.openPaths);
     const closedWhileFiltering = useVideoListStore((s) => s.closedWhileFiltering);
     const toggleFolder = useVideoListStore((s) => s.toggleFolder);
@@ -36,8 +37,8 @@ export function useFolderList(videos: VideoWithRevision[], { filtering = false, 
 
     // Filter results read best as flat paths; browsing walks the folders one level at a time.
     const root = useMemo(
-        () => filtering ? buildFlatFolders(videos) : buildNestedFolders(videos, { compact }),
-        [filtering, compact, videos],
+        () => filtering ? buildFlatFolders(videos) : buildNestedFolders(videos, { compact, emptyFolders }),
+        [filtering, compact, emptyFolders, videos],
     );
 
     const isOpen = useCallback(

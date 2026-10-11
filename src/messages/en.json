@@ -83,6 +83,7 @@
             "title": "Organize",
             "done": "Done",
             "top": "Top",
+            "newFolder": "New folder",
             "rename": {
                 "videoTaken": "A video with this name is already in this folder",
                 "folderTaken": "A folder with this name is already here",

@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import { useTranslations } from "next-intl";
-import { Pencil } from "lucide-react";
+import { FolderPlus, Pencil } from "lucide-react";
 import type { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenuAction } from "@/components/ui/sidebar";
 import { VideoItemButton } from "@/components/video-browser/video-tree/nodes/item/video-item";
@@ -21,6 +21,17 @@ export function RenameAction({ onClick }: { onClick: () => void }) {
     return (
         <SidebarMenuAction showOnHover title={t("action")} onClick={onClick}>
             <Pencil />
+        </SidebarMenuAction>
+    );
+}
+
+// Makes a folder inside this one, or at the top level from Top.
+export function NewFolderAction({ onClick }: { onClick: () => void }) {
+    const t = useTranslations("video-list-panel.organize");
+
+    return (
+        <SidebarMenuAction showOnHover place="second" title={t("newFolder")} onClick={onClick}>
+            <FolderPlus />
         </SidebarMenuAction>
     );
 }

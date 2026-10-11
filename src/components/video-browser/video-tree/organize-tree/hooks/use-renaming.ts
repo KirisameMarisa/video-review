@@ -1,13 +1,17 @@
 import { useState, type ComponentProps } from "react";
 import type { VideoWithRevision } from "@/lib/db-types";
 import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
+import { folderName } from "@/lib/folder-path";
+import { useCreators } from "@/components/video-browser/video-tree/organize-tree/hooks/operations/creators";
 import { isRenameShortcut, useRenamers } from "@/components/video-browser/video-tree/organize-tree/hooks/operations/renamers";
+import type { NewFolders } from "@/components/video-browser/video-tree/organize-tree/hooks/use-new-folders";
 import { folderNodeKey, itemNodeKey, type NodeKey } from "@/components/video-browser/video-tree/organize-tree/node-keys";
 
 // Which node is being renamed. The field stays until `afterRename` settles, so the old name
 // doesn't flash back.
 export function useRenaming(videos: VideoWithRevision[], afterRename: () => Promise<unknown>) {
     const { videoRenamer, folderRenamer } = useRenamers(videos);
+    const { newFolderRenamer } = useCreators(videos);
     const [renaming, setRenaming] = useState<NodeKey | null>(null);
 
     // Closes only the rename it was given: clicking another node's pencil commits the first rename,
@@ -46,5 +50,22 @@ export function useRenaming(videos: VideoWithRevision[], afterRename: () => Prom
         ...ends(folderNodeKey(folder.path)),
     });
 
-    return { editing, start, renameOn, renameVideo, renameFolder };
+    // A folder that was just made starts with an empty name, and goes again if it is left empty.
+    const renameNewFolder = (folder: FolderNode, siblings: FolderNode[], { unnamed, rename, remove }: NewFolders) => {
+        const key = folderNodeKey(folder.path);
+        const fresh = unnamed === folder.path;
+
+        return {
+            renamer: newFolderRenamer(folder, siblings, fresh ? "" : folderName(folder.path), (to) => rename(folder.path, to)),
+            ...ends(key),
+            onCancelled: () => {
+                if (fresh) {
+                    remove(folder.path);
+                }
+                close(key);
+            },
+        };
+    };
+
+    return { editing, start, renameOn, renameVideo, renameFolder, renameNewFolder };
 }

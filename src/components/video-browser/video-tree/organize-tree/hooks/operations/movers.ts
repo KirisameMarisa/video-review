@@ -54,6 +54,7 @@ export function planMove(sources: MoveSource[], path: string): MoveRequest | nul
 export function useMovers() {
     const t = useTranslations("video-list-panel.organize.move");
     const renameFolderPaths = useVideoListStore((s) => s.renameFolderPaths);
+    const fillNewFolder = useVideoListStore((s) => s.fillNewFolder);
 
     // Sends a planMove() result and returns a reason it was refused, or null once it is moved.
     const move = async (request: MoveRequest): Promise<string | null> => {
@@ -73,6 +74,11 @@ export function useMovers() {
         // A moved folder stays open, with the folders under it, as after a rename.
         for (const folder of request.folders) {
             renameFolderPaths(folder.from, folder.to);
+            fillNewFolder(folder.to);
+        }
+
+        for (const video of request.videos) {
+            fillNewFolder(video.folderKey);
         }
         return null;
     };

@@ -9,12 +9,14 @@ import { VideoItemField } from "@/components/video-browser/video-tree/nodes/item
 import { FolderHeaderButton, FolderHeaderField } from "@/components/video-browser/video-tree/nodes/folder/folder-header";
 import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
 import { useFolderList } from "@/components/video-browser/video-tree/use-folder-list";
-import { OrganizeItemButton, RenameAction } from "@/components/video-browser/video-tree/organize-tree/item";
+import { NewFolderAction, OrganizeItemButton, RenameAction } from "@/components/video-browser/video-tree/organize-tree/item";
 import { RenameInput } from "@/components/controls/rename-input";
-import { folderNodeKey, itemNodeKey } from "@/components/video-browser/video-tree/organize-tree/node-keys";
+import { folderNodeKey, itemNodeKey, type NodeKey } from "@/components/video-browser/video-tree/organize-tree/node-keys";
 import { useAllVideos } from "@/components/video-browser/video-tree/organize-tree/hooks/use-all-videos";
 import { useFolderDrop } from "@/components/video-browser/video-tree/organize-tree/hooks/use-folder-drop";
+import { useNewFolders } from "@/components/video-browser/video-tree/organize-tree/hooks/use-new-folders";
 import { useRenaming } from "@/components/video-browser/video-tree/organize-tree/hooks/use-renaming";
+import { TOP, type MoveSource } from "@/components/video-browser/video-tree/organize-tree/hooks/operations/movers";
 import { useSelection } from "@/components/video-browser/video-tree/organize-tree/hooks/use-selection";
 import { useVideoListStore } from "@/stores/video-list-store";
 import { useVideoStore } from "@/stores/video-store";
@@ -23,8 +25,9 @@ import { useVideoStore } from "@/stores/video-store";
 export function OrganizeTree() {
     const t = useTranslations("video-list-panel.organize");
     const { videos, reload } = useAllVideos();
+    const newFolders = useNewFolders(videos);
     // Every folder gets its own node, so each one can be dropped on and renamed.
-    const folderList = useFolderList(videos, { compact: false });
+    const folderList = useFolderList(videos, { compact: false, emptyFolders: newFolders.paths });
     const { reveal } = folderList;
 
     // The browsing list catches up when the mode ends, or here if it ended while saving.
@@ -39,7 +42,7 @@ export function OrganizeTree() {
     const { pickItem, pickFolder, dragged, clear } = useSelection(folderList, videos);
 
     // A renamed folder's key is stale, and so would be those of everything picked inside it.
-    const { editing, start, renameOn, renameVideo, renameFolder } = useRenaming(videos, () => {
+    const { editing, start, renameOn, renameVideo, renameFolder, renameNewFolder } = useRenaming(videos, () => {
         clear();
         return readBack();
     });
@@ -53,6 +56,15 @@ export function OrganizeTree() {
             void readBack();
         },
     });
+
+    const makeFolder = (parent: string) => {
+        reveal(parent);
+        start(folderNodeKey(newFolders.add(parent)));
+    };
+
+    // A new folder holds nothing to move, and the server would refuse it as missing.
+    const moved = (key: NodeKey, alone: MoveSource) =>
+        dragged(key, alone).filter((s) => !("folderPath" in s && newFolders.isNew(s.folderPath)));
 
     const renderItem = (video: VideoWithRevision) => {
         const key = itemNodeKey(video.id);
@@ -68,7 +80,7 @@ export function OrganizeTree() {
                         <OrganizeItemButton
                             {...renameOn(key)}
                             {...pickItem(key)}
-                            {...dragFrom(dragged(key, { video }))}
+                            {...dragFrom(moved(key, { video }))}
                             {...dropOn(video.folderKey)}
                             video={video}
                         />
@@ -81,11 +93,12 @@ export function OrganizeTree() {
 
     const renderHeader = (folder: FolderNode, open: boolean, siblings: FolderNode[]) => {
         const key = folderNodeKey(folder.path);
+        const isNew = newFolders.isNew(folder.path);
 
         if (editing(key)) {
             return (
                 <FolderHeaderField open={open}>
-                    <RenameInput {...renameFolder(folder, siblings)} />
+                    <RenameInput {...(isNew ? renameNewFolder(folder, siblings, newFolders) : renameFolder(folder, siblings))} />
                 </FolderHeaderField>
             );
         }
@@ -95,7 +108,7 @@ export function OrganizeTree() {
                 <FolderHeaderButton
                     {...renameOn(key)}
                     {...pickFolder(key)}
-                    {...dragFrom(dragged(key, { folderPath: folder.path }))}
+                    {...(isNew ? {} : dragFrom(moved(key, { folderPath: folder.path })))}
                     {...dropOn(folder.path)}
                     data-drop-target={dropTarget === folder.path}
                     names={folder.names}
@@ -103,6 +116,7 @@ export function OrganizeTree() {
                     open={open}
                     total={folder.allVideos.length}
                 />
+                <NewFolderAction onClick={() => makeFolder(folder.path)} />
                 <RenameAction onClick={() => start(key)} />
             </>
         );
@@ -115,6 +129,7 @@ export function OrganizeTree() {
                     <FolderRoot className="text-primary" />
                     <span>{t("top")}</span>
                 </SidebarMenuButton>
+                <NewFolderAction onClick={() => makeFolder(TOP)} />
             </SidebarMenuItem>
         </VideoTree>
     );

@@ -37,14 +37,17 @@ type FolderDraft = {
 const folderNames = (folderKey: string) => folderKey.split("/").filter(Boolean);
 
 // The folders as a tree, opened one level at a time while browsing. Organizing turns `compact`
-// off, so every folder has its own header to drop onto.
-export function buildNestedFolders(videos: VideoWithRevision[], { compact = true } = {}): FolderNode {
+// off, so every folder has its own header to drop onto, and adds the empty folders it has made.
+export function buildNestedFolders(
+    videos: VideoWithRevision[],
+    { compact = true, emptyFolders = [] }: { compact?: boolean; emptyFolders?: string[] } = {},
+): FolderNode {
     const root: FolderDraft = { name: "", path: "", folders: new Map(), videos: [] };
 
-    for (const video of videos) {
+    const folderAt = (folderKey: string) => {
         let draft = root;
 
-        for (const name of folderNames(video.folderKey)) {
+        for (const name of folderNames(folderKey)) {
             let child = draft.folders.get(name);
             if (!child) {
                 child = { name, path: draft.path ? `${draft.path}/${name}` : name, folders: new Map(), videos: [] };
@@ -53,7 +56,15 @@ export function buildNestedFolders(videos: VideoWithRevision[], { compact = true
             draft = child;
         }
 
-        draft.videos.push(video);
+        return draft;
+    };
+
+    for (const video of videos) {
+        folderAt(video.folderKey).videos.push(video);
+    }
+
+    for (const path of emptyFolders) {
+        folderAt(path);
     }
 
     // The root has no header of its own, so it never folds into its only child.
