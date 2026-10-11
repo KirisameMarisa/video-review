@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { api, readError } from "@/lib/api-client";
 import type { VideoWithRevision } from "@/lib/db-types";
+import { childPath, folderName, parentPath } from "@/lib/folder-path";
 import { isMac } from "@/lib/platform";
 import type { Renamer } from "@/components/controls/rename-input";
 import type { FolderNode } from "@/components/video-browser/sections/folder-tree";
@@ -43,9 +44,6 @@ export function useRenamers(videos: VideoWithRevision[]) {
 
     // Only the folder's own name changes; a "/" would move it.
     const folderRenamer = (folder: FolderNode, siblings: FolderNode[]): Renamer => {
-        const parent = folder.path.slice(0, Math.max(folder.path.lastIndexOf("/"), 0));
-        const pathFor = (name: string) => parent ? `${parent}/${name}` : name;
-
         return {
             name: folderName(folder.path),
             check: (name) => {
@@ -55,7 +53,7 @@ export function useRenamers(videos: VideoWithRevision[]) {
                 return siblings.some((f) => f !== folder && folderName(f.path) === name) ? t("folderTaken") : null;
             },
             commit: async (name) => {
-                const to = pathFor(name);
+                const to = childPath(parentPath(folder.path), name);
                 // Sibling folders are checked as the name is typed, so a 409 here means a video
                 // already in the destination, deleted ones included, has the same title.
                 const refused = await save(api.videos.folders.$patch({ json: { from: folder.path, to } }), t("videoClash"));
@@ -68,9 +66,4 @@ export function useRenamers(videos: VideoWithRevision[]) {
     };
 
     return { videoRenamer, folderRenamer };
-}
-
-// The last segment of a folder's path.
-function folderName(path: string): string {
-    return path.slice(path.lastIndexOf("/") + 1);
 }

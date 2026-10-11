@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { api, readError } from "@/lib/api-client";
 import type { VideoWithRevision } from "@/lib/db-types";
+import { childPath, folderName, isInFolder, parentPath } from "@/lib/folder-path";
 import { useVideoListStore } from "@/stores/video-list-store";
 
 // What is being dragged: a video, or a folder by its path.
@@ -12,8 +13,6 @@ export type MoveRequest = { videos: { id: string; folderKey: string }[]; folders
 // The folder path for the top level, where only folders can go: videos always live in a folder.
 export const TOP = "";
 
-const isIn = (key: string, folder: string) => key === folder || key.startsWith(`${folder}/`);
-
 // The request for dropping the sources on `path`, or null to refuse the drop. The move is all or
 // nothing, so one source that can't go there refuses them all.
 export function planMove(sources: MoveSource[], path: string): MoveRequest | null {
@@ -21,7 +20,7 @@ export function planMove(sources: MoveSource[], path: string): MoveRequest | nul
 
     // What is inside a picked folder goes with it, so it stays where it is when the folder does.
     const folders = sources.flatMap((s) => "folderPath" in s ? [s.folderPath] : []);
-    const inPicked = (key: string, self?: string) => folders.some((f) => f !== self && isIn(key, f));
+    const inPicked = (key: string, self?: string) => folders.some((f) => f !== self && isInFolder(key, f));
     const outermost = sources.filter((s) => "video" in s
         ? !inPicked(s.video.folderKey)
         : !inPicked(s.folderPath, s.folderPath));
@@ -39,15 +38,12 @@ export function planMove(sources: MoveSource[], path: string): MoveRequest | nul
         }
 
         const from = source.folderPath;
-        if (path !== TOP && isIn(path, from)) {
+        if (path !== TOP && isInFolder(path, from)) {
             return null;
         }
 
-        const slash = from.lastIndexOf("/");
-        const parent = slash < 0 ? TOP : from.slice(0, slash);
-        const name = from.slice(slash + 1);
-        if (path !== parent) {
-            request.folders.push({ from, to: path === TOP ? name : `${path}/${name}` });
+        if (path !== parentPath(from)) {
+            request.folders.push({ from, to: childPath(path, folderName(from)) });
         }
     }
 

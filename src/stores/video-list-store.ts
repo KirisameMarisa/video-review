@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { isInFolder } from "@/lib/folder-path";
 
 interface VideoListState {
     // Folders open while browsing, kept across reloads.
@@ -53,7 +54,7 @@ export const useVideoListStore = create<VideoListState>()(
             renameFolderPaths: (from, to) =>
                 set((state) => ({
                     openPaths: state.openPaths.map((path) =>
-                        path === from || path.startsWith(`${from}/`) ? to + path.slice(from.length) : path),
+                        isInFolder(path, from) ? to + path.slice(from.length) : path),
                 })),
             clearClosedWhileFiltering: () => set({ closedWhileFiltering: [] }),
             recordVisit: (now = new Date()) => {
