@@ -16,6 +16,7 @@ public:
 
 private:
     static FString ResolveExecutablePath(const FString& CliRootOverride);
+    static FString GetReleaseBinaryName();
     static FString GetPlatformDirectoryName();
     static void EnsureExecutablePermission(const FString& ExecutablePath);
     static FString BuildArguments(const FString& Command, const TArray<FString>& Args, const FString& ServerUrl, const FString& ApiToken);
