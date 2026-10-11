@@ -66,18 +66,18 @@ export default function VideoListPanel() {
                         thumbnailsOpen={thumbnailsOpen}
                     />
 
-                    <SidebarContent>
-                        {organizing ? (
-                            <OrganizeTree />
-                        ) : (
+                    {organizing ? (
+                        <OrganizeTree />
+                    ) : (
+                        <SidebarContent>
                             <BrowseTree
                                 folderList={folderList}
                                 markContext={markContext}
                                 selectedVideoId={selectedVideo?.id ?? null}
                                 onSelectVideo={openVideo}
                             />
-                        )}
-                    </SidebarContent>
+                        </SidebarContent>
+                    )}
 
                     <SidebarFooter>
                         <AccountMenu />

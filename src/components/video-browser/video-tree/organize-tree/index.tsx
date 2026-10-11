@@ -3,12 +3,13 @@
 import { useTranslations } from "next-intl";
 import { FolderRoot } from "lucide-react";
 import type { VideoWithRevision } from "@/lib/db-types";
-import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { SidebarContent, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { VideoTree } from "@/components/video-browser/video-tree";
 import { VideoItemField } from "@/components/video-browser/video-tree/nodes/item/video-item";
 import { FolderHeaderButton, FolderHeaderField } from "@/components/video-browser/video-tree/nodes/folder/folder-header";
 import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
 import { useFolderList } from "@/components/video-browser/video-tree/use-folder-list";
+import { OrganizeHeader } from "@/components/video-browser/video-tree/organize-tree/organize-header";
 import { OrganizeItemButton, RenameAction } from "@/components/video-browser/video-tree/organize-tree/item";
 import { RenameInput } from "@/components/controls/rename-input";
 import { folderNodeKey, itemNodeKey } from "@/components/video-browser/video-tree/organize-tree/node-keys";
@@ -19,7 +20,7 @@ import { useSelection } from "@/components/video-browser/video-tree/organize-tre
 import { useVideoListStore } from "@/stores/video-list-store";
 import { useVideoStore } from "@/stores/video-store";
 
-// The tree in organize mode: every folder as its own node, under the Top node.
+// Organize mode's header and tree: every folder as its own node, under the Top node.
 export function OrganizeTree() {
     const t = useTranslations("video-list-panel.organize");
     const { videos, reload } = useAllVideos();
@@ -109,13 +110,19 @@ export function OrganizeTree() {
     };
 
     return (
-        <VideoTree folders={folderList} slot="organize-tree" header={renderHeader} item={renderItem}>
-            <SidebarMenuItem>
-                <SidebarMenuButton {...dropOnTop()}>
-                    <FolderRoot className="text-primary" />
-                    <span>{t("top")}</span>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        </VideoTree>
+        <>
+            <OrganizeHeader />
+
+            <SidebarContent>
+                <VideoTree folders={folderList} slot="organize-tree" header={renderHeader} item={renderItem}>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton {...dropOnTop()}>
+                            <FolderRoot className="text-primary" />
+                            <span>{t("top")}</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </VideoTree>
+            </SidebarContent>
+        </>
     );
 }
