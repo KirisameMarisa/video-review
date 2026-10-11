@@ -40,6 +40,8 @@ model User {
   active        Boolean                 @default(true)
   readStatuses  UserVideoReadStatus[]
   identities    Identity[]
+  comments      VideoComment[]
+  videoFilters  VideoFilter[]
 }
 
 model Identity {
@@ -136,6 +138,8 @@ model VideoComment {
   videoRevNum       Int
   userName          String
   userEmail         String          @default("")
+  userId            String?
+  user              User?           @relation(fields: [userId], references: [id])
   comment           String
   time              Float
   issueId           String?
@@ -173,6 +177,7 @@ model UserVideoReadStatus {
 
   videoId           String
   lastReadCommentId String?
+  lastSeenRevision  Int?
   updatedAt         DateTime @updatedAt
 
   @@unique([userId, videoId])
@@ -281,4 +286,16 @@ model VCSCachedCommit {
   updatedAt      DateTime  @updatedAt
 
   @@unique([hash, repoName])
+}
+
+/// A saved sidebar filter, shown as a chip. `query` is the filter-bar text (`is:unread updated:7d`).
+model VideoFilter {
+  id          String   @id @default(uuid())
+  name        String
+  query       String
+  /// True shows the filter to the whole team; false keeps it to its creator.
+  shared      Boolean
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  sortOrder   Int
 }

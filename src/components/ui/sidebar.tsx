@@ -484,11 +484,17 @@ const sidebarMenuButtonVariants = cva(
         default: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         outline:
           "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
+        // A header that stays on screen while its contents scroll; nested ones set --sticky-top
+        // to stack below their parents.
+        sticky:
+          "sticky top-(--sticky-top) z-10 bg-sidebar hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
       },
       size: {
         default: "h-8 text-sm",
         sm: "h-7 text-xs",
         lg: "h-12 text-sm group-data-[collapsible=icon]:p-0!",
+        // Grows with its content, for rows with a thumbnail and two lines of text.
+        auto: "h-auto py-1.5 text-sm",
       },
     },
     defaultVariants: {
@@ -640,16 +646,32 @@ function SidebarMenuSkeleton({
   )
 }
 
-function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
+const sidebarMenuSubVariants = cva(
+  "border-sidebar-border flex min-w-0 translate-x-px flex-col gap-1 border-l py-0.5 group-data-[collapsible=icon]:hidden",
+  {
+    variants: {
+      inset: {
+        both: "mx-3.5 px-2.5",
+        // Indents on the left only, so nested levels keep the full width to the right edge.
+        start: "ml-3.5 pl-2.5",
+      },
+    },
+    defaultVariants: {
+      inset: "both",
+    },
+  }
+)
+
+function SidebarMenuSub({
+  className,
+  inset,
+  ...props
+}: React.ComponentProps<"ul"> & VariantProps<typeof sidebarMenuSubVariants>) {
   return (
     <ul
       data-slot="sidebar-menu-sub"
       data-sidebar="menu-sub"
-      className={cn(
-        "border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5",
-        "group-data-[collapsible=icon]:hidden",
-        className
-      )}
+      className={cn(sidebarMenuSubVariants({ inset }), className)}
       {...props}
     />
   )

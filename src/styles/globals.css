@@ -111,6 +111,20 @@
   }
 }
 
+/* Material's trailing text: small, muted text after a name. */
+@utility text-trailing {
+  @apply text-xs font-normal tabular-nums text-muted-foreground;
+}
+
+/* Material's supporting text: muted text under a headline. */
+@utility text-supporting {
+  @apply tabular-nums text-muted-foreground;
+}
+
+@utility thumb-frame {
+  @apply overflow-hidden rounded-sm;
+}
+
 /* Thumbnail grid whose cell width the zoom slider sets through --thumb-size. */
 @utility thumbnail-grid {
   grid-template-columns: repeat(auto-fill, minmax(var(--thumb-size, 160px), 1fr));

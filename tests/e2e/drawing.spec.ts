@@ -16,6 +16,12 @@ async function login(page: import("@playwright/test").Page) {
 // The seed ships no media bytes, so the player keeps the <video> element's default box;
 // the canvas is still fitted to it and can be drawn on.
 async function openFirstVideo(page: import("@playwright/test").Page) {
+    // The thumbnail panel shows only the videos in folders open in the sidebar.
+    const closed = page.locator('[data-slot="video-sections"] [aria-expanded="false"]');
+    await expect(closed.first()).toBeVisible();
+    while (await closed.count() > 0) {
+        await closed.first().click();
+    }
     await page.locator('[data-slot="thumbnails-toggle"]').click();
     await page.locator('[data-slot="thumbnails-panel"]').getByRole("button", { name: /Archived Playtest/ }).first().click();
     await page.waitForFunction((sel) => {

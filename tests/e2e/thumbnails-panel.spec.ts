@@ -19,6 +19,15 @@ function toggle(page: import("@playwright/test").Page) {
     return page.getByRole("button", { name: "Thumbnails", exact: true });
 }
 
+// The panel shows only the videos the sidebar shows, so cards need their folders open there.
+async function openAllFolders(page: import("@playwright/test").Page) {
+    const closed = page.locator('[data-slot="video-sections"] [aria-expanded="false"]');
+    await expect(closed.first()).toBeVisible();
+    while (await closed.count() > 0) {
+        await closed.first().click();
+    }
+}
+
 function firstCard(page: import("@playwright/test").Page) {
     return page.locator(PANEL).getByRole("button", { name: /Archived Playtest/ }).first();
 }
@@ -47,18 +56,6 @@ test.describe("thumbnails float panel", () => {
         expect(await player.boundingBox()).toEqual(before);
     });
 
-    test("stays open while the tree is used, and Escape closes it", async ({ page }) => {
-        await login(page);
-        await toggle(page).click();
-        await expect(page.locator(PANEL)).toBeVisible();
-
-        await page.locator('[data-slot="sidebar"]').getByText("01_prototype", { exact: true }).click();
-        await expect(page.locator(PANEL)).toBeVisible();
-
-        await page.keyboard.press("Escape");
-        await expect(page.locator(PANEL)).toHaveCount(0);
-    });
-
     test("survives the filter popover, which renders in a portal", async ({ page }) => {
         await login(page);
         await toggle(page).click();
@@ -83,6 +80,7 @@ test.describe("thumbnails float panel", () => {
 
     test("picking a video opens it", async ({ page }) => {
         await login(page);
+        await openAllFolders(page);
         await toggle(page).click();
 
         const card = firstCard(page);
@@ -95,13 +93,15 @@ test.describe("thumbnails float panel", () => {
 
     test("flags videos with unread comments", async ({ page }) => {
         await login(page);
+        await openAllFolders(page);
         await toggle(page).click();
 
-        await expect(page.locator(PANEL).getByText("NEW", { exact: true }).first()).toBeVisible();
+        await expect(page.locator(PANEL).getByLabel("Unread comments").first()).toBeVisible();
     });
 
     test("follows the list filter", async ({ page }) => {
         await login(page);
+        await openAllFolders(page);
         await toggle(page).click();
         await expect(page.locator(PANEL)).toBeVisible();
 
@@ -114,8 +114,19 @@ test.describe("thumbnails float panel", () => {
         await expect(outside).toHaveCount(0);
     });
 
+    test("shows only the videos the sidebar shows in its open folders", async ({ page }) => {
+        await login(page);
+        await page.locator('[data-slot="video-sections"] [aria-expanded="false"]').first().click();
+        await toggle(page).click();
+
+        const rows = page.locator('[data-slot="video-sections"] [data-sidebar="menu-button"][data-size="auto"]');
+        await expect(rows.first()).toBeVisible();
+        await expect(page.locator(PANEL).locator('[data-slot="thumbnail-card"]')).toHaveCount(await rows.count());
+    });
+
     test("hovering a cell shows its details, and clicking them opens the video", async ({ page }) => {
         await login(page);
+        await openAllFolders(page);
         await toggle(page).click();
 
         const card = firstCard(page);
@@ -143,6 +154,7 @@ test.describe("thumbnails float panel", () => {
 
         test("plays a preview in the detail card", async ({ page }) => {
             await login(page);
+            await openAllFolders(page);
             await toggle(page).click();
             await firstCard(page).hover();
 

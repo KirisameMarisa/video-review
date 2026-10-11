@@ -8,50 +8,44 @@ import VideoUploadDialog from "@/components/dialog/video-upload";
 import VideoListPanelHeader from "@/components/video-browser/header";
 import { VideoSearchDialog } from "@/components/dialog/video-search";
 import VideoThumbnailsPanel from "@/components/video-browser/video-thumbnails-panel";
-import VideoFoldersTree from "@/components/video-browser/video-folders-tree";
+import { VideoSections } from "@/components/video-browser/sections";
+import { useFolderList } from "@/components/video-browser/sections/use-folder-list";
+import { useMarkContext } from "@/components/video-browser/marks/use-mark-context";
 import { useVideoStore } from "@/stores/video-store";
 import { useAuthStore } from "@/stores/auth-store";
-import { api } from "@/lib/api-client";
+import { useCommentStore } from "@/stores/comment-store";
+import { useVideoListStore } from "@/stores/video-list-store";
+import { useVideoSearchStore } from "@/stores/video-search-store";
+import { useVideoDateFilterStore } from "@/stores/date-filter-store";
 import { useDrawingStore } from "@/stores/drawing-store";
 import DrawingToolPanel from "@/components/drawing-tool-panel";
 
 export default function VideoListPanel() {
     const router = useRouter();
     const { userId } = useAuthStore();
+    const loadUnread = useCommentStore((s) => s.loadUnread);
+    const recordVisit = useVideoListStore((s) => s.recordVisit);
     const { videos, reloadOnViewChange, reloadOnDataChange, selectedVideo } = useVideoStore();
     const [searchDialogOpen, setSearchDialogOpen] = useState(false);
     const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
     const [thumbnailsOpen, setThumbnailsOpen] = useState(false);
-    const [unReadVideoIds, setUnReadVideoIds] = useState<string[]>([]);
+    const markContext = useMarkContext();
     const canvasEditing = useDrawingStore((s) => s.canvasEditing);
+    const searching = useVideoSearchStore((s) => s.isFiltering());
+    const dateFiltering = useVideoDateFilterStore((s) => s.mode !== "none");
+    const folderList = useFolderList(videos, searching || dateFiltering);
 
     useEffect(() => {
+        recordVisit();
         void (async () => {
             await reloadOnViewChange();
         })();
     }, [])
 
+    // Once per page load and signed-in user; reading a video afterwards updates it in place (markRead).
     useEffect(() => {
-        if (!userId) {
-            setUnReadVideoIds([]);
-            return;
-        }
-
-        let cancelled = false;
-
-        api.readStatus.unread.$get({ query: { userId } }).then(async (res) => {
-            if (res.status !== 200) throw new Error("failed to get unread comment info");
-            const { unreadVideoIds } = await res.json();
-            if (!cancelled) setUnReadVideoIds(unreadVideoIds);
-        }).catch((reason) => {
-            cancelled = true;
-            console.error(reason);
-        });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [userId]);
+        loadUnread(userId).catch((reason) => console.error(reason));
+    }, [userId, loadUnread]);
 
     return (
         <>
@@ -68,9 +62,9 @@ export default function VideoListPanel() {
                     />
 
                     <SidebarContent>
-                        <VideoFoldersTree
-                            videos={videos}
-                            unReadVideoIds={unReadVideoIds}
+                        <VideoSections
+                            folderList={folderList}
+                            markContext={markContext}
                             selectedVideoId={selectedVideo?.id ?? null}
                             onSelectVideo={(id) => {
                                 router.replace(`/video-review/review/${id}`);
@@ -94,8 +88,7 @@ export default function VideoListPanel() {
                         selectVideoRevision(revisions[0]);
                     }
 
-                    // The tree is virtualised and a new folder can land outside the rendered
-                    // window, so selecting the video brings it into view.
+                    // A new folder can land in a closed section, so selecting the video reveals it.
                     if (uploadedVideoId) {
                         router.replace(`/video-review/review/${uploadedVideoId}`);
                     }
@@ -104,8 +97,8 @@ export default function VideoListPanel() {
 
             <VideoThumbnailsPanel
                 open={thumbnailsOpen}
-                videos={videos}
-                unReadVideoIds={unReadVideoIds}
+                videos={folderList.visible}
+                markContext={markContext}
                 selectedVideoId={selectedVideo?.id}
                 onSelectVideo={(id) => {
                     router.replace(`/video-review/review/${id}`);

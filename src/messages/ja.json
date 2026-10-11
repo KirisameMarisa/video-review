@@ -75,7 +75,9 @@
         "title": "動画リスト",
         "upload": "動画をアップロード",
         "thumbnails": "サムネイル",
-        "thumbnailsClose": "サムネイルを閉じる"
+        "thumbnailsClose": "サムネイルを閉じる",
+        "unreadComments": "未読コメントあり",
+        "unreadCommentVideos": "未読コメント動画 {count} 本"
     },
     "chat-search": {
         "title": "チャット検索",
