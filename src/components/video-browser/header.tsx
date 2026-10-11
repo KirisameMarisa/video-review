@@ -17,8 +17,8 @@ import CalendarDateRadio from "@/components/controls/calendar-date-radio";
 import { Separator } from "../ui/separator";
 import { useChatSearchStore } from "@/stores/chat-search-store";
 import { ChatSearchPanel } from "@/components/chat-search";
-import { OrganizeHeader } from "@/components/video-browser/organize/header";
-import { useOrganizing } from "@/components/video-browser/organize/hooks/use-organizing";
+import { OrganizeHeader } from "@/components/video-browser/video-tree/organize-tree/header";
+import { useOrganizing } from "@/components/video-browser/video-tree/organize-tree/hooks/use-organizing";
 import { useVideoListStore } from "@/stores/video-list-store";
 
 export default function VideoListPanelHeader(

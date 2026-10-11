@@ -3,10 +3,10 @@
 import { useEffect, useRef } from "react";
 import { Marks } from "@/components/video-browser/marks/marks";
 import type { MarkContext } from "@/components/video-browser/marks/use-mark-context";
-import { FolderHeaderButton } from "@/components/video-browser/sections/folder/folder-header";
-import { VideoRow } from "@/components/video-browser/sections/video-row";
-import { VideoTree } from "@/components/video-browser/sections/video-tree";
-import type { FolderList } from "@/components/video-browser/sections/use-folder-list";
+import { FolderHeaderButton } from "@/components/video-browser/video-tree/folder/folder-header";
+import { VideoRow } from "@/components/video-browser/video-tree/browse-tree/video-row";
+import { VideoTree } from "@/components/video-browser/video-tree";
+import type { FolderList } from "@/components/video-browser/video-tree/use-folder-list";
 
 type Props = {
     folderList: FolderList;

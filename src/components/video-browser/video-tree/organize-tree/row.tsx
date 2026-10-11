@@ -3,7 +3,7 @@ import { useTranslations } from "next-intl";
 import { Pencil } from "lucide-react";
 import type { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenuAction, SidebarMenuButton } from "@/components/ui/sidebar";
-import { RowThumbnail } from "@/components/video-browser/sections/video-row/row-thumbnail";
+import { RowThumbnail } from "@/components/video-browser/video-tree/row-thumbnail";
 
 type RowProps = {
     video: VideoWithRevision;

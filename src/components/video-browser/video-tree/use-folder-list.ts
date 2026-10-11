@@ -5,7 +5,7 @@ import {
     buildNestedFolders,
     folderAncestors,
     visibleVideos,
-} from "@/components/video-browser/sections/folder-tree";
+} from "@/components/video-browser/video-tree/folder-tree";
 import { useVideoListStore } from "@/stores/video-list-store";
 
 export type FolderList = ReturnType<typeof useFolderList>;

@@ -1,8 +1,8 @@
 import { useState, type ComponentProps } from "react";
 import type { VideoWithRevision } from "@/lib/db-types";
-import type { FolderNode } from "@/components/video-browser/sections/folder-tree";
-import { isRenameShortcut, useRenamers } from "@/components/video-browser/organize/hooks/operations/renamers";
-import { folderRow, videoRow, type RowKey } from "@/components/video-browser/organize/row-keys";
+import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
+import { isRenameShortcut, useRenamers } from "@/components/video-browser/video-tree/organize-tree/hooks/operations/renamers";
+import { folderRow, videoRow, type RowKey } from "@/components/video-browser/video-tree/organize-tree/row-keys";
 
 // Which row is being renamed. The field stays until `afterRename` settles, so the old name
 // doesn't flash back.

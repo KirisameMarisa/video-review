@@ -3,9 +3,9 @@ import { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { VideoDetailHoverCard } from "@/components/video-browser/thumbnail-cell/detail-card";
 import { thumbnailKey } from "@/components/video-browser/thumbnail-cell/lazy-loader";
-import { RowThumbnail } from "@/components/video-browser/sections/video-row/row-thumbnail";
-import { VideoSummary } from "@/components/video-browser/sections/video-row/video-summary";
-import { FOLDER_HEADER_REM } from "@/components/video-browser/sections/folder";
+import { RowThumbnail } from "@/components/video-browser/video-tree/row-thumbnail";
+import { VideoSummary } from "@/components/video-browser/video-tree/browse-tree/video-row/video-summary";
+import { FOLDER_HEADER_REM } from "@/components/video-browser/video-tree/folder";
 import { useThumbnailGridStore } from "@/stores/thumbnail-grid-store";
 
 type Props = {

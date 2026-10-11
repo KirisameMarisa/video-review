@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { useDragDrop } from "@/lib/hooks/use-drag-drop";
-import { planMove, TOP, useMovers, type MoveSource } from "@/components/video-browser/organize/hooks/operations/movers";
+import { planMove, TOP, useMovers, type MoveSource } from "@/components/video-browser/video-tree/organize-tree/hooks/operations/movers";
 
 type Options = {
     // Opens a folder and the folders above it, so a closed one can be dropped into.

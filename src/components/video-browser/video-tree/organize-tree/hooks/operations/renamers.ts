@@ -4,7 +4,7 @@ import type { VideoWithRevision } from "@/lib/db-types";
 import { childPath, folderName, parentPath } from "@/lib/folder-path";
 import { isMac } from "@/lib/platform";
 import type { Renamer } from "@/components/controls/rename-input";
-import type { FolderNode } from "@/components/video-browser/sections/folder-tree";
+import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
 import { useVideoListStore } from "@/stores/video-list-store";
 
 // The key that starts renaming the focused row: F2 as in Explorer, or Return on a Mac as in Finder.

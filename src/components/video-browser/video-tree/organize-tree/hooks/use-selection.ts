@@ -1,9 +1,9 @@
 import { useMemo, useRef, useState, type ComponentProps, type MouseEvent } from "react";
 import type { VideoWithRevision } from "@/lib/db-types";
 import { isMac } from "@/lib/platform";
-import type { FolderNode } from "@/components/video-browser/sections/folder-tree";
-import type { MoveSource } from "@/components/video-browser/organize/hooks/operations/movers";
-import { folderRow, parseRow, videoRow, type RowKey } from "@/components/video-browser/organize/row-keys";
+import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
+import type { MoveSource } from "@/components/video-browser/video-tree/organize-tree/hooks/operations/movers";
+import { folderRow, parseRow, videoRow, type RowKey } from "@/components/video-browser/video-tree/organize-tree/row-keys";
 import { useVideoListStore } from "@/stores/video-list-store";
 
 type PickProps = ComponentProps<"button"> & { "data-selected": boolean };

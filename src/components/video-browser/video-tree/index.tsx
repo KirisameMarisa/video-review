@@ -1,9 +1,9 @@
 import { Fragment, type ReactNode, type RefObject } from "react";
 import type { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenu } from "@/components/ui/sidebar";
-import { FolderSection } from "@/components/video-browser/sections/folder";
-import type { FolderNode } from "@/components/video-browser/sections/folder-tree";
-import type { FolderList } from "@/components/video-browser/sections/use-folder-list";
+import { FolderSection } from "@/components/video-browser/video-tree/folder";
+import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
+import type { FolderList } from "@/components/video-browser/video-tree/use-folder-list";
 
 type Props = {
     folders: Pick<FolderList, "root" | "isOpen" | "toggle">;
