@@ -5,16 +5,18 @@ import { VideoWithRevision } from "@/lib/db-types";
 import { formatTime } from "@/lib/utils";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { PreviewVideo } from "@/components/video-browser/thumbnail-cell/preview-video";
+import { thumbnailKey } from "@/components/video-browser/thumbnail-cell/lazy-loader";
+import { useThumbnailGridStore } from "@/stores/thumbnail-grid-store";
 
 const MAX_TAGS = 6;
 
 type Props = {
     video: VideoWithRevision;
-    thumbnailUrl: string | undefined;
 };
 
 /** Contents of the hover card: preview on the left, facts on the right. */
-export function VideoDetailCard({ video, thumbnailUrl }: Props) {
+export function VideoDetailCard({ video }: Props) {
+    const thumbnailUrl = useThumbnailGridStore((s) => s.urls.get(thumbnailKey(video.id)));
     const latest = video.latestRevision;
     const format = useFormatter();
     const [duration, setDuration] = useState<number>();
@@ -95,7 +97,7 @@ type HoverProps = Props & {
 };
 
 // Opens the detail card beside what it wraps; clicking the card opens the video as well.
-export function VideoDetailHoverCard({ video, thumbnailUrl, onSelect, children }: HoverProps) {
+export function VideoDetailHoverCard({ video, onSelect, children }: HoverProps) {
     return (
         <HoverCard openDelay={300} closeDelay={100}>
             <HoverCardTrigger asChild>{children}</HoverCardTrigger>
@@ -109,7 +111,7 @@ export function VideoDetailHoverCard({ video, thumbnailUrl, onSelect, children }
                 className="w-136 max-w-screen-gutter cursor-pointer"
             >
                 <div className="flex gap-3">
-                    <VideoDetailCard video={video} thumbnailUrl={thumbnailUrl} />
+                    <VideoDetailCard video={video} />
                 </div>
             </HoverCardContent>
         </HoverCard>

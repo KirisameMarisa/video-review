@@ -77,7 +77,31 @@
         "thumbnails": "썸네일",
         "thumbnailsClose": "썸네일 닫기",
         "unreadComments": "읽지 않은 댓글 있음",
-        "unreadCommentVideos": "읽지 않은 댓글 동영상 {count}개"
+        "unreadCommentVideos": "읽지 않은 댓글 동영상 {count}개",
+        "organize": {
+            "open": "정리",
+            "title": "정리",
+            "done": "완료",
+            "top": "최상위",
+            "newFolder": "새 폴더",
+            "rename": {
+                "videoTaken": "이 폴더에 같은 이름의 동영상이 이미 있습니다",
+                "folderTaken": "같은 이름의 폴더가 이미 있습니다",
+                "slash": "폴더 이름에는 / 를 사용할 수 없습니다",
+                "failed": "이름을 변경하지 못했습니다",
+                "action": "이름 변경",
+                "videoClash": "이동할 위치에 같은 이름의 동영상이 이미 있습니다"
+            },
+            "move": {
+                "title": "이동",
+                "emptied": "{folders} 폴더가 비어 목록에서 사라집니다",
+                "cancel": "취소",
+                "confirm": "이동",
+                "close": "확인",
+                "clash": "이동할 위치에 같은 이름의 동영상이 이미 있습니다",
+                "failed": "이동하지 못했습니다"
+            }
+        }
     },
     "chat-search": {
         "title": "채팅 검색",

@@ -77,7 +77,31 @@
         "thumbnails": "サムネイル",
         "thumbnailsClose": "サムネイルを閉じる",
         "unreadComments": "未読コメントあり",
-        "unreadCommentVideos": "未読コメント動画 {count} 本"
+        "unreadCommentVideos": "未読コメント動画 {count} 本",
+        "organize": {
+            "open": "整理",
+            "title": "整理",
+            "done": "完了",
+            "top": "Top",
+            "newFolder": "新しいフォルダ",
+            "rename": {
+                "videoTaken": "このフォルダには同じ名前の動画があります",
+                "folderTaken": "同じ名前のフォルダがあります",
+                "slash": "フォルダ名に / は使えません",
+                "failed": "名前を変更できませんでした",
+                "action": "名前を変更",
+                "videoClash": "移した先に同じ名前の動画があります"
+            },
+            "move": {
+                "title": "移動",
+                "emptied": "{folders} が空になり、一覧から消えます",
+                "cancel": "キャンセル",
+                "confirm": "移動",
+                "close": "OK",
+                "clash": "移した先に同じ名前の動画があります",
+                "failed": "移動できませんでした"
+            }
+        }
     },
     "chat-search": {
         "title": "チャット検索",

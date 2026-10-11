@@ -4,13 +4,13 @@ import {
     buildFlatFolders,
     buildNestedFolders,
     folderAncestors,
-} from "@/components/video-browser/sections/folder-tree";
+} from "@/components/video-browser/video-tree/folder-tree";
 
 const video = (folderKey: string, title = "Cut") =>
     ({ id: `${folderKey}/${title}`, title, folderKey, latestRevision: null }) as VideoWithRevision;
 
 describe("buildNestedFolders", () => {
-    it("folds a chain of folders that only hold one folder into a single row", () => {
+    it("folds a chain of folders that only hold one folder into a single node", () => {
         const root = buildNestedFolders([video("Main/Chapter09/Abyss/Event"), video("Main/Chapter09/Abyss/Boss")]);
 
         const [abyss] = root.folders;

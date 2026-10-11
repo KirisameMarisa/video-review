@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { X, Plus, LayoutGrid, MessageSquare } from "lucide-react";
+import { X, Plus, LayoutGrid, MessageSquare, FolderTree } from "lucide-react";
 import { Button } from "@/ui/button";
 import { SidebarSearchInput } from "@/components/controls/sidebar-search-input";
 import { useAuthStore } from "@/stores/auth-store";
 import { useTranslations } from "next-intl";
-import { isGuest } from "@/lib/role";
+import { isAdmin, isGuest } from "@/lib/role";
 import { SidebarGroup, SidebarHeader, useSidebar } from "@/ui/sidebar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
@@ -17,6 +17,9 @@ import CalendarDateRadio from "@/components/controls/calendar-date-radio";
 import { Separator } from "../ui/separator";
 import { useChatSearchStore } from "@/stores/chat-search-store";
 import { ChatSearchPanel } from "@/components/chat-search";
+import { OrganizeHeader } from "@/components/video-browser/video-tree/organize-tree/organize-header";
+import { useOrganizing } from "@/components/video-browser/video-tree/organize-tree/hooks/use-organizing";
+import { useVideoListStore } from "@/stores/video-list-store";
 
 export default function VideoListPanelHeader(
 { onSearchDialogShow, onUploadDialogShow, onThumbnailsToggle, thumbnailsOpen }: {
@@ -33,6 +36,8 @@ export default function VideoListPanelHeader(
     const { filterTree, setFilterTree, isFiltering, clear } = useVideoSearchStore();
     const videoDate = useVideoDateFilterStore();
     const { open: openChat } = useChatSearchStore();
+    const organizing = useOrganizing();
+    const setOrganizing = useVideoListStore((s) => s.setOrganizing);
 
     // Refetch when the tree text or the date filter changes.
     useEffect(() => {
@@ -46,6 +51,11 @@ export default function VideoListPanelHeader(
         clear();
         videoDate.clear();
         reloadOnViewChange();
+    }
+
+    // The mode lists every video, so the filters have nothing to act on while it is on.
+    if (organizing) {
+        return <OrganizeHeader />;
     }
 
     return (
@@ -67,6 +77,15 @@ export default function VideoListPanelHeader(
                 </div>
 
                 <div className="flex items-center gap-1">
+                    <Button
+                        variant="toolbar"
+                        size="icon-sm"
+                        hidden={!isAdmin(role)}
+                        onClick={() => setOrganizing(true)}
+                        title={t("organize.open")}
+                    >
+                        <FolderTree className="size-5" />
+                    </Button>
                     <Button
                         variant="toolbar"
                         size="icon-sm"

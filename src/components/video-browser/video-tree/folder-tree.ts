@@ -18,7 +18,7 @@ function byPath(a: string, b: string): number {
 }
 
 export type FolderNode = {
-    // More than one name when folders holding only a single folder were folded into this row.
+    // More than one name when folders holding only a single folder were folded into this node.
     names: string[];
     path: string;
     folders: FolderNode[];
@@ -36,14 +36,18 @@ type FolderDraft = {
 
 const folderNames = (folderKey: string) => folderKey.split("/").filter(Boolean);
 
-// The folders as a tree, opened one level at a time while browsing.
-export function buildNestedFolders(videos: VideoWithRevision[]): FolderNode {
+// The folders as a tree, opened one level at a time while browsing. Organizing turns `compact`
+// off, so every folder has its own header to drop onto, and adds the empty folders it has made.
+export function buildNestedFolders(
+    videos: VideoWithRevision[],
+    { compact = true, emptyFolders = [] }: { compact?: boolean; emptyFolders?: string[] } = {},
+): FolderNode {
     const root: FolderDraft = { name: "", path: "", folders: new Map(), videos: [] };
 
-    for (const video of videos) {
+    const folderAt = (folderKey: string) => {
         let draft = root;
 
-        for (const name of folderNames(video.folderKey)) {
+        for (const name of folderNames(folderKey)) {
             let child = draft.folders.get(name);
             if (!child) {
                 child = { name, path: draft.path ? `${draft.path}/${name}` : name, folders: new Map(), videos: [] };
@@ -52,11 +56,19 @@ export function buildNestedFolders(videos: VideoWithRevision[]): FolderNode {
             draft = child;
         }
 
-        draft.videos.push(video);
+        return draft;
+    };
+
+    for (const video of videos) {
+        folderAt(video.folderKey).videos.push(video);
+    }
+
+    for (const path of emptyFolders) {
+        folderAt(path);
     }
 
     // The root has no header of its own, so it never folds into its only child.
-    return finishFolder(root, []);
+    return finishFolder(root, [], compact);
 }
 
 // One flat section per folder that directly holds videos, for filter results. Sorting by path
@@ -82,7 +94,7 @@ export function buildFlatFolders(videos: VideoWithRevision[]): FolderNode {
     return { names: [], path: "", folders, videos: [], allVideos: folders.flatMap((f) => f.allVideos) };
 }
 
-// A chain of folders that each hold just one folder and no videos reads as one row,
+// A chain of folders that each hold just one folder and no videos reads as one node,
 // as VS Code's compact folders do, so a deep but narrow path costs a single level.
 function compactFolder(draft: FolderDraft): FolderNode {
     const names = [draft.name];
@@ -92,13 +104,13 @@ function compactFolder(draft: FolderDraft): FolderNode {
         names.push(draft.name);
     }
 
-    return finishFolder(draft, names);
+    return finishFolder(draft, names, true);
 }
 
-function finishFolder(draft: FolderDraft, names: string[]): FolderNode {
+function finishFolder(draft: FolderDraft, names: string[], compact: boolean): FolderNode {
     const folders = [...draft.folders.values()]
         .sort((a, b) => byName(a.name, b.name))
-        .map(compactFolder);
+        .map((child) => compact ? compactFolder(child) : finishFolder(child, [child.name], false));
     const videos = draft.videos.sort((a, b) => byName(a.title, b.title));
 
     return {
@@ -110,13 +122,24 @@ function finishFolder(draft: FolderDraft, names: string[]): FolderNode {
     };
 }
 
-// The videos the list shows, in its order: under open folders only, subfolders before videos.
-export function visibleVideos(folder: FolderNode, isOpen: (path: string) => boolean): VideoWithRevision[] {
-    const nested = folder.folders.filter((f) => isOpen(f.path)).flatMap((f) => visibleVideos(f, isOpen));
-    return [...nested, ...folder.videos];
+export type VisibleNode = { folder: FolderNode } | { video: VideoWithRevision };
+
+// The headers and videos the list shows, in its order: a folder's contents only while it is open,
+// subfolders before videos.
+export function visibleNodes(folder: FolderNode, isOpen: (path: string) => boolean): VisibleNode[] {
+    const folders = folder.folders.flatMap((f) => {
+        const contents = isOpen(f.path) ? visibleNodes(f, isOpen) : [];
+        return [{ folder: f }, ...contents];
+    });
+
+    return [...folders, ...folder.videos.map((video) => ({ video }))];
 }
 
-// Every folder on the way to a video, so opening them all reveals it whichever rows were folded.
+export function visibleVideos(folder: FolderNode, isOpen: (path: string) => boolean): VideoWithRevision[] {
+    return visibleNodes(folder, isOpen).flatMap((node) => "video" in node ? [node.video] : []);
+}
+
+// Every folder on the way to a video, so opening them all reveals it whichever nodes were folded.
 export function folderAncestors(folderKey: string): string[] {
     const names = folderNames(folderKey);
 

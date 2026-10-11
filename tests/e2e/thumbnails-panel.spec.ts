@@ -21,7 +21,7 @@ function toggle(page: import("@playwright/test").Page) {
 
 // The panel shows only the videos the sidebar shows, so cards need their folders open there.
 async function openAllFolders(page: import("@playwright/test").Page) {
-    const closed = page.locator('[data-slot="video-sections"] [aria-expanded="false"]');
+    const closed = page.locator('[data-slot="browse-tree"] [aria-expanded="false"]');
     await expect(closed.first()).toBeVisible();
     while (await closed.count() > 0) {
         await closed.first().click();
@@ -116,10 +116,10 @@ test.describe("thumbnails float panel", () => {
 
     test("shows only the videos the sidebar shows in its open folders", async ({ page }) => {
         await login(page);
-        await page.locator('[data-slot="video-sections"] [aria-expanded="false"]').first().click();
+        await page.locator('[data-slot="browse-tree"] [aria-expanded="false"]').first().click();
         await toggle(page).click();
 
-        const rows = page.locator('[data-slot="video-sections"] [data-sidebar="menu-button"][data-size="auto"]');
+        const rows = page.locator('[data-slot="browse-tree"] [data-sidebar="menu-button"][data-size="auto"]');
         await expect(rows.first()).toBeVisible();
         await expect(page.locator(PANEL).locator('[data-slot="thumbnail-card"]')).toHaveCount(await rows.count());
     });

@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 // Seeded admin user (see prisma/seed.ts).
 const USER = { email: "Bocchi@example.com", password: "pass123" };
 
-const SECTIONS = '[data-slot="video-sections"]';
+const TREE = '[data-slot="browse-tree"]';
 
 async function login(page: import("@playwright/test").Page) {
     await page.goto("/login");
@@ -17,9 +17,9 @@ async function login(page: import("@playwright/test").Page) {
 test.describe("sidebar video list", () => {
     test("hovering a row shows the video's detail card", async ({ page }) => {
         await login(page);
-        await page.locator(`${SECTIONS} [aria-expanded="false"]`).first().click();
+        await page.locator(`${TREE} [aria-expanded="false"]`).first().click();
 
-        const row = page.locator(`${SECTIONS} [data-sidebar="menu-button"][data-size="auto"]`).first();
+        const row = page.locator(`${TREE} [data-sidebar="menu-button"][data-size="auto"]`).first();
         const title = (await row.locator('[data-slot="middle-truncate"]').textContent())!;
         await row.hover();
 

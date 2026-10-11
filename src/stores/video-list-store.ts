@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { isInFolder } from "@/lib/folder-path";
 
 interface VideoListState {
     // Folders open while browsing, kept across reloads.
@@ -13,12 +14,24 @@ interface VideoListState {
     // The first visit on an earlier day, so reopening the list during the day doesn't move it.
     // Null until a second day is recorded.
     previousVisitAt: number | null;
+    // The admin's organize mode, which shows the list for moving and renaming instead. Not kept
+    // across reloads.
+    organizing: boolean;
+    // Folders made in the mode that nothing has been moved into yet, so they exist only here.
+    newFolders: string[];
 
     toggleFolder: (path: string, filtering: boolean) => void;
-    // Opens every folder on the way to a video's folder, whichever of them are folded into one row.
+    // Opens every folder on the way to a video's folder, whichever of them are folded into one node.
     revealFolders: (paths: string[]) => void;
+    // Follows a renamed folder, so it and the folders under it stay open, new ones included.
+    renameFolderPaths: (from: string, to: string) => void;
+    addNewFolder: (path: string) => void;
+    removeNewFolder: (path: string) => void;
+    // Something was moved into `path`, so it and the new folders above it now exist on the server.
+    fillNewFolder: (path: string) => void;
     clearClosedWhileFiltering: () => void;
     recordVisit: (now?: Date) => void;
+    setOrganizing: (organizing: boolean) => void;
 }
 
 const toggleIn = (paths: string[], path: string) =>
@@ -33,6 +46,8 @@ export const useVideoListStore = create<VideoListState>()(
             visitDay: null,
             firstVisitAt: null,
             previousVisitAt: null,
+            organizing: false,
+            newFolders: [],
 
             toggleFolder: (path, filtering) =>
                 set((state) => filtering
@@ -43,6 +58,16 @@ export const useVideoListStore = create<VideoListState>()(
                     const closed = paths.filter((path) => !state.openPaths.includes(path));
                     return closed.length ? { openPaths: [...state.openPaths, ...closed] } : state;
                 }),
+            renameFolderPaths: (from, to) =>
+                set((state) => {
+                    const follow = (path: string) => isInFolder(path, from) ? to + path.slice(from.length) : path;
+                    return { openPaths: state.openPaths.map(follow), newFolders: state.newFolders.map(follow) };
+                }),
+            addNewFolder: (path) => set((state) => ({ newFolders: [...state.newFolders, path] })),
+            removeNewFolder: (path) =>
+                set((state) => ({ newFolders: state.newFolders.filter((folder) => !isInFolder(folder, path)) })),
+            fillNewFolder: (path) =>
+                set((state) => ({ newFolders: state.newFolders.filter((folder) => !isInFolder(path, folder)) })),
             clearClosedWhileFiltering: () => set({ closedWhileFiltering: [] }),
             recordVisit: (now = new Date()) => {
                 const today = now.toDateString();
@@ -51,6 +76,7 @@ export const useVideoListStore = create<VideoListState>()(
                 }
                 set((state) => ({ visitDay: today, firstVisitAt: now.getTime(), previousVisitAt: state.firstVisitAt }));
             },
+            setOrganizing: (organizing) => set({ organizing, newFolders: [] }),
         }),
         {
             name: "video-list",
