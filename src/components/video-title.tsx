@@ -15,6 +15,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { formatDateTime } from "@/lib/utils";
 import { CompareButton } from "@/components/revision-diff-view/compare-button";
+import { SidePanelTrigger } from "@/components/controls/side-panel-trigger";
 
 export default function VideoTitle() {
     const t = useTranslations("video-title");
@@ -60,13 +61,13 @@ export default function VideoTitle() {
         <div className="py-1 px-2 mb-2 flex items-center justify-between">
             <div className="min-w-0">
                 <div className="flex items-center justify-between">
-                    <h2 className="flex items-center gap-1 px-2 text-lg font-semibold text-primary tracking-wide">
+                    <h2 className="flex items-center gap-1 px-2 text-lg font-semibold tracking-wide">
                         <SidebarTrigger className="-ml-1" />
                         <Separator
                             orientation="vertical"
                             className="mr-2 data-[orientation=vertical]:h-4"
                         />
-                        <span className="truncate">{selectedVideo?.title ?? t("noSelection")}</span>
+                        <span className="truncate text-primary">{selectedVideo?.title ?? t("noSelection")}</span>
                     </h2>
                     <div className="flex items-center gap-3">
                         {revisions.length > 1 && selectedRevision && (
@@ -176,15 +177,18 @@ export default function VideoTitle() {
                 )}
             </div>
 
-            {isAdmin(role) && selectedVideo && (
-                <div className="shrink-0 self-start mt-1 flex items-center gap-2" title={t("guestVisible")}>
-                    <Badge variant={selectedVideo.guestVisible ? "default" : "outline"}>Guests</Badge>
-                    <Switch
-                        checked={selectedVideo.guestVisible ?? false}
-                        onCheckedChange={(v) => void setGuestVisible(selectedVideo.id, v)}
-                    />
-                </div>
-            )}
+            <div className="shrink-0 self-start mt-1 flex items-center gap-2">
+                {isAdmin(role) && selectedVideo && (
+                    <div className="flex items-center gap-2" title={t("guestVisible")}>
+                        <Badge variant={selectedVideo.guestVisible ? "default" : "outline"}>Guests</Badge>
+                        <Switch
+                            checked={selectedVideo.guestVisible ?? false}
+                            onCheckedChange={(v) => void setGuestVisible(selectedVideo.id, v)}
+                        />
+                    </div>
+                )}
+                <SidePanelTrigger />
+            </div>
         </div>
     );
 }

@@ -8,12 +8,16 @@ interface VideoPlayerState {
     volumeEnabled: boolean;
     playMode: EPlayMode,
     playbackRate: number;
+    listPanelOpen: boolean;
+    sidePanelOpen: boolean;
 
     setPlaybackRate: (rate: number) => void;
     setVolume: (vol: number) => void;
     setVolumeEnabled: (enabled: boolean) => void;
     setMode(mode: EPlayMode): void;
     toggleMode: () => void;
+    setListPanelOpen: (open: boolean) => void;
+    setSidePanelOpen: (open: boolean) => void;
 }
 
 export const useVideoPlayerStore = create<VideoPlayerState>()(
@@ -23,6 +27,8 @@ export const useVideoPlayerStore = create<VideoPlayerState>()(
             volumeEnabled: true,
             playMode: 'normal',
             playbackRate: 1.0,
+            listPanelOpen: true,
+            sidePanelOpen: true,
 
             setPlaybackRate: (rate) => set({ playbackRate: rate }),
             setMode: (mode) => set({ playMode: mode }),
@@ -36,6 +42,8 @@ export const useVideoPlayerStore = create<VideoPlayerState>()(
             },
             setVolume: (vol) => set({ volume: vol }),
             setVolumeEnabled: (enabled) => set({ volumeEnabled: enabled }),
+            setListPanelOpen: (open) => set({ listPanelOpen: open }),
+            setSidePanelOpen: (open) => set({ sidePanelOpen: open }),
         }),
         {
             name: "video-player-store",
@@ -43,6 +51,8 @@ export const useVideoPlayerStore = create<VideoPlayerState>()(
                 volume: state.volume,
                 volumeEnabled: state.volumeEnabled,
                 playbackRate: state.playbackRate,
+                listPanelOpen: state.listPanelOpen,
+                sidePanelOpen: state.sidePanelOpen,
             }),
         },
     ),

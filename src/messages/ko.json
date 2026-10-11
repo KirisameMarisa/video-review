@@ -6,6 +6,7 @@
         "initialize": "초기 설정"
     },
     "video-title": {
+        "toggleSidePanel": "사이드 패널 표시 전환",
         "noSelection": "선택된 동영상 없음",
         "revisionInfo": "리비전: {revision} ({uploadedAt})",
         "noRevision": "리비전 정보 없음",
