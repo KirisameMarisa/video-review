@@ -17,7 +17,7 @@ async function login(page: import("@playwright/test").Page) {
 // the canvas is still fitted to it and can be drawn on.
 async function openFirstVideo(page: import("@playwright/test").Page) {
     // The thumbnail panel shows only the videos in folders open in the sidebar.
-    const closed = page.locator('[data-slot="video-sections"] [aria-expanded="false"]');
+    const closed = page.locator('[data-slot="browse-tree"] [aria-expanded="false"]');
     await expect(closed.first()).toBeVisible();
     while (await closed.count() > 0) {
         await closed.first().click();

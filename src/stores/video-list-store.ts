@@ -19,7 +19,7 @@ interface VideoListState {
     organizing: boolean;
 
     toggleFolder: (path: string, filtering: boolean) => void;
-    // Opens every folder on the way to a video's folder, whichever of them are folded into one row.
+    // Opens every folder on the way to a video's folder, whichever of them are folded into one node.
     revealFolders: (paths: string[]) => void;
     // Follows a renamed folder, so it and the folders under it stay open.
     renameFolderPaths: (from: string, to: string) => void;

@@ -9,7 +9,7 @@ type Options = {
     onMoved: (folderKey: string) => void;
 };
 
-// Rows and folder headers are dragged onto folder headers, the top-level row, or a video's row,
+// Items and folder headers are dragged onto folder headers, the Top node, or an item,
 // which stands for the folder it is in, as in Finder.
 export function useFolderDrop({ reveal, onMoved }: Options) {
     const { move } = useMovers();
@@ -29,7 +29,7 @@ export function useFolderDrop({ reveal, onMoved }: Options) {
         onLinger: reveal,
     });
 
-    // Props for the top-level row, which only takes folders.
+    // Props for the Top node, which only takes folders.
     const dropOnTop = () => ({
         ...drag.dropOn(TOP),
         "data-drop-target": drag.target === TOP,

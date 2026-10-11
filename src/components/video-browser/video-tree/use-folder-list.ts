@@ -12,7 +12,7 @@ export type FolderList = ReturnType<typeof useFolderList>;
 
 type Options = {
     filtering?: boolean;
-    // Whether a chain of folders that only hold one folder folds into one row.
+    // Whether a chain of folders that only hold one folder folds into one node.
     compact?: boolean;
 };
 

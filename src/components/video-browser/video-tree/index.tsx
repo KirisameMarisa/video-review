@@ -1,31 +1,31 @@
 import { createContext, Fragment, useRef, type ReactNode, type RefObject } from "react";
 import type { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenu } from "@/components/ui/sidebar";
-import { FolderSection } from "@/components/video-browser/video-tree/folder";
+import { FolderSection } from "@/components/video-browser/video-tree/nodes/folder";
 import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
 import type { FolderList } from "@/components/video-browser/video-tree/use-folder-list";
 
 type Props = {
     folders: Pick<FolderList, "root" | "isOpen" | "toggle">;
     slot: string;
-    // What a folder's sticky header row holds; `siblings` are the folders beside it.
+    // What a folder's sticky header holds; `siblings` are the folders beside it.
     header: (folder: FolderNode, open: boolean, siblings: FolderNode[]) => ReactNode;
-    row: (video: VideoWithRevision, depth: number) => ReactNode;
-    // Rows above the folders.
+    item: (video: VideoWithRevision, depth: number) => ReactNode;
+    // Nodes above the folders, such as organize's Top.
     children?: ReactNode;
 };
 
-// Row thumbnails load as they scroll into this list, not the window.
+// Item thumbnails load as they scroll into this list, not the window.
 export const TreeScrollContext = createContext<RefObject<HTMLDivElement | null>>({ current: null });
 
-// The scrolling list of folders and videos that each list fills with its own headers and rows.
+// The scrolling list of folders and videos that each list fills with its own headers and items.
 // Each folder wraps its contents, so its sticky header leaves together with them.
-export function VideoTree({ folders, slot, header, row, children }: Props) {
+export function VideoTree({ folders, slot, header, item, children }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const { root, isOpen, toggle } = folders;
 
-    const renderRow = (video: VideoWithRevision, depth: number) => (
-        <Fragment key={video.id}>{row(video, depth)}</Fragment>
+    const renderItem = (video: VideoWithRevision, depth: number) => (
+        <Fragment key={video.id}>{item(video, depth)}</Fragment>
     );
 
     const renderFolder = (folder: FolderNode, depth: number, siblings: FolderNode[]) => {
@@ -40,7 +40,7 @@ export function VideoTree({ folders, slot, header, row, children }: Props) {
                 header={header(folder, open, siblings)}
             >
                 {folder.folders.map((child) => renderFolder(child, depth + 1, folder.folders))}
-                {folder.videos.map((video) => renderRow(video, depth + 1))}
+                {folder.videos.map((video) => renderItem(video, depth + 1))}
             </FolderSection>
         );
     };
@@ -51,7 +51,7 @@ export function VideoTree({ folders, slot, header, row, children }: Props) {
                 <SidebarMenu>
                     {children}
                     {root.folders.map((folder) => renderFolder(folder, 0, root.folders))}
-                    {root.videos.map((video) => renderRow(video, 0))}
+                    {root.videos.map((video) => renderItem(video, 0))}
                 </SidebarMenu>
             </TreeScrollContext>
         </div>

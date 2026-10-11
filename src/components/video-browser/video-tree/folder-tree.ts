@@ -18,7 +18,7 @@ function byPath(a: string, b: string): number {
 }
 
 export type FolderNode = {
-    // More than one name when folders holding only a single folder were folded into this row.
+    // More than one name when folders holding only a single folder were folded into this node.
     names: string[];
     path: string;
     folders: FolderNode[];
@@ -83,7 +83,7 @@ export function buildFlatFolders(videos: VideoWithRevision[]): FolderNode {
     return { names: [], path: "", folders, videos: [], allVideos: folders.flatMap((f) => f.allVideos) };
 }
 
-// A chain of folders that each hold just one folder and no videos reads as one row,
+// A chain of folders that each hold just one folder and no videos reads as one node,
 // as VS Code's compact folders do, so a deep but narrow path costs a single level.
 function compactFolder(draft: FolderDraft): FolderNode {
     const names = [draft.name];
@@ -111,13 +111,13 @@ function finishFolder(draft: FolderDraft, names: string[], compact: boolean): Fo
     };
 }
 
-export type VisibleRow = { folder: FolderNode } | { video: VideoWithRevision };
+export type VisibleNode = { folder: FolderNode } | { video: VideoWithRevision };
 
 // The headers and videos the list shows, in its order: a folder's contents only while it is open,
 // subfolders before videos.
-export function visibleRows(folder: FolderNode, isOpen: (path: string) => boolean): VisibleRow[] {
+export function visibleNodes(folder: FolderNode, isOpen: (path: string) => boolean): VisibleNode[] {
     const folders = folder.folders.flatMap((f) => {
-        const contents = isOpen(f.path) ? visibleRows(f, isOpen) : [];
+        const contents = isOpen(f.path) ? visibleNodes(f, isOpen) : [];
         return [{ folder: f }, ...contents];
     });
 
@@ -125,10 +125,10 @@ export function visibleRows(folder: FolderNode, isOpen: (path: string) => boolea
 }
 
 export function visibleVideos(folder: FolderNode, isOpen: (path: string) => boolean): VideoWithRevision[] {
-    return visibleRows(folder, isOpen).flatMap((row) => "video" in row ? [row.video] : []);
+    return visibleNodes(folder, isOpen).flatMap((node) => "video" in node ? [node.video] : []);
 }
 
-// Every folder on the way to a video, so opening them all reveals it whichever rows were folded.
+// Every folder on the way to a video, so opening them all reveals it whichever nodes were folded.
 export function folderAncestors(folderKey: string): string[] {
     const names = folderNames(folderKey);
 

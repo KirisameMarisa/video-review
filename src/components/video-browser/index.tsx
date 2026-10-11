@@ -8,8 +8,8 @@ import VideoUploadDialog from "@/components/dialog/video-upload";
 import VideoListPanelHeader from "@/components/video-browser/header";
 import { VideoSearchDialog } from "@/components/dialog/video-search";
 import VideoThumbnailsPanel from "@/components/video-browser/video-thumbnails-panel";
-import { VideoSections } from "@/components/video-browser/video-tree/browse-tree";
-import { OrganizeList } from "@/components/video-browser/video-tree/organize-tree";
+import { BrowseTree } from "@/components/video-browser/video-tree/browse-tree";
+import { OrganizeTree } from "@/components/video-browser/video-tree/organize-tree";
 import { useOrganizing } from "@/components/video-browser/video-tree/organize-tree/hooks/use-organizing";
 import { useFolderList } from "@/components/video-browser/video-tree/use-folder-list";
 import { useMarkContext } from "@/components/video-browser/marks/use-mark-context";
@@ -66,9 +66,9 @@ export default function VideoListPanel() {
 
                     <SidebarContent>
                         {organizing ? (
-                            <OrganizeList />
+                            <OrganizeTree />
                         ) : (
-                            <VideoSections
+                            <BrowseTree
                                 folderList={folderList}
                                 markContext={markContext}
                                 selectedVideoId={selectedVideo?.id ?? null}

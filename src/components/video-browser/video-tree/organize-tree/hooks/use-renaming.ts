@@ -2,24 +2,24 @@ import { useState, type ComponentProps } from "react";
 import type { VideoWithRevision } from "@/lib/db-types";
 import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
 import { isRenameShortcut, useRenamers } from "@/components/video-browser/video-tree/organize-tree/hooks/operations/renamers";
-import { folderRow, videoRow, type RowKey } from "@/components/video-browser/video-tree/organize-tree/row-keys";
+import { folderNodeKey, itemNodeKey, type NodeKey } from "@/components/video-browser/video-tree/organize-tree/node-keys";
 
-// Which row is being renamed. The field stays until `afterRename` settles, so the old name
+// Which node is being renamed. The field stays until `afterRename` settles, so the old name
 // doesn't flash back.
 export function useRenaming(videos: VideoWithRevision[], afterRename: () => Promise<unknown>) {
     const { videoRenamer, folderRenamer } = useRenamers(videos);
-    const [renaming, setRenaming] = useState<RowKey | null>(null);
+    const [renaming, setRenaming] = useState<NodeKey | null>(null);
 
-    // Closes only the rename it was given: clicking another row's pencil commits the first rename,
+    // Closes only the rename it was given: clicking another node's pencil commits the first rename,
     // whose save may end after the second one has opened.
-    const close = (key: RowKey) => setRenaming((current) => current === key ? null : current);
+    const close = (key: NodeKey) => setRenaming((current) => current === key ? null : current);
 
-    const editing = (key: RowKey) => renaming === key;
+    const editing = (key: NodeKey) => renaming === key;
 
-    const start = (key: RowKey) => setRenaming(key);
+    const start = (key: NodeKey) => setRenaming(key);
 
-    // Props for the row's button: the keyboard shortcut that starts renaming it.
-    const renameOn = (key: RowKey): ComponentProps<"button"> => ({
+    // Props for the node's button: the keyboard shortcut that starts renaming it.
+    const renameOn = (key: NodeKey): ComponentProps<"button"> => ({
         onKeyDown: (e) => {
             if (isRenameShortcut(e)) {
                 e.preventDefault();
@@ -28,7 +28,7 @@ export function useRenaming(videos: VideoWithRevision[], afterRename: () => Prom
         },
     });
 
-    const ends = (key: RowKey) => ({
+    const ends = (key: NodeKey) => ({
         onRenamed: () => {
             void afterRename().finally(() => close(key));
         },
@@ -38,12 +38,12 @@ export function useRenaming(videos: VideoWithRevision[], afterRename: () => Prom
     // Props for the RenameInput that takes the button's place.
     const renameVideo = (video: VideoWithRevision) => ({
         renamer: videoRenamer(video),
-        ...ends(videoRow(video.id)),
+        ...ends(itemNodeKey(video.id)),
     });
 
     const renameFolder = (folder: FolderNode, siblings: FolderNode[]) => ({
         renamer: folderRenamer(folder, siblings),
-        ...ends(folderRow(folder.path)),
+        ...ends(folderNodeKey(folder.path)),
     });
 
     return { editing, start, renameOn, renameVideo, renameFolder };

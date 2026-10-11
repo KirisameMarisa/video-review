@@ -2,7 +2,7 @@ import { useFormatter } from "next-intl";
 import { VideoWithRevision } from "@/lib/db-types";
 import { MiddleTruncate } from "@/components/controls/middle-truncate";
 
-// What a row needs to tell videos apart.
+// What an item needs to tell videos apart.
 export function VideoSummary({ video }: { video: VideoWithRevision }) {
     const format = useFormatter();
     const latest = video.latestRevision;

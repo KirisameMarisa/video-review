@@ -3,8 +3,8 @@
 import { useEffect, useRef } from "react";
 import { Marks } from "@/components/video-browser/marks/marks";
 import type { MarkContext } from "@/components/video-browser/marks/use-mark-context";
-import { FolderHeaderButton } from "@/components/video-browser/video-tree/folder/folder-header";
-import { VideoRow } from "@/components/video-browser/video-tree/browse-tree/video-row";
+import { FolderHeaderButton } from "@/components/video-browser/video-tree/nodes/folder/folder-header";
+import { BrowseItem } from "@/components/video-browser/video-tree/browse-tree/browse-item";
 import { VideoTree } from "@/components/video-browser/video-tree";
 import type { FolderList } from "@/components/video-browser/video-tree/use-folder-list";
 
@@ -15,8 +15,8 @@ type Props = {
     onSelectVideo: (videoId: string) => void;
 };
 
-export function VideoSections({ folderList, markContext, selectedVideoId, onSelectVideo }: Props) {
-    const rowRefs = useRef(new Map<string, HTMLButtonElement>());
+export function BrowseTree({ folderList, markContext, selectedVideoId, onSelectVideo }: Props) {
+    const itemRefs = useRef(new Map<string, HTMLButtonElement>());
     const { root, reveal } = folderList;
 
     // A video opened from elsewhere (URL, auto-play next, upload) is revealed and scrolled to.
@@ -28,14 +28,14 @@ export function VideoSections({ folderList, markContext, selectedVideoId, onSele
 
         reveal(video.folderKey);
         requestAnimationFrame(() => {
-            rowRefs.current.get(video.id)?.scrollIntoView({ block: "nearest" });
+            itemRefs.current.get(video.id)?.scrollIntoView({ block: "nearest" });
         });
     }, [selectedVideoId, root, reveal]);
 
     return (
         <VideoTree
             folders={folderList}
-            slot="video-sections"
+            slot="browse-tree"
             header={(folder, open) => (
                 <FolderHeaderButton
                     names={folder.names}
@@ -45,13 +45,13 @@ export function VideoSections({ folderList, markContext, selectedVideoId, onSele
                     marks={<Marks videos={folder.allVideos} scope="folder" context={markContext} />}
                 />
             )}
-            row={(video, depth) => (
-                <VideoRow
+            item={(video, depth) => (
+                <BrowseItem
                     ref={(el) => {
                         if (el) {
-                            rowRefs.current.set(video.id, el);
+                            itemRefs.current.set(video.id, el);
                         } else {
-                            rowRefs.current.delete(video.id);
+                            itemRefs.current.delete(video.id);
                         }
                     }}
                     video={video}

@@ -7,7 +7,7 @@ import type { Renamer } from "@/components/controls/rename-input";
 import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
 import { useVideoListStore } from "@/stores/video-list-store";
 
-// The key that starts renaming the focused row: F2 as in Explorer, or Return on a Mac as in Finder.
+// The key that starts renaming the focused node: F2 as in Explorer, or Return on a Mac as in Finder.
 export function isRenameShortcut(e: { key: string }): boolean {
     return e.key === "F2" || (e.key === "Enter" && isMac());
 }

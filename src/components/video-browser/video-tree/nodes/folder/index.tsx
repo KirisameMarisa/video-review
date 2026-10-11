@@ -3,7 +3,7 @@ import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { SidebarMenuHeader, SidebarMenuItem, SidebarMenuSub } from "@/components/ui/sidebar";
 
 // The header's height (SidebarMenuButton's default h-8), so nested headers can stick one
-// header below their parent and rows can scroll clear of the stacked headers.
+// header below their parent and items can scroll clear of the stacked headers.
 export const FOLDER_HEADER_REM = 2;
 
 type Props = {
@@ -11,7 +11,7 @@ type Props = {
     depth: number;
     open: boolean;
     onToggle: () => void;
-    // What the sticky header row holds, such as a FolderHeaderButton and its actions.
+    // What the sticky header holds, such as a FolderHeaderButton and its actions.
     header: ReactNode;
     children: ReactNode;
 };
