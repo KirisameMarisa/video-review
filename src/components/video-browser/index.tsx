@@ -27,7 +27,9 @@ export default function VideoListPanel() {
     const { userId } = useAuthStore();
     const loadUnread = useCommentStore((s) => s.loadUnread);
     const recordVisit = useVideoListStore((s) => s.recordVisit);
-    const { videos, reloadOnViewChange, reloadOnDataChange, selectedVideo } = useVideoStore();
+    const loadSeen = useVideoListStore((s) => s.loadSeen);
+    const markSeen = useVideoListStore((s) => s.markSeen);
+    const { videos, reloadOnViewChange, reloadOnDataChange, selectedVideo, selectedRevision } = useVideoStore();
     const [searchDialogOpen, setSearchDialogOpen] = useState(false);
     const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
     const [thumbnailsOpen, setThumbnailsOpen] = useState(false);
@@ -47,10 +49,20 @@ export default function VideoListPanel() {
         })();
     }, [])
 
-    // Once per page load and signed-in user; reading a video afterwards updates it in place (markRead).
+    // Once per page load and signed-in user; reading a video afterwards updates it in place (markRead / markSeen).
     useEffect(() => {
         loadUnread(userId).catch((reason) => console.error(reason));
-    }, [userId, loadUnread]);
+        loadSeen(userId).catch((reason) => console.error(reason));
+    }, [userId, loadUnread, loadSeen]);
+
+    const selectedVideoId = selectedVideo?.id;
+    const selectedRevisionNumber = selectedRevision?.revision;
+
+    useEffect(() => {
+        if (userId && selectedVideoId && selectedRevisionNumber) {
+            markSeen(userId, selectedVideoId, selectedRevisionNumber).catch((reason) => console.error(reason));
+        }
+    }, [userId, selectedVideoId, selectedRevisionNumber, markSeen]);
 
     return (
         <>
