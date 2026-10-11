@@ -2,20 +2,21 @@ import { useEffect, useRef, useState } from "react";
 import { VideoWithRevision } from "@/lib/db-types";
 import { resolveMediaUrl } from "@/lib/media-url";
 import { Spinner } from "@/components/ui/spinner";
+import { useThumbnailGridStore } from "@/stores/thumbnail-grid-store";
 
 export const thumbnailKey = (videoId: string) => `thumbnails/${videoId}/thumb.png`;
 
 type Props = {
     video: VideoWithRevision;
     containerRef: React.RefObject<HTMLDivElement | null>;
-    cache: Map<string, string | undefined>;
-    onResolve?: (key: string, resolveURL: string | undefined) => void;
 };
 
-export function ThumbnailLazyLoader({ video, containerRef, cache, onResolve }: Props) {
+export function ThumbnailLazyLoader({ video, containerRef }: Props) {
     const ref = useRef<HTMLDivElement | null>(null);
     const key = thumbnailKey(video.id);
-    const cached = cache.get(key);
+    // Only this video's URL, so resolving another thumbnail doesn't redraw this one.
+    const cached = useThumbnailGridStore((s) => s.urls.get(key));
+    const cacheUrl = useThumbnailGridStore((s) => s.cacheUrl);
     const [isResolving, setIsResolving] = useState(false);
 
     useEffect(() => {
@@ -27,7 +28,7 @@ export function ThumbnailLazyLoader({ video, containerRef, cache, onResolve }: P
 
                 setIsResolving(true);
                 resolveMediaUrl(key)
-                    .then(url => onResolve?.(key, url))
+                    .then(url => cacheUrl(key, url))
                     .finally(() => {
                         setIsResolving(false);
                         observer.disconnect();

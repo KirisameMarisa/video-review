@@ -7,20 +7,18 @@ type Props = {
     video: VideoWithRevision;
     selectedVideoId: string | undefined;
     marks: ReactNode;
-    /** Resolved by the lazy loader; reused by the hover card. */
-    thumbnailUrl: string | undefined;
     children?: React.ReactNode;
     onSelectVideo?: (videoId: string) => void;
 };
 
 /** Picture-only grid cell; hovering it opens the detail card beside it. */
 export const ThumbnailCell = forwardRef<HTMLDivElement, Props>(
-    function ThumbnailCell({ video, selectedVideoId, marks, thumbnailUrl, onSelectVideo, children }, ref) {
+    function ThumbnailCell({ video, selectedVideoId, marks, onSelectVideo, children }, ref) {
         const isSelected = video.id === selectedVideoId;
         const select = () => onSelectVideo?.(video.id);
 
         return (
-            <VideoDetailHoverCard video={video} thumbnailUrl={thumbnailUrl} onSelect={select}>
+            <VideoDetailHoverCard video={video} onSelect={select}>
                 <div
                     ref={ref}
                     data-slot="thumbnail-card"

@@ -2,10 +2,8 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
 import { VideoDetailHoverCard } from "@/components/video-browser/thumbnail-cell/detail-card";
-import { thumbnailKey } from "@/components/video-browser/thumbnail-cell/lazy-loader";
 import { VideoItemButton } from "@/components/video-browser/video-tree/nodes/item/video-item";
 import { VideoSummary } from "@/components/video-browser/video-tree/browse-tree/browse-item/video-summary";
-import { useThumbnailGridStore } from "@/stores/thumbnail-grid-store";
 
 type Props = {
     video: VideoWithRevision;
@@ -15,7 +13,6 @@ type Props = {
 };
 
 export function BrowseItem({ video, selected, marks, onSelect }: Props) {
-    const urls = useThumbnailGridStore((s) => s.urls);
     const ref = useRef<HTMLButtonElement>(null);
     const select = () => onSelect(video.id);
 
@@ -28,7 +25,7 @@ export function BrowseItem({ video, selected, marks, onSelect }: Props) {
 
     return (
         <SidebarMenuItem>
-            <VideoDetailHoverCard video={video} thumbnailUrl={urls.get(thumbnailKey(video.id))} onSelect={select}>
+            <VideoDetailHoverCard video={video} onSelect={select}>
                 <VideoItemButton
                     ref={ref}
                     video={video}

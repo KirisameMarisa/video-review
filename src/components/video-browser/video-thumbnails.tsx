@@ -5,7 +5,7 @@ import { VideoWithRevision } from "@/lib/db-types";
 import { Slider } from "@/ui/slider";
 import { ZoomInIcon } from "lucide-react";
 import { ThumbnailCell } from "@/components/video-browser/thumbnail-cell";
-import { ThumbnailLazyLoader, thumbnailKey } from "@/components/video-browser/thumbnail-cell/lazy-loader";
+import { ThumbnailLazyLoader } from "@/components/video-browser/thumbnail-cell/lazy-loader";
 import { useThumbnailGridStore } from "@/stores/thumbnail-grid-store";
 import { Marks } from "@/components/video-browser/marks/marks";
 import type { MarkContext } from "@/components/video-browser/marks/use-mark-context";
@@ -19,7 +19,8 @@ type Props = {
 
 export default function VideoThumbnails({ videos, markContext, selectedVideoId, onSelectVideo }: Props) {
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const { thumbSize, setThumbSize, urls, cacheUrl } = useThumbnailGridStore();
+    const thumbSize = useThumbnailGridStore((s) => s.thumbSize);
+    const setThumbSize = useThumbnailGridStore((s) => s.setThumbSize);
 
     // One section per folder, in the order the sidebar shows them.
     const groups = useMemo(() => {
@@ -77,15 +78,9 @@ export default function VideoThumbnails({ videos, markContext, selectedVideoId, 
                                     video={video}
                                     selectedVideoId={selectedVideoId}
                                     marks={<Marks videos={[video]} scope="video" context={markContext} />}
-                                    thumbnailUrl={urls.get(thumbnailKey(video.id))}
                                     onSelectVideo={onSelectVideo}
                                 >
-                                    <ThumbnailLazyLoader
-                                        video={video}
-                                        containerRef={containerRef}
-                                        cache={urls}
-                                        onResolve={cacheUrl}
-                                    />
+                                    <ThumbnailLazyLoader video={video} containerRef={containerRef} />
                                 </ThumbnailCell>
                             ))}
                         </div>
