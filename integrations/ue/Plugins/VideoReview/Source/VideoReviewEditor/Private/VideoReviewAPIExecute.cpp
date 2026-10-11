@@ -26,6 +26,12 @@ FVideoReviewCommandResult FVideoReviewAPIExecute::Run(
         return Result;
     }
 
+    if (ExecutablePath.IsEmpty())
+    {
+        Result.StdErr = FString::Printf(TEXT("No CLI binary in bin/%s. Put %s there."), *GetPlatformDirectoryName(), *GetReleaseBinaryName());
+        return Result;
+    }
+
     EnsureExecutablePermission(ExecutablePath);
 
     FString Arguments = BuildArguments(Command, Args, ServerUrl, ApiToken);
@@ -109,23 +115,60 @@ FString FVideoReviewAPIExecute::ResolveExecutablePath(const FString& CliRootOver
     checkf(IFileManager::Get().DirectoryExists(*PlatformDir),
         TEXT("VideoReview CLI directory not found: %s"), *PlatformDir);
 
+    // The binary as the release names it comes first, so a downloaded one works without renaming.
+    const FString ReleaseName = GetReleaseBinaryName();
+    auto Priority = [&ReleaseName](const FString& Name) -> int32
+    {
+        if (Name.Equals(ReleaseName, ESearchCase::IgnoreCase))
+        {
+            return 0;
+        }
+        if (Name.Equals(TEXT("video-review-cli.exe"), ESearchCase::IgnoreCase))
+        {
+            return 1;
+        }
+        if (Name.Equals(TEXT("video-review-cli"), ESearchCase::IgnoreCase))
+        {
+            return 2;
+        }
+        return INDEX_NONE;
+    };
+
     TArray<FString> Files;
     IFileManager::Get().FindFiles(Files, *FPaths::Combine(PlatformDir, TEXT("*")), true, false);
-    checkf(Files.Num() > 0, TEXT("No CLI binary found under: %s"), *PlatformDir);
-
-    // Prefer video-review-cli.exe > video-review-cli > others
-    Files.Sort([](const FString& A, const FString& B)
+    Files.RemoveAll([&](const FString& Name)
     {
-        auto Priority = [](const FString& Name) -> int32
-        {
-            if (Name.Equals(TEXT("video-review-cli.exe"), ESearchCase::IgnoreCase)) return 0;
-            if (Name.Equals(TEXT("video-review-cli"), ESearchCase::IgnoreCase)) return 1;
-            return 10;
-        };
-        return Priority(FPaths::GetCleanFilename(A)) < Priority(FPaths::GetCleanFilename(B));
+        return Priority(Name) == INDEX_NONE || IFileManager::Get().FileSize(*FPaths::Combine(PlatformDir, Name)) <= 0;
+    });
+    if (Files.Num() == 0)
+    {
+        return FString();
+    }
+
+    Files.Sort([&Priority](const FString& A, const FString& B)
+    {
+        return Priority(A) < Priority(B);
     });
 
     return FPaths::Combine(PlatformDir, Files[0]);
+}
+
+// Such as video-review-cli-windows-amd64.exe, as the release workflow builds it.
+FString FVideoReviewAPIExecute::GetReleaseBinaryName()
+{
+#if PLATFORM_CPU_ARM_FAMILY
+    const TCHAR* Arch = TEXT("arm64");
+#else
+    const TCHAR* Arch = TEXT("amd64");
+#endif
+
+#if PLATFORM_WINDOWS
+    return FString::Printf(TEXT("video-review-cli-windows-%s.exe"), Arch);
+#elif PLATFORM_MAC
+    return FString::Printf(TEXT("video-review-cli-darwin-%s"), Arch);
+#else
+    return FString::Printf(TEXT("video-review-cli-linux-%s"), Arch);
+#endif
 }
 
 FString FVideoReviewAPIExecute::GetPlatformDirectoryName()

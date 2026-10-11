@@ -136,9 +136,21 @@
   max-width: calc(100vw - var(--panel-offset, 0px));
 }
 
-/* Review screen: player on the left, side panel on the right. */
+/* Review screen: player on the left, side panel on the right. The panel slides like the video
+   list and keeps its width while it does, so its contents don't squeeze. */
 @utility review-columns {
   grid-template-columns: 73% 27%;
+  transition: grid-template-columns 200ms linear;
+}
+
+@utility review-columns-closed {
+  grid-template-columns: 100% 0%;
+  transition: grid-template-columns 200ms linear;
+}
+
+/* 27% of review-main, the @container around it, which the open video list narrows. */
+@utility side-panel-width {
+  width: 27cqw;
 }
 
 /* The player never grows past most of the viewport so the controls stay visible. */

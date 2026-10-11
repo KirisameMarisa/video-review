@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -91,34 +92,53 @@ namespace VideoReview.Editor.API
 
             var files = Directory
                 .GetFiles(platformDir)
-                .Where(path => !path.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
+                .Where(path => GetBinaryPriority(path) < NotTheCli)
                 .OrderBy(GetBinaryPriority)
                 .ToArray();
 
-            if (files.Length == 0)
+            var found = files.FirstOrDefault(file => new FileInfo(file).Length > 0);
+            if (found == null)
             {
-                throw new FileNotFoundException($"No CLI binary found under: {platformDir}");
+                throw new FileNotFoundException($"No CLI binary in {platformDir}. Put {GetReleaseBinaryName()} there.");
             }
 
-            foreach (var file in files)
-            {
-                var info = new FileInfo(file);
-                if (info.Length > 0)
-                {
-                    return file;
-                }
-            }
-
-            throw new FileLoadException(
-                "CLI binary exists but is empty. Replace placeholder files under Assets/VideoReview/Editor/API/bin/<platform>.");
+            return found;
         }
 
+        private const int NotTheCli = 10;
+
+        // The binary as the release names it comes first, so a downloaded one works without renaming.
         private static int GetBinaryPriority(string path)
         {
             var name = Path.GetFileName(path);
-            if (string.Equals(name, "video-review-cli.exe", StringComparison.OrdinalIgnoreCase)) return 0;
-            if (string.Equals(name, "video-review-cli", StringComparison.OrdinalIgnoreCase)) return 1;
-            return 10;
+            if (string.Equals(name, GetReleaseBinaryName(), StringComparison.OrdinalIgnoreCase))
+            {
+                return 0;
+            }
+            if (string.Equals(name, "video-review-cli.exe", StringComparison.OrdinalIgnoreCase))
+            {
+                return 1;
+            }
+            if (string.Equals(name, "video-review-cli", StringComparison.OrdinalIgnoreCase))
+            {
+                return 2;
+            }
+            return NotTheCli;
+        }
+
+        // Such as video-review-cli-windows-amd64.exe, as the release workflow builds it.
+        private static string GetReleaseBinaryName()
+        {
+            var arch = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64" : "amd64";
+            switch (Application.platform)
+            {
+                case RuntimePlatform.WindowsEditor:
+                    return $"video-review-cli-windows-{arch}.exe";
+                case RuntimePlatform.OSXEditor:
+                    return $"video-review-cli-darwin-{arch}";
+                default:
+                    return $"video-review-cli-linux-{arch}";
+            }
         }
 
         private static void ValidateExecutable(string path)
