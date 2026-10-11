@@ -15,11 +15,10 @@ type Props = {
     marks: ReactNode;
     // How many section headers are stacked above this row.
     depth: number;
-    containerRef: React.RefObject<HTMLDivElement | null>;
     onSelect: (videoId: string) => void;
 };
 
-export function VideoRow({ ref, video, selected, marks, depth, containerRef, onSelect }: Props) {
+export function VideoRow({ ref, video, selected, marks, depth, onSelect }: Props) {
     const urls = useThumbnailGridStore((s) => s.urls);
     const select = () => onSelect(video.id);
 
@@ -45,7 +44,7 @@ export function VideoRow({ ref, video, selected, marks, depth, containerRef, onS
                     // Clears the stacked sticky headers when scrolled into view.
                     className="scroll-mt-(--row-scroll-margin)"
                 >
-                    <RowThumbnail video={video} containerRef={containerRef} />
+                    <RowThumbnail video={video} />
                     <VideoSummary video={video} />
 
                     {marks}

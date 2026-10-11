@@ -5,16 +5,11 @@ import type { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenuAction, SidebarMenuButton } from "@/components/ui/sidebar";
 import { RowThumbnail } from "@/components/video-browser/video-tree/row-thumbnail";
 
-type RowProps = {
-    video: VideoWithRevision;
-    containerRef: React.RefObject<HTMLDivElement | null>;
-};
-
 // A video with only what tells it apart when organizing: the thumbnail and the whole title.
-export function OrganizeRowButton({ video, containerRef, ...props }: RowProps & ComponentProps<"button">) {
+export function OrganizeRowButton({ video, ...props }: { video: VideoWithRevision } & ComponentProps<"button">) {
     return (
         <SidebarMenuButton {...props} size="auto">
-            <RowThumbnail video={video} containerRef={containerRef} />
+            <RowThumbnail video={video} />
             <div className="min-w-0 flex-1 text-base font-medium wrap-break-word">{video.title}</div>
         </SidebarMenuButton>
     );
@@ -22,11 +17,11 @@ export function OrganizeRowButton({ video, containerRef, ...props }: RowProps & 
 
 // The row with a field in place of the title, as a plain element since a field can't sit inside
 // a button.
-export function OrganizeRowField({ video, containerRef, children }: RowProps & { children: ReactNode }) {
+export function OrganizeRowField({ video, children }: { video: VideoWithRevision; children: ReactNode }) {
     return (
         <SidebarMenuButton asChild size="auto">
             <div>
-                <RowThumbnail video={video} containerRef={containerRef} />
+                <RowThumbnail video={video} />
                 {children}
             </div>
         </SidebarMenuButton>

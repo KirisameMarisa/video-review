@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode, type RefObject } from "react";
+import { createContext, Fragment, useRef, type ReactNode, type RefObject } from "react";
 import type { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenu } from "@/components/ui/sidebar";
 import { FolderSection } from "@/components/video-browser/video-tree/folder";
@@ -7,7 +7,6 @@ import type { FolderList } from "@/components/video-browser/video-tree/use-folde
 
 type Props = {
     folders: Pick<FolderList, "root" | "isOpen" | "toggle">;
-    containerRef: RefObject<HTMLDivElement | null>;
     slot: string;
     // What a folder's sticky header row holds; `siblings` are the folders beside it.
     header: (folder: FolderNode, open: boolean, siblings: FolderNode[]) => ReactNode;
@@ -16,9 +15,13 @@ type Props = {
     children?: ReactNode;
 };
 
+// Row thumbnails load as they scroll into this list, not the window.
+export const TreeScrollContext = createContext<RefObject<HTMLDivElement | null>>({ current: null });
+
 // The scrolling list of folders and videos that each list fills with its own headers and rows.
 // Each folder wraps its contents, so its sticky header leaves together with them.
-export function VideoTree({ folders, containerRef, slot, header, row, children }: Props) {
+export function VideoTree({ folders, slot, header, row, children }: Props) {
+    const containerRef = useRef<HTMLDivElement>(null);
     const { root, isOpen, toggle } = folders;
 
     const renderRow = (video: VideoWithRevision, depth: number) => (
@@ -44,11 +47,13 @@ export function VideoTree({ folders, containerRef, slot, header, row, children }
 
     return (
         <div ref={containerRef} data-slot={slot} className="min-h-0 flex-1 overflow-y-auto">
-            <SidebarMenu>
-                {children}
-                {root.folders.map((folder) => renderFolder(folder, 0, root.folders))}
-                {root.videos.map((video) => renderRow(video, 0))}
-            </SidebarMenu>
+            <TreeScrollContext value={containerRef}>
+                <SidebarMenu>
+                    {children}
+                    {root.folders.map((folder) => renderFolder(folder, 0, root.folders))}
+                    {root.videos.map((video) => renderRow(video, 0))}
+                </SidebarMenu>
+            </TreeScrollContext>
         </div>
     );
 }

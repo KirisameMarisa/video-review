@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { useTranslations } from "next-intl";
 import { FolderRoot } from "lucide-react";
 import type { VideoWithRevision } from "@/lib/db-types";
@@ -22,7 +21,6 @@ import { useVideoStore } from "@/stores/video-store";
 // The list in organize mode: every folder on its own row, under a row for the top level.
 export function OrganizeList() {
     const t = useTranslations("video-list-panel.organize");
-    const containerRef = useRef<HTMLDivElement>(null);
     const { videos, reload } = useAllVideos();
     // Every folder gets its own row, so each one can be dropped on and renamed.
     const folderList = useFolderList(videos, { compact: false });
@@ -61,7 +59,7 @@ export function OrganizeList() {
         return (
             <SidebarMenuItem>
                 {editing(key) ? (
-                    <OrganizeRowField video={video} containerRef={containerRef}>
+                    <OrganizeRowField video={video}>
                         <RenameInput {...renameVideo(video)} />
                     </OrganizeRowField>
                 ) : (
@@ -72,7 +70,6 @@ export function OrganizeList() {
                             {...dragFrom(dragged(key, { video }))}
                             {...dropOn(video.folderKey)}
                             video={video}
-                            containerRef={containerRef}
                         />
                         <RenameAction onClick={() => start(key)} />
                     </>
@@ -111,7 +108,7 @@ export function OrganizeList() {
     };
 
     return (
-        <VideoTree folders={folderList} containerRef={containerRef} slot="organize-list" header={renderHeader} row={renderRow}>
+        <VideoTree folders={folderList} slot="organize-list" header={renderHeader} row={renderRow}>
             <SidebarMenuItem>
                 <SidebarMenuButton {...dropOnTop()}>
                     <FolderRoot className="text-primary" />

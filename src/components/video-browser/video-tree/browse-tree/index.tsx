@@ -16,7 +16,6 @@ type Props = {
 };
 
 export function VideoSections({ folderList, markContext, selectedVideoId, onSelectVideo }: Props) {
-    const containerRef = useRef<HTMLDivElement>(null);
     const rowRefs = useRef(new Map<string, HTMLButtonElement>());
     const { root, reveal } = folderList;
 
@@ -36,7 +35,6 @@ export function VideoSections({ folderList, markContext, selectedVideoId, onSele
     return (
         <VideoTree
             folders={folderList}
-            containerRef={containerRef}
             slot="video-sections"
             header={(folder, open) => (
                 <FolderHeaderButton
@@ -60,7 +58,6 @@ export function VideoSections({ folderList, markContext, selectedVideoId, onSele
                     selected={video.id === selectedVideoId}
                     marks={<Marks videos={[video]} scope="video" context={markContext} />}
                     depth={depth}
-                    containerRef={containerRef}
                     onSelect={onSelectVideo}
                 />
             )}
