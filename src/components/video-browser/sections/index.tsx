@@ -1,14 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { VideoWithRevision } from "@/lib/db-types";
-import { SidebarMenu } from "@/components/ui/sidebar";
 import { Marks } from "@/components/video-browser/marks/marks";
 import type { MarkContext } from "@/components/video-browser/marks/use-mark-context";
-import { FolderSection } from "@/components/video-browser/sections/folder";
 import { FolderHeaderButton } from "@/components/video-browser/sections/folder/folder-header";
 import { VideoRow } from "@/components/video-browser/sections/video-row";
-import type { FolderNode } from "@/components/video-browser/sections/folder-tree";
+import { VideoTree } from "@/components/video-browser/sections/video-tree";
 import type { FolderList } from "@/components/video-browser/sections/use-folder-list";
 
 type Props = {
@@ -21,7 +18,7 @@ type Props = {
 export function VideoSections({ folderList, markContext, selectedVideoId, onSelectVideo }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const rowRefs = useRef(new Map<string, HTMLButtonElement>());
-    const { root, isOpen, toggle, reveal } = folderList;
+    const { root, reveal } = folderList;
 
     // A video opened from elsewhere (URL, auto-play next, upload) is revealed and scrolled to.
     useEffect(() => {
@@ -36,57 +33,37 @@ export function VideoSections({ folderList, markContext, selectedVideoId, onSele
         });
     }, [selectedVideoId, root, reveal]);
 
-    const renderRow = (video: VideoWithRevision, depth: number) => (
-        <VideoRow
-            key={video.id}
-            ref={(el) => {
-                if (el) {
-                    rowRefs.current.set(video.id, el);
-                } else {
-                    rowRefs.current.delete(video.id);
-                }
-            }}
-            video={video}
-            selected={video.id === selectedVideoId}
-            marks={<Marks videos={[video]} scope="video" context={markContext} />}
-            depth={depth}
-            containerRef={containerRef}
-            onSelect={onSelectVideo}
-        />
-    );
-
-    // Each folder wraps its contents, so its sticky header leaves together with them.
-    const renderFolder = (folder: FolderNode, depth: number) => {
-        const open = isOpen(folder.path);
-
-        return (
-            <FolderSection
-                key={folder.path}
-                depth={depth}
-                open={open}
-                onToggle={() => toggle(folder.path)}
-                header={(
-                    <FolderHeaderButton
-                        names={folder.names}
-                        path={folder.path}
-                        open={open}
-                        total={folder.allVideos.length}
-                        marks={<Marks videos={folder.allVideos} scope="folder" context={markContext} />}
-                    />
-                )}
-            >
-                {folder.folders.map((child) => renderFolder(child, depth + 1))}
-                {folder.videos.map((video) => renderRow(video, depth + 1))}
-            </FolderSection>
-        );
-    };
-
     return (
-        <div ref={containerRef} data-slot="video-sections" className="min-h-0 flex-1 overflow-y-auto">
-            <SidebarMenu>
-                {root.folders.map((folder) => renderFolder(folder, 0))}
-                {root.videos.map((video) => renderRow(video, 0))}
-            </SidebarMenu>
-        </div>
+        <VideoTree
+            folders={folderList}
+            containerRef={containerRef}
+            slot="video-sections"
+            header={(folder, open) => (
+                <FolderHeaderButton
+                    names={folder.names}
+                    path={folder.path}
+                    open={open}
+                    total={folder.allVideos.length}
+                    marks={<Marks videos={folder.allVideos} scope="folder" context={markContext} />}
+                />
+            )}
+            row={(video, depth) => (
+                <VideoRow
+                    ref={(el) => {
+                        if (el) {
+                            rowRefs.current.set(video.id, el);
+                        } else {
+                            rowRefs.current.delete(video.id);
+                        }
+                    }}
+                    video={video}
+                    selected={video.id === selectedVideoId}
+                    marks={<Marks videos={[video]} scope="video" context={markContext} />}
+                    depth={depth}
+                    containerRef={containerRef}
+                    onSelect={onSelectVideo}
+                />
+            )}
+        />
     );
 }
