@@ -32,3 +32,31 @@ describe("recordVisit", () => {
         expect(useVideoListStore.getState().previousVisitAt).toBe(at(5, 9).getTime());
     });
 });
+
+describe("renameFolderPaths", () => {
+    beforeEach(() => {
+        useVideoListStore.setState({ openPaths: ["a", "a/b", "ab"], newFolders: ["a/n"] });
+    });
+
+    it("keeps a renamed folder and the folders under it open, but not one that only starts with the same letters", () => {
+        useVideoListStore.getState().renameFolderPaths("a", "x");
+
+        expect(useVideoListStore.getState().openPaths).toEqual(["x", "x/b", "ab"]);
+    });
+
+    it("takes the new folders inside it along", () => {
+        useVideoListStore.getState().renameFolderPaths("a", "x");
+
+        expect(useVideoListStore.getState().newFolders).toEqual(["x/n"]);
+    });
+});
+
+describe("fillNewFolder", () => {
+    it("forgets a new folder and the new ones above it once something is moved in, but not the ones beside it", () => {
+        useVideoListStore.setState({ newFolders: ["n", "n/m", "n/k", "o"] });
+
+        useVideoListStore.getState().fillNewFolder("n/m");
+
+        expect(useVideoListStore.getState().newFolders).toEqual(["n/k", "o"]);
+    });
+});
