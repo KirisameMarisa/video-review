@@ -17,6 +17,7 @@ import CalendarDateRadio from "@/components/controls/calendar-date-radio";
 import { Separator } from "../ui/separator";
 import { useChatSearchStore } from "@/stores/chat-search-store";
 import { ChatSearchPanel } from "@/components/chat-search";
+import { OrganizeHeader } from "@/components/video-browser/video-tree/organize-tree/organize-header";
 import { useOrganizing } from "@/components/video-browser/video-tree/organize-tree/hooks/use-organizing";
 import { useVideoListStore } from "@/stores/video-list-store";
 
@@ -52,9 +53,9 @@ export default function VideoListPanelHeader(
         reloadOnViewChange();
     }
 
-    // The mode draws its own header. Returning null keeps this mounted, so the videos aren't refetched.
+    // The mode lists every video, so the filters have nothing to act on while it is on.
     if (organizing) {
-        return null;
+        return <OrganizeHeader />;
     }
 
     return (
