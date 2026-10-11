@@ -4,7 +4,7 @@ import { SidebarMenuHeader, SidebarMenuItem, SidebarMenuSub } from "@/components
 
 // The header's height (SidebarMenuButton's default h-8), so nested headers can stick one
 // header below their parent and items can scroll clear of the stacked headers.
-export const FOLDER_HEADER_REM = 2;
+const FOLDER_HEADER_REM = 2;
 
 type Props = {
     // How many headers are stacked above this one.
@@ -26,7 +26,13 @@ export function FolderSection({ depth, open, onToggle, header, children }: Props
                 </SidebarMenuHeader>
 
                 <CollapsibleContent>
-                    <SidebarMenuSub inset="start">{children}</SidebarMenuSub>
+                    <SidebarMenuSub
+                        inset="start"
+                        // Inherited by items for their scroll margin.
+                        style={{ "--item-scroll-margin": `${(depth + 1) * FOLDER_HEADER_REM}rem` } as React.CSSProperties}
+                    >
+                        {children}
+                    </SidebarMenuSub>
                 </CollapsibleContent>
             </Collapsible>
         </SidebarMenuItem>

@@ -1,7 +1,7 @@
 import { createContext, Fragment, useRef, type ReactNode, type RefObject } from "react";
 import type { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenu } from "@/components/ui/sidebar";
-import { FolderSection } from "@/components/video-browser/video-tree/nodes/folder";
+import { FolderSection } from "@/components/video-browser/video-tree/nodes/folder/folder-section";
 import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
 import type { FolderList } from "@/components/video-browser/video-tree/use-folder-list";
 
@@ -10,7 +10,7 @@ type Props = {
     slot: string;
     // What a folder's sticky header holds; `siblings` are the folders beside it.
     header: (folder: FolderNode, open: boolean, siblings: FolderNode[]) => ReactNode;
-    item: (video: VideoWithRevision, depth: number) => ReactNode;
+    item: (video: VideoWithRevision) => ReactNode;
     // Nodes above the folders, such as organize's Top.
     children?: ReactNode;
 };
@@ -24,8 +24,8 @@ export function VideoTree({ folders, slot, header, item, children }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const { root, isOpen, toggle } = folders;
 
-    const renderItem = (video: VideoWithRevision, depth: number) => (
-        <Fragment key={video.id}>{item(video, depth)}</Fragment>
+    const renderItem = (video: VideoWithRevision) => (
+        <Fragment key={video.id}>{item(video)}</Fragment>
     );
 
     const renderFolder = (folder: FolderNode, depth: number, siblings: FolderNode[]) => {
@@ -40,7 +40,7 @@ export function VideoTree({ folders, slot, header, item, children }: Props) {
                 header={header(folder, open, siblings)}
             >
                 {folder.folders.map((child) => renderFolder(child, depth + 1, folder.folders))}
-                {folder.videos.map((video) => renderItem(video, depth + 1))}
+                {folder.videos.map((video) => renderItem(video))}
             </FolderSection>
         );
     };
@@ -51,7 +51,7 @@ export function VideoTree({ folders, slot, header, item, children }: Props) {
                 <SidebarMenu>
                     {children}
                     {root.folders.map((folder) => renderFolder(folder, 0, root.folders))}
-                    {root.videos.map((video) => renderItem(video, 0))}
+                    {root.videos.map((video) => renderItem(video))}
                 </SidebarMenu>
             </TreeScrollContext>
         </div>

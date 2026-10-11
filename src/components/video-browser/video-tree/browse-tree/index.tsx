@@ -45,7 +45,7 @@ export function BrowseTree({ folderList, markContext, selectedVideoId, onSelectV
                     marks={<Marks videos={folder.allVideos} scope="folder" context={markContext} />}
                 />
             )}
-            item={(video, depth) => (
+            item={(video) => (
                 <BrowseItem
                     ref={(el) => {
                         if (el) {
@@ -57,7 +57,6 @@ export function BrowseTree({ folderList, markContext, selectedVideoId, onSelectV
                     video={video}
                     selected={video.id === selectedVideoId}
                     marks={<Marks videos={[video]} scope="video" context={markContext} />}
-                    depth={depth}
                     onSelect={onSelectVideo}
                 />
             )}

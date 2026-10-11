@@ -5,7 +5,6 @@ import { VideoDetailHoverCard } from "@/components/video-browser/thumbnail-cell/
 import { thumbnailKey } from "@/components/video-browser/thumbnail-cell/lazy-loader";
 import { VideoItemButton } from "@/components/video-browser/video-tree/nodes/item/video-item";
 import { VideoSummary } from "@/components/video-browser/video-tree/browse-tree/browse-item/video-summary";
-import { FOLDER_HEADER_REM } from "@/components/video-browser/video-tree/nodes/folder";
 import { useThumbnailGridStore } from "@/stores/thumbnail-grid-store";
 
 type Props = {
@@ -13,12 +12,10 @@ type Props = {
     video: VideoWithRevision;
     selected: boolean;
     marks: ReactNode;
-    // How many section headers are stacked above this item.
-    depth: number;
     onSelect: (videoId: string) => void;
 };
 
-export function BrowseItem({ ref, video, selected, marks, depth, onSelect }: Props) {
+export function BrowseItem({ ref, video, selected, marks, onSelect }: Props) {
     const urls = useThumbnailGridStore((s) => s.urls);
     const select = () => onSelect(video.id);
 
@@ -40,8 +37,8 @@ export function BrowseItem({ ref, video, selected, marks, depth, onSelect }: Pro
                     // A clicked item keeps focus; opening the card on focus would leave it covering the
                     // player after switching windows or tabbing down the list.
                     onFocus={(e) => e.preventDefault()}
-                    style={{ "--item-scroll-margin": `${depth * FOLDER_HEADER_REM}rem` } as React.CSSProperties}
-                    // Clears the stacked sticky headers when scrolled into view.
+                    // Clears the stacked sticky headers when scrolled into view. The folder's FolderSection
+                    // sets the margin; top-level items have no headers above them.
                     className="scroll-mt-(--item-scroll-margin)"
                 >
                     <VideoSummary video={video} />
