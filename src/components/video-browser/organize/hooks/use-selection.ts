@@ -1,0 +1,106 @@
+import { useMemo, useRef, useState, type ComponentProps, type MouseEvent } from "react";
+import type { VideoWithRevision } from "@/lib/db-types";
+import { isMac } from "@/lib/platform";
+import type { FolderNode } from "@/components/video-browser/sections/folder-tree";
+import type { MoveSource } from "@/components/video-browser/organize/hooks/operations/movers";
+import { folderRow, parseRow, videoRow, type RowKey } from "@/components/video-browser/organize/row-keys";
+import { useVideoListStore } from "@/stores/video-list-store";
+
+type PickProps = ComponentProps<"button"> & { "data-selected": boolean };
+
+// Shift picks a range; ⌘ on a Mac (where Ctrl+click is a right click), or Ctrl elsewhere, adds one.
+const isPickClick = (e: MouseEvent) => e.shiftKey || (isMac() ? e.metaKey : e.ctrlKey);
+
+// Rows and folders picked for moving, as in Explorer and Finder.
+export function useSelection(root: FolderNode, videos: VideoWithRevision[]) {
+    const openPaths = useVideoListStore((s) => s.openPaths);
+    const [selected, setSelected] = useState<RowKey[]>([]);
+    // Where a Shift range starts: the last row clicked without Shift.
+    const anchor = useRef<RowKey | null>(null);
+
+    // Every row and folder as shown, top to bottom, for a Shift range.
+    const order = useMemo(() => {
+        const keys: RowKey[] = [];
+        const walk = (folder: FolderNode) => {
+            keys.push(folderRow(folder.path));
+            if (openPaths.includes(folder.path)) {
+                folder.folders.forEach(walk);
+                keys.push(...folder.videos.map((v) => videoRow(v.id)));
+            }
+        };
+
+        root.folders.forEach(walk);
+        keys.push(...root.videos.map((v) => videoRow(v.id)));
+        return keys;
+    }, [root, openPaths]);
+
+    // Only what is in view moves, as in Finder: closing a folder leaves what was picked inside it.
+    const pickedSources = useMemo(() => {
+        const byId = new Map(videos.map((v) => [v.id, v]));
+        const shown = new Set(order);
+        return selected.filter((k) => shown.has(k)).flatMap((k): MoveSource[] => {
+            const row = parseRow(k);
+            if ("folderPath" in row) {
+                return [row];
+            }
+
+            const video = byId.get(row.videoId);
+            return video ? [{ video }] : [];
+        });
+    }, [selected, videos, order]);
+
+    const pick = (key: RowKey, e: MouseEvent) => {
+        if (e.shiftKey && anchor.current !== null && order.includes(anchor.current)) {
+            const from = order.indexOf(anchor.current);
+            const to = order.indexOf(key);
+            setSelected(order.slice(Math.min(from, to), Math.max(from, to) + 1));
+            return;
+        }
+
+        anchor.current = key;
+
+        if (isPickClick(e)) {
+            setSelected((current) => current.includes(key) ? current.filter((k) => k !== key) : [...current, key]);
+        } else {
+            setSelected([key]);
+        }
+    };
+
+    const clear = () => {
+        anchor.current = null;
+        setSelected([]);
+    };
+
+    // Shift+click would also select the page's text between the clicks.
+    const keepTextUnselected = (e: MouseEvent) => {
+        if (e.shiftKey) {
+            e.preventDefault();
+        }
+    };
+
+    // Props for a video's row, where any click picks.
+    const pickRow = (key: RowKey): PickProps => ({
+        onMouseDown: keepTextUnselected,
+        onClick: (e) => pick(key, e),
+        "data-selected": selected.includes(key),
+    });
+
+    // Props for a folder's header, where a plain click opens and closes the folder instead.
+    const pickHeader = (key: RowKey): PickProps => ({
+        onMouseDown: keepTextUnselected,
+        onClick: (e) => {
+            if (isPickClick(e)) {
+                e.preventDefault();
+                pick(key, e);
+            }
+        },
+        "data-selected": selected.includes(key),
+    });
+
+    // What dragging the row moves: everything picked if it is picked, otherwise only itself.
+    const dragged = (key: RowKey, alone: MoveSource): MoveSource[] => {
+        return selected.includes(key) ? pickedSources : [alone];
+    };
+
+    return { pickRow, pickHeader, dragged, clear };
+}

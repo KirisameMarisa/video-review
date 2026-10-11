@@ -14,9 +14,8 @@ export const TOP = "";
 
 const isIn = (key: string, folder: string) => key === folder || key.startsWith(`${folder}/`);
 
-// What dropping the sources on the folder at `path` asks the server, or null when the drop is
-// refused. One video on the top level or one folder into itself refuses all of them, since the
-// move is all or nothing; those already there stay, and with nothing left the drop is refused too.
+// The request for dropping the sources on `path`, or null to refuse the drop. The move is all or
+// nothing, so one source that can't go there refuses them all.
 export function planMove(sources: MoveSource[], path: string): MoveRequest | null {
     const request: MoveRequest = { videos: [], folders: [] };
 
@@ -32,6 +31,7 @@ export function planMove(sources: MoveSource[], path: string): MoveRequest | nul
             if (path === TOP) {
                 return null;
             }
+
             if (path !== source.video.folderKey) {
                 request.videos.push({ id: source.video.id, folderKey: path });
             }

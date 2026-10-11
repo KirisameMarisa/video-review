@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { useDragDrop } from "@/lib/hooks/use-drag-drop";
-import { planMove, useMovers, type MoveSource } from "@/components/video-browser/organize/operations/movers";
+import { planMove, TOP, useMovers, type MoveSource } from "@/components/video-browser/organize/hooks/operations/movers";
 
 type Options = {
     // Opens a folder and the folders above it, so a closed one can be dropped into.
@@ -14,7 +14,7 @@ type Options = {
 export function useFolderDrop({ reveal, onMoved }: Options) {
     const { move } = useMovers();
 
-    return useDragDrop<MoveSource[]>({
+    const drag = useDragDrop<MoveSource[]>({
         accepts: (sources, path) => planMove(sources, path) !== null,
         onDrop: (sources, path) => {
             void move(planMove(sources, path)!).then((refused) => {
@@ -28,4 +28,12 @@ export function useFolderDrop({ reveal, onMoved }: Options) {
         },
         onLinger: reveal,
     });
+
+    // Props for the top-level row, which only takes folders.
+    const dropOnTop = () => ({
+        ...drag.dropOn(TOP),
+        "data-drop-target": drag.target === TOP,
+    });
+
+    return { ...drag, dropOnTop };
 }

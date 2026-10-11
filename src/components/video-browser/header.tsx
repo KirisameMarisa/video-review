@@ -18,7 +18,7 @@ import { Separator } from "../ui/separator";
 import { useChatSearchStore } from "@/stores/chat-search-store";
 import { ChatSearchPanel } from "@/components/chat-search";
 import { OrganizeHeader } from "@/components/video-browser/organize/header";
-import { useOrganizing } from "@/components/video-browser/organize/use-organizing";
+import { useOrganizing } from "@/components/video-browser/organize/hooks/use-organizing";
 import { useVideoListStore } from "@/stores/video-list-store";
 
 export default function VideoListPanelHeader(

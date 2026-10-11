@@ -10,7 +10,7 @@ import { VideoSearchDialog } from "@/components/dialog/video-search";
 import VideoThumbnailsPanel from "@/components/video-browser/video-thumbnails-panel";
 import { VideoSections } from "@/components/video-browser/sections";
 import { OrganizeList } from "@/components/video-browser/organize";
-import { useOrganizing } from "@/components/video-browser/organize/use-organizing";
+import { useOrganizing } from "@/components/video-browser/organize/hooks/use-organizing";
 import { useFolderList } from "@/components/video-browser/sections/use-folder-list";
 import { useMarkContext } from "@/components/video-browser/marks/use-mark-context";
 import { useVideoStore } from "@/stores/video-store";

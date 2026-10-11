@@ -1,6 +1,8 @@
 import type { ComponentProps, ReactNode } from "react";
+import { useTranslations } from "next-intl";
+import { Pencil } from "lucide-react";
 import type { VideoWithRevision } from "@/lib/db-types";
-import { SidebarMenuButton } from "@/components/ui/sidebar";
+import { SidebarMenuAction, SidebarMenuButton } from "@/components/ui/sidebar";
 import { RowThumbnail } from "@/components/video-browser/sections/video-row/row-thumbnail";
 
 type RowProps = {
@@ -8,9 +10,7 @@ type RowProps = {
     containerRef: React.RefObject<HTMLDivElement | null>;
 };
 
-// A video in organize mode, showing only what tells videos apart when deciding where they go:
-// the thumbnail and the whole title, wrapped rather than shortened. Other button props, such as
-// key handlers, pass through to the button.
+// A video with only what tells it apart when organizing: the thumbnail and the whole title.
 export function OrganizeRowButton({ video, containerRef, ...props }: RowProps & ComponentProps<"button">) {
     return (
         <SidebarMenuButton {...props} size="auto">
@@ -30,5 +30,16 @@ export function OrganizeRowField({ video, containerRef, children }: RowProps & {
                 {children}
             </div>
         </SidebarMenuButton>
+    );
+}
+
+// The pencil beside a row or folder header that starts renaming it, shown on hover or focus.
+export function RenameAction({ onClick }: { onClick: () => void }) {
+    const t = useTranslations("video-list-panel.organize.rename");
+
+    return (
+        <SidebarMenuAction showOnHover title={t("action")} onClick={onClick}>
+            <Pencil />
+        </SidebarMenuAction>
     );
 }
