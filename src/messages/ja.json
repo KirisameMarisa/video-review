@@ -6,6 +6,7 @@
         "initialize": "初期設定"
     },
     "video-title": {
+        "toggleSidePanel": "サイドパネルの表示を切り替え",
         "noSelection": "未選択",
         "revisionInfo": "Rev: {revision} ({uploadedAt})",
         "noRevision": "リビジョン情報なし",

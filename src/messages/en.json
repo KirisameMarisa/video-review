@@ -6,6 +6,7 @@
         "initialize": "Initialize"
     },
     "video-title": {
+        "toggleSidePanel": "Show or hide the side panel",
         "noSelection": "No video selected",
         "revisionInfo": "Revision: {revision} ({uploadedAt})",
         "noRevision": "No revision info",
