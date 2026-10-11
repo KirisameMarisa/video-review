@@ -93,6 +93,11 @@
                 "videoClash": "A video in the destination already has the same name"
             },
             "move": {
+                "title": "Move",
+                "emptied": "{folders} will be empty and disappear from the list",
+                "cancel": "Cancel",
+                "confirm": "Move",
+                "close": "OK",
                 "clash": "A video with the same name is already there",
                 "failed": "Could not move"
             }

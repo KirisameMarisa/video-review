@@ -93,6 +93,11 @@
                 "videoClash": "移した先に同じ名前の動画があります"
             },
             "move": {
+                "title": "移動",
+                "emptied": "{folders} が空になり、一覧から消えます",
+                "cancel": "キャンセル",
+                "confirm": "移動",
+                "close": "OK",
                 "clash": "移した先に同じ名前の動画があります",
                 "failed": "移動できませんでした"
             }

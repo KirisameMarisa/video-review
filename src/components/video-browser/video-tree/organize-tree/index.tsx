@@ -9,6 +9,7 @@ import { VideoItemField } from "@/components/video-browser/video-tree/nodes/item
 import { FolderHeaderButton, FolderHeaderField } from "@/components/video-browser/video-tree/nodes/folder/folder-header";
 import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
 import { useFolderList } from "@/components/video-browser/video-tree/use-folder-list";
+import { MoveDialog } from "@/components/video-browser/video-tree/organize-tree/move-dialog";
 import { NewFolderAction, OrganizeItemButton, RenameAction } from "@/components/video-browser/video-tree/organize-tree/item";
 import { RenameInput } from "@/components/controls/rename-input";
 import { folderNodeKey, itemNodeKey, type NodeKey } from "@/components/video-browser/video-tree/organize-tree/node-keys";
@@ -48,7 +49,8 @@ export function OrganizeTree() {
     });
 
     // Opens where it went, so the moved video or folder is in view.
-    const { dragFrom, dropOn, dropOnTop, target: dropTarget } = useFolderDrop({
+    const { dragFrom, dropOn, dropOnTop, target: dropTarget, moveDialog } = useFolderDrop({
+        videos,
         reveal,
         onMoved: (path) => {
             clear();
@@ -131,6 +133,8 @@ export function OrganizeTree() {
                 </SidebarMenuButton>
                 <NewFolderAction onClick={() => makeFolder(TOP)} />
             </SidebarMenuItem>
+
+            {moveDialog && <MoveDialog {...moveDialog} />}
         </VideoTree>
     );
 }

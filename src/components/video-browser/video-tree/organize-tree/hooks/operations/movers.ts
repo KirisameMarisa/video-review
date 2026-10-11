@@ -2,6 +2,7 @@ import { useTranslations } from "next-intl";
 import { api, readError } from "@/lib/api-client";
 import type { VideoWithRevision } from "@/lib/db-types";
 import { childPath, folderName, isInFolder, parentPath } from "@/lib/folder-path";
+import { folderAncestors } from "@/components/video-browser/video-tree/folder-tree";
 import { useVideoListStore } from "@/stores/video-list-store";
 
 // What is being dragged: a video, or a folder by its path.
@@ -50,6 +51,25 @@ export function planMove(sources: MoveSource[], path: string): MoveRequest | nul
     return request.videos.length + request.folders.length === 0 ? null : request;
 }
 
+// The outermost folders a move leaves without a video. A folder is only a path in videos' folder
+// keys, so these leave the list.
+export function emptiedFolders(videos: VideoWithRevision[], request: MoveRequest): string[] {
+    const movedVideos = new Map(request.videos.map((v) => [v.id, v.folderKey]));
+
+    const after = videos.map((video) => {
+        const key = movedVideos.get(video.id) ?? video.folderKey;
+        const folder = request.folders.find((f) => isInFolder(key, f.from));
+        return folder ? folder.to + key.slice(folder.from.length) : key;
+    });
+
+    const before = new Set(videos.flatMap((v) => folderAncestors(v.folderKey)));
+    const kept = new Set(after.flatMap(folderAncestors));
+    const movedAway = (path: string) => request.folders.some((f) => isInFolder(path, f.from));
+    const emptied = [...before].filter((path) => !kept.has(path) && !movedAway(path));
+
+    return emptied.filter((path) => !emptied.some((other) => other !== path && isInFolder(path, other)));
+}
+
 // How organize mode moves videos and folders: the request, and how a refusal reads.
 export function useMovers() {
     const t = useTranslations("video-list-panel.organize.move");
@@ -83,5 +103,7 @@ export function useMovers() {
         return null;
     };
 
-    return { move };
+    const emptiedMessage = (folders: string[]) => t("emptied", { folders: folders.map(folderName).join(", ") });
+
+    return { move, emptiedMessage };
 }
