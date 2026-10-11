@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { api } from "@/lib/api-client";
 import { isInFolder } from "@/lib/folder-path";
 
 interface VideoListState {
@@ -14,6 +15,8 @@ interface VideoListState {
     // The first visit on an earlier day, so reopening the list during the day doesn't move it.
     // Null until a second day is recorded.
     previousVisitAt: number | null;
+    // The newest revision this user has opened of each video, from the server.
+    seenRevisions: Record<string, number>;
     // The admin's organize mode, which shows the list for moving and renaming instead. Not kept
     // across reloads.
     organizing: boolean;
@@ -31,6 +34,8 @@ interface VideoListState {
     fillNewFolder: (path: string) => void;
     clearClosedWhileFiltering: () => void;
     recordVisit: (now?: Date) => void;
+    loadSeen: (userId: string | null) => Promise<void>;
+    markSeen: (userId: string, videoId: string, revision: number) => Promise<void>;
     setOrganizing: (organizing: boolean) => void;
 }
 
@@ -46,6 +51,7 @@ export const useVideoListStore = create<VideoListState>()(
             visitDay: null,
             firstVisitAt: null,
             previousVisitAt: null,
+            seenRevisions: {},
             organizing: false,
             newFolders: [],
 
@@ -75,6 +81,38 @@ export const useVideoListStore = create<VideoListState>()(
                     return;
                 }
                 set((state) => ({ visitDay: today, firstVisitAt: now.getTime(), previousVisitAt: state.firstVisitAt }));
+            },
+            loadSeen: async (userId) => {
+                if (!userId) {
+                    set({ seenRevisions: {} });
+                    return;
+                }
+
+                const res = await api.readStatus.seen.$get({ query: { userId } });
+                if (res.status !== 200) {
+                    throw new Error("failed to get seen revisions");
+                }
+                const { seen } = await res.json();
+                // A revision marked while this was in flight is newer than what the server sent.
+                set((state) => {
+                    const merged = { ...seen };
+                    for (const [id, revision] of Object.entries(state.seenRevisions)) {
+                        merged[id] = Math.max(revision, merged[id] ?? 0);
+                    }
+                    return { seenRevisions: merged };
+                });
+            },
+            // Shown here at once, so NEW goes without a reload.
+            markSeen: async (userId, videoId, revision) => {
+                if ((get().seenRevisions[videoId] ?? 0) >= revision) {
+                    return;
+                }
+
+                set((state) => ({ seenRevisions: { ...state.seenRevisions, [videoId]: revision } }));
+                const res = await api.readStatus.seen.$post({ json: { userId, videoId, revision } });
+                if (!res.ok) {
+                    throw new Error("failed to record the seen revision");
+                }
             },
             setOrganizing: (organizing) => set({ organizing, newFolders: [] }),
         }),
