@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import { useTranslations } from "next-intl";
 import { FolderRoot } from "lucide-react";
 import type { VideoWithRevision } from "@/lib/db-types";
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { FolderSection } from "@/components/video-browser/video-tree/folder";
+import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { VideoTree } from "@/components/video-browser/video-tree";
 import { FolderHeaderButton, FolderHeaderField } from "@/components/video-browser/video-tree/folder/folder-header";
-import { buildNestedFolders, folderAncestors, type FolderNode } from "@/components/video-browser/video-tree/folder-tree";
+import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
+import { useFolderList } from "@/components/video-browser/video-tree/use-folder-list";
 import { OrganizeRowButton, OrganizeRowField, RenameAction } from "@/components/video-browser/video-tree/organize-tree/row";
 import { RenameInput } from "@/components/controls/rename-input";
 import { folderRow, videoRow } from "@/components/video-browser/video-tree/organize-tree/row-keys";
@@ -23,13 +24,9 @@ export function OrganizeList() {
     const t = useTranslations("video-list-panel.organize");
     const containerRef = useRef<HTMLDivElement>(null);
     const { videos, reload } = useAllVideos();
-    const openPaths = useVideoListStore((s) => s.openPaths);
-    const toggleFolder = useVideoListStore((s) => s.toggleFolder);
-    const revealFolders = useVideoListStore((s) => s.revealFolders);
-
-    const root = useMemo(() => buildNestedFolders(videos, { compact: false }), [videos]);
-
-    const reveal = (path: string) => revealFolders(folderAncestors(path));
+    // Every folder gets its own row, so each one can be dropped on and renamed.
+    const folderList = useFolderList(videos, { compact: false });
+    const { reveal } = folderList;
 
     // The browsing list catches up when the mode ends, or here if it ended while saving.
     const readBack = () => {
@@ -40,7 +37,7 @@ export function OrganizeList() {
         return reading;
     };
 
-    const { pickRow, pickHeader, dragged, clear } = useSelection(root, videos);
+    const { pickRow, pickHeader, dragged, clear } = useSelection(folderList, videos);
 
     // A renamed folder's key is stale, and so would be those of everything picked inside it.
     const { editing, start, renameOn, renameVideo, renameFolder } = useRenaming(videos, () => {
@@ -62,7 +59,7 @@ export function OrganizeList() {
         const key = videoRow(video.id);
 
         return (
-            <SidebarMenuItem key={video.id}>
+            <SidebarMenuItem>
                 {editing(key) ? (
                     <OrganizeRowField video={video} containerRef={containerRef}>
                         <RenameInput {...renameVideo(video)} />
@@ -84,56 +81,43 @@ export function OrganizeList() {
         );
     };
 
-    const renderFolder = (folder: FolderNode, depth: number, siblings: FolderNode[]) => {
+    const renderHeader = (folder: FolderNode, open: boolean, siblings: FolderNode[]) => {
         const key = folderRow(folder.path);
-        const open = openPaths.includes(folder.path);
+
+        if (editing(key)) {
+            return (
+                <FolderHeaderField open={open}>
+                    <RenameInput {...renameFolder(folder, siblings)} />
+                </FolderHeaderField>
+            );
+        }
 
         return (
-            <FolderSection
-                key={folder.path}
-                depth={depth}
-                open={open}
-                onToggle={() => toggleFolder(folder.path, false)}
-                header={editing(key) ? (
-                    <FolderHeaderField open={open}>
-                        <RenameInput {...renameFolder(folder, siblings)} />
-                    </FolderHeaderField>
-                ) : (
-                    <>
-                        <FolderHeaderButton
-                            {...renameOn(key)}
-                            {...pickHeader(key)}
-                            {...dragFrom(dragged(key, { folderPath: folder.path }))}
-                            {...dropOn(folder.path)}
-                            data-drop-target={dropTarget === folder.path}
-                            names={folder.names}
-                            path={folder.path}
-                            open={open}
-                            total={folder.allVideos.length}
-                        />
-                        <RenameAction onClick={() => start(key)} />
-                    </>
-                )}
-            >
-                {folder.folders.map((child) => renderFolder(child, depth + 1, folder.folders))}
-                {folder.videos.map(renderRow)}
-            </FolderSection>
+            <>
+                <FolderHeaderButton
+                    {...renameOn(key)}
+                    {...pickHeader(key)}
+                    {...dragFrom(dragged(key, { folderPath: folder.path }))}
+                    {...dropOn(folder.path)}
+                    data-drop-target={dropTarget === folder.path}
+                    names={folder.names}
+                    path={folder.path}
+                    open={open}
+                    total={folder.allVideos.length}
+                />
+                <RenameAction onClick={() => start(key)} />
+            </>
         );
     };
 
     return (
-        <div ref={containerRef} data-slot="organize-list" className="min-h-0 flex-1 overflow-y-auto">
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton {...dropOnTop()}>
-                        <FolderRoot className="text-primary" />
-                        <span>{t("top")}</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-
-                {root.folders.map((folder) => renderFolder(folder, 0, root.folders))}
-                {root.videos.map(renderRow)}
-            </SidebarMenu>
-        </div>
+        <VideoTree folders={folderList} containerRef={containerRef} slot="organize-list" header={renderHeader} row={renderRow}>
+            <SidebarMenuItem>
+                <SidebarMenuButton {...dropOnTop()}>
+                    <FolderRoot className="text-primary" />
+                    <span>{t("top")}</span>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+        </VideoTree>
     );
 }

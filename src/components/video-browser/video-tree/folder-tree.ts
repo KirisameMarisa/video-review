@@ -111,10 +111,21 @@ function finishFolder(draft: FolderDraft, names: string[], compact: boolean): Fo
     };
 }
 
-// The videos the list shows, in its order: under open folders only, subfolders before videos.
+export type VisibleRow = { folder: FolderNode } | { video: VideoWithRevision };
+
+// The headers and videos the list shows, in its order: a folder's contents only while it is open,
+// subfolders before videos.
+export function visibleRows(folder: FolderNode, isOpen: (path: string) => boolean): VisibleRow[] {
+    const folders = folder.folders.flatMap((f) => {
+        const contents = isOpen(f.path) ? visibleRows(f, isOpen) : [];
+        return [{ folder: f }, ...contents];
+    });
+
+    return [...folders, ...folder.videos.map((video) => ({ video }))];
+}
+
 export function visibleVideos(folder: FolderNode, isOpen: (path: string) => boolean): VideoWithRevision[] {
-    const nested = folder.folders.filter((f) => isOpen(f.path)).flatMap((f) => visibleVideos(f, isOpen));
-    return [...nested, ...folder.videos];
+    return visibleRows(folder, isOpen).flatMap((row) => "video" in row ? [row.video] : []);
 }
 
 // Every folder on the way to a video, so opening them all reveals it whichever rows were folded.

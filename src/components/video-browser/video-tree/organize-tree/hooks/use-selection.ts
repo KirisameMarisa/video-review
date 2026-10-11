@@ -1,10 +1,10 @@
 import { useMemo, useRef, useState, type ComponentProps, type MouseEvent } from "react";
 import type { VideoWithRevision } from "@/lib/db-types";
 import { isMac } from "@/lib/platform";
-import type { FolderNode } from "@/components/video-browser/video-tree/folder-tree";
+import { visibleRows } from "@/components/video-browser/video-tree/folder-tree";
+import type { FolderList } from "@/components/video-browser/video-tree/use-folder-list";
 import type { MoveSource } from "@/components/video-browser/video-tree/organize-tree/hooks/operations/movers";
 import { folderRow, parseRow, videoRow, type RowKey } from "@/components/video-browser/video-tree/organize-tree/row-keys";
-import { useVideoListStore } from "@/stores/video-list-store";
 
 type PickProps = ComponentProps<"button"> & { "data-selected": boolean };
 
@@ -12,27 +12,16 @@ type PickProps = ComponentProps<"button"> & { "data-selected": boolean };
 const isPickClick = (e: MouseEvent) => e.shiftKey || (isMac() ? e.metaKey : e.ctrlKey);
 
 // Rows and folders picked for moving, as in Explorer and Finder.
-export function useSelection(root: FolderNode, videos: VideoWithRevision[]) {
-    const openPaths = useVideoListStore((s) => s.openPaths);
+export function useSelection({ root, isOpen }: Pick<FolderList, "root" | "isOpen">, videos: VideoWithRevision[]) {
     const [selected, setSelected] = useState<RowKey[]>([]);
     // Where a Shift range starts: the last row clicked without Shift.
     const anchor = useRef<RowKey | null>(null);
 
     // Every row and folder as shown, top to bottom, for a Shift range.
-    const order = useMemo(() => {
-        const keys: RowKey[] = [];
-        const walk = (folder: FolderNode) => {
-            keys.push(folderRow(folder.path));
-            if (openPaths.includes(folder.path)) {
-                folder.folders.forEach(walk);
-                keys.push(...folder.videos.map((v) => videoRow(v.id)));
-            }
-        };
-
-        root.folders.forEach(walk);
-        keys.push(...root.videos.map((v) => videoRow(v.id)));
-        return keys;
-    }, [root, openPaths]);
+    const order = useMemo(
+        () => visibleRows(root, isOpen).map((row) => "folder" in row ? folderRow(row.folder.path) : videoRow(row.video.id)),
+        [root, isOpen],
+    );
 
     // Only what is in view moves, as in Finder: closing a folder leaves what was picked inside it.
     const pickedSources = useMemo(() => {

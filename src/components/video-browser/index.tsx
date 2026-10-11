@@ -35,7 +35,7 @@ export default function VideoListPanel() {
     const canvasEditing = useDrawingStore((s) => s.canvasEditing);
     const searching = useVideoSearchStore((s) => s.isFiltering());
     const dateFiltering = useVideoDateFilterStore((s) => s.mode !== "none");
-    const folderList = useFolderList(videos, searching || dateFiltering);
+    const folderList = useFolderList(videos, { filtering: searching || dateFiltering });
     const organizing = useOrganizing();
 
     useEffect(() => {
