@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Marks } from "@/components/video-browser/marks/marks";
 import type { MarkContext } from "@/components/video-browser/marks/use-mark-context";
 import { FolderHeaderButton } from "@/components/video-browser/video-tree/nodes/folder/folder-header";
@@ -16,20 +16,14 @@ type Props = {
 };
 
 export function BrowseTree({ folderList, markContext, selectedVideoId, onSelectVideo }: Props) {
-    const itemRefs = useRef(new Map<string, HTMLButtonElement>());
     const { root, reveal } = folderList;
 
-    // A video opened from elsewhere (URL, auto-play next, upload) is revealed and scrolled to.
+    // A video opened from elsewhere (URL, auto-play next, upload) is revealed; its item scrolls to itself.
     useEffect(() => {
         const video = root.allVideos.find((v) => v.id === selectedVideoId);
-        if (!video) {
-            return;
+        if (video) {
+            reveal(video.folderKey);
         }
-
-        reveal(video.folderKey);
-        requestAnimationFrame(() => {
-            itemRefs.current.get(video.id)?.scrollIntoView({ block: "nearest" });
-        });
     }, [selectedVideoId, root, reveal]);
 
     return (
@@ -47,13 +41,6 @@ export function BrowseTree({ folderList, markContext, selectedVideoId, onSelectV
             )}
             item={(video) => (
                 <BrowseItem
-                    ref={(el) => {
-                        if (el) {
-                            itemRefs.current.set(video.id, el);
-                        } else {
-                            itemRefs.current.delete(video.id);
-                        }
-                    }}
                     video={video}
                     selected={video.id === selectedVideoId}
                     marks={<Marks videos={[video]} scope="video" context={markContext} />}

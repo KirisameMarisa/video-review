@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { VideoWithRevision } from "@/lib/db-types";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
 import { VideoDetailHoverCard } from "@/components/video-browser/thumbnail-cell/detail-card";
@@ -8,16 +8,23 @@ import { VideoSummary } from "@/components/video-browser/video-tree/browse-tree/
 import { useThumbnailGridStore } from "@/stores/thumbnail-grid-store";
 
 type Props = {
-    ref: Ref<HTMLButtonElement>;
     video: VideoWithRevision;
     selected: boolean;
     marks: ReactNode;
     onSelect: (videoId: string) => void;
 };
 
-export function BrowseItem({ ref, video, selected, marks, onSelect }: Props) {
+export function BrowseItem({ video, selected, marks, onSelect }: Props) {
     const urls = useThumbnailGridStore((s) => s.urls);
+    const ref = useRef<HTMLButtonElement>(null);
     const select = () => onSelect(video.id);
+
+    // Also runs on mount, so opening the folder that holds the open video scrolls to it.
+    useEffect(() => {
+        if (selected) {
+            ref.current?.scrollIntoView({ block: "nearest" });
+        }
+    }, [selected]);
 
     return (
         <SidebarMenuItem>
