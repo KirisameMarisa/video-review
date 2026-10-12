@@ -25,8 +25,16 @@ describe("frameDiff", () => {
         expect(pixel(out, 1)).toEqual([173, 20, 20, 255]);
     });
 
+    it("tints a change of colour even when the brightness stays the same", () => {
+        // A pinkish and a greenish pixel of nearly the same luminance, 60 apart in red.
+        const base = new Uint8ClampedArray([180, 120, 120, 255]);
+        const other = new Uint8ClampedArray([120, 150, 128, 255]);
+
+        expect(pixel(frameDiff(base, other, options), 0)).toEqual([181, 28, 28, 255]);
+    });
+
     it("counts a difference exactly at the threshold as changed", () => {
-        // Gray 100 vs 124 differ by exactly 24 in luminance.
+        // Gray 100 vs 124 differ by exactly 24 in every channel.
         const out = frameDiff(frame(100), frame(124), options);
 
         expect(pixel(out, 0)).toEqual([173, 20, 20, 255]);
