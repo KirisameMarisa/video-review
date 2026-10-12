@@ -1,6 +1,11 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "description": [
+        "Every update waits on the dependency dashboard until someone ticks it, and only updates Merge Confidence rates high or very high are offered.",
+        "constraints: the lockfile is written with the same npm major as CI's. The runner's newest npm (12) refuses remote tarballs by default, and @tailwindcss/oxide's wasm fallback needs one."
+    ],
     "extends": ["config:recommended"],
+    "constraints": { "npm": "^11" },
     "dependencyDashboard": true,
     "dependencyDashboardApproval": true,
     "dependencyDashboardOSVVulnerabilitySummary": "all",
@@ -9,36 +14,34 @@
         "enabled": false
     },
     "lockFileMaintenance": {
-        "description": "Refresh the lockfile once a month in one PR, so indirect packages do not drift far behind.",
+        "description": "Offered once a month, so indirect packages do not drift far behind.",
         "enabled": true,
-        "dependencyDashboardApproval": false,
         "schedule": ["before 9am on the first day of the month"]
     },
     "packageRules": [
         {
-            "description": "npm packages can be unpublished within 72 hours and hijacked releases surface in the first days, so the dashboard offers the newest version that is at least 3 days old.",
+            "description": "npm packages can be unpublished within 72 hours and hijacked releases surface in the first days. Only the newest release at least this old is rated, so two weeks also gives Merge Confidence time to rate it.",
             "matchDatasources": ["npm"],
-            "minimumReleaseAge": "3 days"
+            "minimumReleaseAge": "14 days"
         },
         {
-            "description": "Patch and minor updates arrive together once a week and go in when the PR checks pass. Majors stay on the dashboard until approved.",
+            "description": "Not offered until Merge Confidence rates them high or very high; a rating rises as a release ages and is adopted.",
+            "matchDatasources": ["npm"],
+            "matchConfidence": ["low", "neutral"],
+            "enabled": false
+        },
+        {
+            "description": "Patch and minor updates are offered together once a week as one PR.",
             "matchDatasources": ["npm"],
             "matchUpdateTypes": ["patch", "minor"],
-            "dependencyDashboardApproval": false,
             "groupName": "non-major dependencies",
             "schedule": ["before 9am on monday"]
         },
         {
-            "description": "The lint plugin is young; each release may add findings, so bump it weekly in its own PR and let the CI lint job show the effect.",
+            "description": "The lint plugin is young; each release may add findings, so it is offered weekly in its own PR and the CI lint job shows the effect.",
             "matchPackageNames": ["@shadcn/lint"],
-            "dependencyDashboardApproval": false,
             "groupName": "@shadcn/lint",
             "schedule": ["before 9am on monday"]
-        },
-        {
-            "description": "Actions are pinned to commit SHAs, which nobody can read well enough to approve from the dashboard.",
-            "matchManagers": ["github-actions"],
-            "dependencyDashboardApproval": false
         }
     ]
 }
