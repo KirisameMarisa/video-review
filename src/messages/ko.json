@@ -122,7 +122,9 @@
         "next": "다음 동영상 자동 재생",
         "playMode": "재생 모드",
         "saveScreenshot": "스크린샷 저장",
-        "captureDrawing": "스크린샷에 그림 포함"
+        "captureDrawing": "스크린샷에 그림 포함",
+        "fullscreen": "전체 화면",
+        "exitFullscreen": "전체 화면 종료"
     },
     "video-comment-panel": {
         "title": "댓글",

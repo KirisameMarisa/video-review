@@ -13,8 +13,8 @@ async function login(page: import("@playwright/test").Page) {
     await page.waitForURL(/\/video-review\/review\b/);
 }
 
-// The seed ships no media bytes, so the player keeps the <video> element's default box;
-// the canvas is still fitted to it and can be drawn on.
+// The seed ships no media bytes; the player still sizes a 16:9 box for the video and
+// the canvas is fitted to it, so it can be drawn on.
 async function openFirstVideo(page: import("@playwright/test").Page) {
     // The thumbnail panel shows only the videos in folders open in the sidebar.
     const closed = page.locator('[data-slot="browse-tree"] [aria-expanded="false"]');

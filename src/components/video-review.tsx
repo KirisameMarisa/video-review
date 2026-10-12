@@ -1,5 +1,5 @@
 "use client"
-import { useRef, useEffect, useState, useMemo, useCallback } from "react";
+import { useRef, useEffect, useState, useMemo, useCallback, type CSSProperties } from "react";
 import { useVideoReviewStore } from "@/stores/video-review-store";
 import { usePlayback } from "@/stores/playback-store";
 import VideoTimelineBar from "@/components/video-timeline-bar";
@@ -24,7 +24,11 @@ export default function VideoReview() {
     const t = useTranslations("video-review");
     const router = useRouter();
     const videoRef = useRef<HTMLVideoElement>(null);
+    // The whole player column goes fullscreen, so drawing, the timeline and the controls stay usable.
+    const playerRef = useRef<HTMLDivElement>(null);
     const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
+    // Feeds video-fit; 16/9 until loadedmetadata.
+    const [videoAspect, setVideoAspect] = useState("16 / 9");
 
     const { token } = useAuthStore();
 
@@ -153,6 +157,7 @@ export default function VideoReview() {
         const onPause = () => setIsPlaying(false);
         const onMeta = () => {
             setDuration(v.duration);
+            setVideoAspect(`${v.videoWidth} / ${v.videoHeight}`);
             v.playbackRate = playbackRate;
             v.volume = volumeEnabled ? volume : 0.0;
         }
@@ -239,7 +244,7 @@ export default function VideoReview() {
 
     return (
         <>
-            <div className="flex flex-col h-full w-full border-r">
+            <div ref={playerRef} className="flex flex-col h-full w-full border-r">
                 {loading
                     ?
                     <div className="flex-1 flex flex-col items-center justify-center">
@@ -250,20 +255,20 @@ export default function VideoReview() {
                         <VideoTitle />
                         {selectedRevision ? (
                             <>
-                                <div className="flex-1 flex flex-col items-center justify-center bg-black rounded mb-3 relative">
-                                    <div className="relative inline-block">
+                                <div className="video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative">
+                                    <div className="video-fit relative" style={{ "--video-aspect": videoAspect } as CSSProperties}>
                                         <video
                                             ref={attachVideo}
                                             src={playbackUrl ?? undefined}
                                             onClick={togglePlay}
-                                            className="video-stage max-w-full rounded cursor-pointer object-contain"
+                                            className="w-full h-full rounded cursor-pointer"
                                         />
                                         <DrawingLayer />
                                     </div>
                                 </div>
 
                                 <VideoTimelineBar />
-                                <VideoControlPanel />
+                                <VideoControlPanel fullscreenTarget={playerRef} />
                             </>
                         ) : (
                             <div className="flex-1 flex items-center justify-center text-muted-foreground">

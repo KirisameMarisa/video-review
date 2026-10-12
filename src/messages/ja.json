@@ -122,7 +122,9 @@
         "next": "次の動画を自動再生",
         "playMode": "再生モード",
         "saveScreenshot": "スクリーンショットを保存",
-        "captureDrawing": "スクリーンショットに描画を含める"
+        "captureDrawing": "スクリーンショットに描画を含める",
+        "fullscreen": "全画面",
+        "exitFullscreen": "全画面を終了"
     },
     "video-comment-panel": {
         "title": "Comments",

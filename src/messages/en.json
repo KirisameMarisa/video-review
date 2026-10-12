@@ -122,7 +122,9 @@
         "next": "Auto play next video",
         "playMode": "Play mode",
         "saveScreenshot": "Save screenshot",
-        "captureDrawing": "Include drawing in screenshots"
+        "captureDrawing": "Include drawing in screenshots",
+        "fullscreen": "Fullscreen",
+        "exitFullscreen": "Exit fullscreen"
     },
     "video-comment-panel": {
         "title": "Comments",

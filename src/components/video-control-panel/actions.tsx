@@ -1,14 +1,15 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, type RefObject } from "react";
 import { Button } from "@/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLink, faDownload, faGamepad, faCamera, faPalette } from "@fortawesome/free-solid-svg-icons";
+import { faLink, faDownload, faGamepad, faCamera, faPalette, faExpand, faCompress } from "@fortawesome/free-solid-svg-icons";
 import { Switch } from "@/ui/switch";
 import { ButtonGroup, ButtonGroupText } from "@/ui/button-group";
 import { useTranslations } from "next-intl";
 import { formatTime } from "@/lib/utils";
 import { createOpenSceneLink } from "@/lib/url";
 import { useConfigStore } from "@/stores/config-store";
+import { useFullscreen } from "@/lib/hooks/use-fullscreen";
 import { useDrawingSettingsStore } from "@/stores/drawing-settings-store";
 import { captureView } from "@/lib/drawing/capture-view";
 import { ShareLinkDialog } from "@/components/dialog/share-link";
@@ -90,6 +91,18 @@ export function OpenSceneButton({ scenePath }: { scenePath: string | null }) {
     return (
         <Button size="icon-sm" onClick={() => { window.location.href = link; }}>
             <FontAwesomeIcon icon={faGamepad} />
+        </Button>
+    );
+}
+
+export function FullscreenButton({ target }: { target: RefObject<HTMLElement | null> }) {
+    const t = useTranslations("video-control-panel");
+    const { active, toggle } = useFullscreen(target);
+    const label = active ? t("exitFullscreen") : t("fullscreen");
+
+    return (
+        <Button size="icon-sm" aria-label={label} title={label} onClick={toggle}>
+            <FontAwesomeIcon icon={active ? faCompress : faExpand} />
         </Button>
     );
 }
