@@ -16,6 +16,10 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { LoadingBadge } from "@/components/controls/loading-badge";
 
+// Well under one frame at any frame rate, so only the time a paused video already shows
+// counts as the same.
+const SAME_TIME_S = 0.001;
+
 export default function VideoReview() {
     const t = useTranslations("video-review");
     const router = useRouter();
@@ -86,10 +90,18 @@ export default function VideoReview() {
         const v = videoRef.current;
         if (!v) return;
 
-        if (timelineTimeRef.current !== null) {
-            setCurrentTime(timelineTimeRef.current);
-            v.currentTime = timelineTimeRef.current;
+        const target = timelineTimeRef.current;
+        if (target === null) {
+            return;
         }
+
+        setCurrentTime(target);
+        // Seeking to where a paused video already is can show the neighbouring frame, so selecting
+        // a comment written there would nudge the picture.
+        if (v.paused && Math.abs(v.currentTime - target) < SAME_TIME_S) {
+            return;
+        }
+        v.currentTime = target;
     }
 
     useEffect(() => {
