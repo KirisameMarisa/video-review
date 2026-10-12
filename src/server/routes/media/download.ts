@@ -5,7 +5,7 @@ import { authorize } from "@/server/lib/token";
 import { ServerError } from "@/server/lib/server-error";
 import { VideoReviewStorage } from "@/server/lib/storage";
 import { prisma } from "@/server/lib/db";
-import { formatVideoRes } from "@/server/lib/utils/format-video-res";
+import { formatVideoRes } from "@/lib/format-video-res";
 import { getResolutionPresets } from "@/server/lib/integrations/general";
 
 export const downloadRouter = createRouter()

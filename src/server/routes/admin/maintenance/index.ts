@@ -9,7 +9,7 @@ import { ContentfulStatusCode } from "hono/utils/http-status";
 import { z } from "zod";
 import { hash, randomBytes } from "crypto";
 import { getResolutionPresets } from "@/server/lib/integrations/general";
-import { formatVideoRes } from "@/server/lib/utils/format-video-res";
+import { formatVideoRes } from "@/lib/format-video-res";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 
 const DeleteQuerySchema = z.object({

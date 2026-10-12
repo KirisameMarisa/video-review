@@ -1,11 +1,12 @@
 import { useEffect } from "react";
 import { resolveMediaUrl } from "@/lib/media-url";
+import { formatVideoRes } from "@/lib/format-video-res";
 import { useConfigStore } from "@/stores/config-store";
 import { useThumbnailGridStore } from "@/stores/thumbnail-grid-store";
 
-// The worker writes `<name>_<width>p.mp4` beside the source for each preset; the smallest is enough for a preview.
+// The smallest preset is enough for a preview.
 const previewKey = (filePath: string, presets: number[]) =>
-    presets.length === 0 ? undefined : filePath.replace(/\.[^./]+$/, "") + `_${Math.min(...presets)}p.mp4`;
+    presets.length === 0 ? undefined : formatVideoRes(filePath, Math.min(...presets));
 
 // Resolves the preview variant's URL once per key; a resolver miss is remembered as undefined so it is not retried.
 function usePreviewUrl(filePath: string | undefined): { url: string | undefined; forget: () => void } {

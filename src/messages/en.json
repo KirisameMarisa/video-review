@@ -130,7 +130,9 @@
         "downloadVideo": "Download video",
         "captureDrawing": "Include drawing in screenshots",
         "fullscreen": "Fullscreen",
-        "exitFullscreen": "Exit fullscreen"
+        "exitFullscreen": "Exit fullscreen",
+        "playbackResolution": "Playback resolution",
+        "originalResolution": "Original"
     },
     "video-comment-panel": {
         "title": "Comments",

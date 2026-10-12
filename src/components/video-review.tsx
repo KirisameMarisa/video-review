@@ -12,6 +12,8 @@ import { VideoComment } from "@/lib/db-types";
 import { DrawingLayer } from "@/components/drawing-layer";
 import { useTranslations } from "next-intl";
 import { resolveMediaUrl } from "@/lib/media-url";
+import { formatVideoRes } from "@/lib/format-video-res";
+import { usePlaybackWidth } from "@/lib/hooks/use-playback-width";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { LoadingBadge } from "@/components/controls/loading-badge";
@@ -30,6 +32,9 @@ export default function VideoReview() {
     const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
     // Feeds video-fit; 16/9 until loadedmetadata.
     const [videoAspect, setVideoAspect] = useState("16 / 9");
+    const playbackWidth = usePlaybackWidth();
+    // Which revision the element currently holds, to tell a resolution switch from a new video.
+    const loadedRevisionRef = useRef<string | null>(null);
 
     const { token } = useAuthStore();
 
@@ -151,18 +156,55 @@ export default function VideoReview() {
     }, [selectedVideo])
 
     useEffect(() => {
+        if (selectedRevision == null) {
+            return;
+        }
+        fetchComments(selectedRevision);
+    }, [selectedRevision]);
+
+    useEffect(() => {
         if (selectedRevision == null) return
 
         const v = videoRef.current;
         if (!v) return;
 
-        fetchComments(selectedRevision);
-
+        let resume: { time: number; playing: boolean } | null = null;
         let canceled = false;
-        void (async () => {
+        let variantLoaded = false;
+
+        const swapSource = (url: string) => {
+            // Keeps the position and playing state so a resolution switch carries on where it was.
+            // A new revision starts over.
+            const holdsRevision = loadedRevisionRef.current === selectedRevision.id;
+            loadedRevisionRef.current = selectedRevision.id;
+            if (!holdsRevision) {
+                resume = null;
+            } else if (v.readyState !== HTMLMediaElement.HAVE_NOTHING) {
+                // After a failed variant the element is empty; the resume taken before it is kept.
+                resume = { time: v.currentTime, playing: !v.paused };
+            }
+            setPlaybackUrl(url);
+        };
+        const loadOriginal = async () => {
             const url = await resolveMediaUrl(selectedRevision.filePath);
             if (url && !canceled) {
-                setPlaybackUrl(url);
+                swapSource(url);
+            }
+        };
+        void (async () => {
+            // Plays the chosen variant, or the original when the preset has no file.
+            let variant: string | undefined;
+            if (playbackWidth !== null) {
+                variant = await resolveMediaUrl(formatVideoRes(selectedRevision.filePath, playbackWidth));
+            }
+            if (canceled) {
+                return;
+            }
+            if (variant) {
+                variantLoaded = true;
+                swapSource(variant);
+            } else {
+                await loadOriginal();
             }
         })();
 
@@ -173,7 +215,22 @@ export default function VideoReview() {
             setVideoAspect(`${v.videoWidth} / ${v.videoHeight}`);
             v.playbackRate = playbackRate;
             v.volume = volumeEnabled ? volume : 0.0;
+            if (resume) {
+                v.currentTime = resume.time;
+                if (resume.playing) {
+                    void v.play();
+                }
+            }
         }
+        // Falls back to the original when the variant fails to load: some storage resolves a URL without
+        // checking the file exists.
+        const onError = () => {
+            if (!variantLoaded) {
+                return;
+            }
+            variantLoaded = false;
+            void loadOriginal();
+        };
         const onTimeUpdate = () => {
             if (timelineTimeRef.current !== null) {
                 return;
@@ -201,6 +258,7 @@ export default function VideoReview() {
         }
 
         v.addEventListener("loadedmetadata", onMeta);
+        v.addEventListener("error", onError);
         v.addEventListener("play", onPlay);
         v.addEventListener("pause", onPause);
         v.addEventListener("timeupdate", onTimeUpdate);
@@ -211,10 +269,11 @@ export default function VideoReview() {
             v.removeEventListener("play", onPlay);
             v.removeEventListener("pause", onPause);
             v.removeEventListener("loadedmetadata", onMeta);
+            v.removeEventListener("error", onError);
             v.removeEventListener("timeupdate", onTimeUpdate);
             v.removeEventListener("ended", onEnded);
         };
-    }, [selectedRevision]);
+    }, [selectedRevision, playbackWidth]);
 
     useEffect(() => {
         const v = videoRef.current;
