@@ -17,10 +17,11 @@ out vec4 outColor;
 
 void main() {
     // On the 0-255 scale frameDiff uses, so the threshold means the same on both engines.
-    float base = dot(texture(u_primary, v_uv).rgb, u_luma) * 255.0;
-    float other = dot(texture(u_compare, v_uv).rgb, u_luma) * 255.0;
+    vec3 primary = texture(u_primary, v_uv).rgb;
+    vec3 change = abs(primary - texture(u_compare, v_uv).rgb) * 255.0;
+    float base = dot(primary, u_luma) * 255.0;
     vec3 gray = vec3(base * u_baseOpacity / 255.0);
 
-    vec3 color = abs(base - other) >= u_threshold ? mix(gray, u_highlight, u_highlightMix) : gray;
+    vec3 color = max(change.r, max(change.g, change.b)) >= u_threshold ? mix(gray, u_highlight, u_highlightMix) : gray;
     outColor = vec4(color, 1.0);
 }
