@@ -4,6 +4,14 @@
 @custom-variant dark (&:is(.dark *));
 /* Inside an element that is fullscreen (the player). */
 @custom-variant fullscreen (&:where(:fullscreen *));
+/* The same, on a phone: touch-driven with its short side under the sidebar breakpoint. */
+@custom-variant phone-fullscreen {
+  @media (pointer: coarse) and ((max-width: 767px) or (max-height: 767px)) {
+    &:where(:fullscreen *) {
+      @slot;
+    }
+  }
+}
 
 @theme inline {
   --color-background: var(--background);

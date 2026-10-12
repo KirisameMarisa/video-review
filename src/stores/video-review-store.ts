@@ -18,6 +18,9 @@ interface VideoReviewState {
     setActiveComments: (comments: VideoComment[]) => void;
 }
 
+// Missing from TypeScript's DOM typings because Safari has no lock.
+type LockableOrientation = ScreenOrientation & { lock?: (orientation: "landscape") => Promise<void> };
+
 export const useVideoReviewStore = create<VideoReviewState>((set, get) => ({
     videoRefElement: null,
     playerElement: null,
@@ -32,9 +35,16 @@ export const useVideoReviewStore = create<VideoReviewState>((set, get) => ({
     toggleFullscreen: () => {
         if (document.fullscreenElement) {
             void document.exitFullscreen();
-        } else {
-            void get().playerElement?.requestFullscreen();
+            return;
         }
+        const player = get().playerElement;
+        if (!player) {
+            return;
+        }
+        // Phones are turned landscape; desktops reject the lock, and exiting fullscreen releases it.
+        player.requestFullscreen()
+            .then(() => (screen.orientation as LockableOrientation).lock?.("landscape"))
+            .catch(() => {});
     },
     setActiveComments: (comment) => set({ activeComments: comment }),
 }));

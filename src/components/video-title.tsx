@@ -58,7 +58,7 @@ export default function VideoTitle() {
     };
 
     return (
-        <div className="py-1 px-2 mb-2 flex items-center justify-between">
+        <div className="py-1 px-2 mb-2 flex items-center justify-between phone-fullscreen:hidden">
             <div className="min-w-0">
                 <div className="flex items-center justify-between">
                     <h2 className="flex items-center gap-1 px-2 text-lg font-semibold tracking-wide">

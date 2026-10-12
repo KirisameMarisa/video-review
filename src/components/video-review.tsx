@@ -258,7 +258,7 @@ export default function VideoReview() {
     return (
         // Dropdowns and dialogs opened from the player must render inside it while it is fullscreen.
         <PortalContainerContext.Provider value={fullscreen ? playerElement : null}>
-            <div ref={setPlayerElement} className="flex flex-col h-full w-full border-r">
+            <div ref={setPlayerElement} className="relative flex flex-col h-full w-full border-r">
                 {loading
                     ?
                     <div className="flex-1 flex flex-col items-center justify-center">
@@ -269,7 +269,7 @@ export default function VideoReview() {
                         <VideoTitle />
                         {selectedRevision ? (
                             <>
-                                <div data-slot="video-stage" onClick={onStageClick} className="video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative cursor-pointer">
+                                <div data-slot="video-stage" onClick={onStageClick} className="video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative cursor-pointer phone-fullscreen:rounded-none phone-fullscreen:mb-0">
                                     <div className="video-fit relative" style={{ "--video-aspect": videoAspect } as CSSProperties}>
                                         <video
                                             ref={attachVideo}
@@ -280,8 +280,11 @@ export default function VideoReview() {
                                     </div>
                                 </div>
 
-                                <VideoTimelineBar />
-                                <VideoControlPanel />
+                                {/* In phone fullscreen these overlay the picture so the video can fill the screen. */}
+                                <div className="phone-fullscreen:absolute phone-fullscreen:inset-x-0 phone-fullscreen:bottom-0 phone-fullscreen:px-2">
+                                    <VideoTimelineBar />
+                                    <VideoControlPanel />
+                                </div>
                             </>
                         ) : (
                             <div className="flex-1 flex items-center justify-center text-muted-foreground">
