@@ -1,7 +1,7 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "description": [
-        "Every update waits on the dependency dashboard until someone ticks it, and only updates Merge Confidence rates high or very high are offered.",
+        "Every update waits on the dependency dashboard until someone ticks it.",
         "constraints: the lockfile is written with the same npm major as CI's. The runner's newest npm (12) refuses remote tarballs by default, and @tailwindcss/oxide's wasm fallback needs one."
     ],
     "extends": ["config:recommended"],
@@ -20,15 +20,9 @@
     },
     "packageRules": [
         {
-            "description": "npm packages can be unpublished within 72 hours and hijacked releases surface in the first days. Only the newest release at least this old is rated, so two weeks also gives Merge Confidence time to rate it.",
+            "description": "npm packages can be unpublished within 72 hours and hijacked releases surface in the first days, so the dashboard offers the newest version that is at least two weeks old.",
             "matchDatasources": ["npm"],
             "minimumReleaseAge": "14 days"
-        },
-        {
-            "description": "Not offered until Merge Confidence rates them high or very high; a rating rises as a release ages and is adopted.",
-            "matchDatasources": ["npm"],
-            "matchConfidence": ["low", "neutral"],
-            "enabled": false
         },
         {
             "description": "Patch and minor updates are offered together once a week as one PR.",
