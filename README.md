@@ -16,7 +16,7 @@
     <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
   </p>
 
-  <img src="https://github.com/user-attachments/assets/f20801d1-845d-4279-9c57-aca98e9bc16c" alt="VideoReview: comment, draw on the frame, and compare revisions" width="880" />
+  <img src="https://github.com/user-attachments/assets/77a85359-9e3a-4b62-8ee5-27c9b18557d4" alt="VideoReview: find a video, comment, draw on the frame, and compare revisions" width="880" />
 
 </div>
 

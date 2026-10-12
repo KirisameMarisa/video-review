@@ -16,7 +16,7 @@
     <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
   </p>
 
-  <img src="https://github.com/user-attachments/assets/f20801d1-845d-4279-9c57-aca98e9bc16c" alt="VideoReview：コメント、フレームへの描き込み、リビジョンの比較" width="880" />
+  <img src="https://github.com/user-attachments/assets/77a85359-9e3a-4b62-8ee5-27c9b18557d4" alt="VideoReview：動画の検索、コメント、フレームへの描き込み、リビジョンの比較" width="880" />
 
 </div>
 
@@ -60,7 +60,7 @@
 </table>
 
 **オンプレミスで動く**：未公開の映像を社外に出さずにレビューできます（S3 や Nextcloud にも置けます）  
-**ほかにも**：検索 · [AI チャット検索](./documents/build.run/ai-guide.jp.md#2-アプリ内チャット検索を使う) · [MCP](./documents/build.run/ai-guide.jp.md#3-ai-エージェントから使う) · [メンテナンス CLI](./maintenance/README.jp.md)
+**他機能**：検索 · [AI チャット検索](./documents/build.run/ai-guide.jp.md#2-アプリ内チャット検索を使う) · [MCP](./documents/build.run/ai-guide.jp.md#3-ai-エージェントから使う) · [メンテナンス CLI](./maintenance/README.jp.md)
 
 ## Quick Start (Docker)
 
