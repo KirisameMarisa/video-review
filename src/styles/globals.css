@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+/* Inside an element that is fullscreen (the player). */
+@custom-variant fullscreen (&:where(:fullscreen *));
 
 @theme inline {
   --color-background: var(--background);

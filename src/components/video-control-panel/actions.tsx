@@ -1,15 +1,16 @@
 "use client";
-import React, { useState, type RefObject } from "react";
+import React, { useState } from "react";
 import { Button } from "@/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLink, faDownload, faGamepad, faCamera, faPalette, faExpand, faCompress } from "@fortawesome/free-solid-svg-icons";
 import { Switch } from "@/ui/switch";
 import { ButtonGroup, ButtonGroupText } from "@/ui/button-group";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { formatTime } from "@/lib/utils";
 import { createOpenSceneLink } from "@/lib/url";
 import { useConfigStore } from "@/stores/config-store";
-import { useFullscreen } from "@/lib/hooks/use-fullscreen";
+import { useVideoReviewStore } from "@/stores/video-review-store";
 import { useDrawingSettingsStore } from "@/stores/drawing-settings-store";
 import { captureView } from "@/lib/drawing/capture-view";
 import { ShareLinkDialog } from "@/components/dialog/share-link";
@@ -34,6 +35,8 @@ export function ScreenshotButton({ title, time }: { title: string | null, time: 
         link.download = `${title}_${formatTime(time).replaceAll(":", "-")}.png`;
         link.click();
         URL.revokeObjectURL(url);
+        // In fullscreen the browser's own download indicator is out of sight.
+        toast.success(t("screenshotSaved"), { description: link.download });
     };
 
     return (
@@ -66,14 +69,16 @@ export function ShareLinkButton({ url }: { url: string }) {
 }
 
 export function DownloadButton({ videoId, videoRevId }: { videoId: string | null, videoRevId: string | null }) {
+    const t = useTranslations("video-control-panel");
     const [open, setOpen] = useState(false);
+
     if (!videoId || !videoRevId) {
         return <></>
     }
 
     return (
         <>
-            <Button size="icon-sm" onClick={() => setOpen(true)}>
+            <Button size="icon-sm" aria-label={t("downloadVideo")} title={t("downloadVideo")} onClick={() => setOpen(true)}>
                 <FontAwesomeIcon icon={faDownload} />
             </Button>
             <VideoDownloadDialog videoId={videoId} videoRevId={videoRevId} open={open} onClose={() => setOpen(false)} />
@@ -95,14 +100,15 @@ export function OpenSceneButton({ scenePath }: { scenePath: string | null }) {
     );
 }
 
-export function FullscreenButton({ target }: { target: RefObject<HTMLElement | null> }) {
+export function FullscreenButton() {
     const t = useTranslations("video-control-panel");
-    const { active, toggle } = useFullscreen(target);
-    const label = active ? t("exitFullscreen") : t("fullscreen");
+    const fullscreen = useVideoReviewStore((s) => s.fullscreen);
+    const toggleFullscreen = useVideoReviewStore((s) => s.toggleFullscreen);
+    const label = fullscreen ? t("exitFullscreen") : t("fullscreen");
 
     return (
-        <Button size="icon-sm" aria-label={label} title={label} onClick={toggle}>
-            <FontAwesomeIcon icon={active ? faCompress : faExpand} />
+        <Button size="icon-sm" aria-label={label} title={label} onClick={toggleFullscreen}>
+            <FontAwesomeIcon icon={fullscreen ? faCompress : faExpand} />
         </Button>
     );
 }

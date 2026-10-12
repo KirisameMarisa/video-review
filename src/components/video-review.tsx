@@ -15,6 +15,9 @@ import { resolveMediaUrl } from "@/lib/media-url";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { LoadingBadge } from "@/components/controls/loading-badge";
+import { useFullscreenSync } from "@/lib/hooks/use-fullscreen-sync";
+import { PortalContainerContext } from "@/lib/portal-container";
+import { Toaster } from "@/components/ui/sonner";
 
 // Well under one frame at any frame rate, so only the time a paused video already shows
 // counts as the same.
@@ -24,8 +27,6 @@ export default function VideoReview() {
     const t = useTranslations("video-review");
     const router = useRouter();
     const videoRef = useRef<HTMLVideoElement>(null);
-    // The whole player column goes fullscreen, so drawing, the timeline and the controls stay usable.
-    const playerRef = useRef<HTMLDivElement>(null);
     const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
     // Feeds video-fit; 16/9 until loadedmetadata.
     const [videoAspect, setVideoAspect] = useState("16 / 9");
@@ -43,9 +44,14 @@ export default function VideoReview() {
     const { comments, fetchComments } = useCommentStore();
     const {
         setVideoRefElement,
+        setPlayerElement,
+        playerElement,
+        fullscreen,
         selectedComment,
         setSelectComment,
         setActiveComments } = useVideoReviewStore();
+
+    useFullscreenSync();
 
     const {
         isPlaying,
@@ -243,8 +249,9 @@ export default function VideoReview() {
     }, [selectedRevision, timelineTime]);
 
     return (
-        <>
-            <div ref={playerRef} className="flex flex-col h-full w-full border-r">
+        // Dropdowns and dialogs opened from the player must render inside it while it is fullscreen.
+        <PortalContainerContext.Provider value={fullscreen ? playerElement : null}>
+            <div ref={setPlayerElement} className="flex flex-col h-full w-full border-r">
                 {loading
                     ?
                     <div className="flex-1 flex flex-col items-center justify-center">
@@ -268,7 +275,7 @@ export default function VideoReview() {
                                 </div>
 
                                 <VideoTimelineBar />
-                                <VideoControlPanel fullscreenTarget={playerRef} />
+                                <VideoControlPanel />
                             </>
                         ) : (
                             <div className="flex-1 flex items-center justify-center text-muted-foreground">
@@ -277,8 +284,11 @@ export default function VideoReview() {
                         )}
                     </>
                 }
+                {/* The app's toaster sits in body, which the browser hides while the player is fullscreen.
+                    Lifted above the timeline and the control bar so it covers no buttons. */}
+                {fullscreen && <Toaster offset={{ bottom: "6.5rem" }} />}
             </div>
-        </>
+        </PortalContainerContext.Provider>
     );
 }
 

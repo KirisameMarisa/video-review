@@ -1,0 +1,45 @@
+import { test, expect } from "@playwright/test";
+
+// Seeded admin user (see prisma/seed.ts).
+const USER = { email: "Bocchi@example.com", password: "pass123" };
+
+async function login(page: import("@playwright/test").Page) {
+    await page.goto("/login");
+    await page.getByRole("tab", { name: "Email & Password" }).click();
+    await page.locator('input[type="email"]').fill(USER.email);
+    await page.locator('input[type="password"]').fill(USER.password);
+    await page.locator('input[type="password"]').press("Enter");
+    await page.waitForURL(/\/video-review\/review\b/);
+}
+
+// The seed ships no media bytes; the player still shows the controls, the stage and a 16:9 box
+// for the video.
+async function openFirstVideo(page: import("@playwright/test").Page) {
+    // The thumbnail panel shows only the videos in folders open in the sidebar.
+    const closed = page.locator('[data-slot="browse-tree"] [aria-expanded="false"]');
+    await expect(closed.first()).toBeVisible();
+    while (await closed.count() > 0) {
+        await closed.first().click();
+    }
+    await page.locator('[data-slot="thumbnails-toggle"]').click();
+    await page.locator('[data-slot="thumbnails-panel"]').getByRole("button", { name: /Archived Playtest/ }).first().click();
+    await expect(page.getByRole("button", { name: "Fullscreen" })).toBeVisible();
+}
+
+test.describe("player", () => {
+    test.beforeEach(async ({ page }) => {
+        await login(page);
+        await openFirstVideo(page);
+    });
+
+    test("dropdowns open inside the fullscreen player", async ({ page }) => {
+        await page.getByRole("button", { name: "Fullscreen" }).click();
+        await expect.poll(() => page.evaluate(() => document.fullscreenElement !== null)).toBe(true);
+
+        await page.getByRole("combobox", { name: "Playback rate" }).click();
+        const listbox = page.getByRole("listbox");
+        await expect(listbox).toBeVisible();
+        // Only the fullscreen element's subtree is shown, so a list portalled to body would be unseen.
+        expect(await listbox.evaluate((el) => document.fullscreenElement!.contains(el))).toBe(true);
+    });
+});

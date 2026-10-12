@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import ComboBox from "@/components/controls/combo-box";
 import { ControlRow } from "@/components/controls/control-row";
 import { FormDialog } from "@/components/dialog/form-dialog";
@@ -10,7 +11,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useVideoStore } from "@/stores/video-store";
 import { useConfigStore } from "@/stores/config-store";
 
-async function downloadVideo(videoId: string, videoRevId: string, width?: number): Promise<void> {
+async function downloadVideo(videoId: string, videoRevId: string, width?: number): Promise<string> {
     const res = await api.media.download.$get({
         query: { videoId, videoRevId, width: width ? String(width) : undefined },
     });
@@ -35,6 +36,7 @@ async function downloadVideo(videoId: string, videoRevId: string, width?: number
     a.click();
 
     URL.revokeObjectURL(url);
+    return filename;
 }
 
 export function VideoDownloadDialog({ videoId, videoRevId, open, onClose }: { videoId: string; videoRevId: string; open: boolean; onClose: () => void }) {
@@ -57,7 +59,8 @@ export function VideoDownloadDialog({ videoId, videoRevId, open, onClose }: { vi
     }, [open])
 
     const handleDownload = async () => {
-        await downloadVideo(videoId, videoRevId, selectedResolution);
+        const filename = await downloadVideo(videoId, videoRevId, selectedResolution);
+        toast.success(t("saved"), { description: filename });
         onClose();
     };
 

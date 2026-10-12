@@ -4,13 +4,13 @@ import { Button } from "@/ui/button";
 import { useVideoPlayerStore } from "@/stores/video-player-store";
 
 // The right-hand counterpart of SidebarTrigger, for the side panel.
-export function SidePanelTrigger() {
+export function SidePanelTrigger({ className }: { className?: string }) {
     const t = useTranslations("video-title");
     const sidePanelOpen = useVideoPlayerStore((s) => s.sidePanelOpen);
     const setSidePanelOpen = useVideoPlayerStore((s) => s.setSidePanelOpen);
 
     return (
-        <Button variant="ghost" size="icon-sm" title={t("toggleSidePanel")} onClick={() => setSidePanelOpen(!sidePanelOpen)}>
+        <Button variant="ghost" size="icon-sm" className={className} title={t("toggleSidePanel")} onClick={() => setSidePanelOpen(!sidePanelOpen)}>
             <PanelRight />
         </Button>
     );

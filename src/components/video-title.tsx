@@ -62,16 +62,17 @@ export default function VideoTitle() {
             <div className="min-w-0">
                 <div className="flex items-center justify-between">
                     <h2 className="flex items-center gap-1 px-2 text-lg font-semibold tracking-wide">
-                        <SidebarTrigger className="-ml-1" />
+                        {/* Hidden in fullscreen: these open things outside the player. */}
+                        <SidebarTrigger className="-ml-1 fullscreen:hidden" />
                         <Separator
                             orientation="vertical"
-                            className="mr-2 data-[orientation=vertical]:h-4"
+                            className="mr-2 data-[orientation=vertical]:h-4 fullscreen:hidden"
                         />
                         <span className="truncate text-primary">{selectedVideo?.title ?? t("noSelection")}</span>
                     </h2>
                     <div className="flex items-center gap-3">
                         {revisions.length > 1 && selectedRevision && (
-                            <CompareButton revisions={revisions} selected={selectedRevision} />
+                            <CompareButton revisions={revisions} selected={selectedRevision} className="fullscreen:hidden" />
                         )}
                         {revisions.length > 1 && (
                             <Select
@@ -187,7 +188,7 @@ export default function VideoTitle() {
                         />
                     </div>
                 )}
-                <SidePanelTrigger />
+                <SidePanelTrigger className="fullscreen:hidden" />
             </div>
         </div>
     );

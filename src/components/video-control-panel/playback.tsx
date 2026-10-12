@@ -77,6 +77,7 @@ export function TimeDisplay() {
 }
 
 export function PlaybackRateSelect() {
+    const t = useTranslations("video-control-panel");
     const playbackRate = useVideoPlayerStore((s) => s.playbackRate);
     const setPlaybackRate = useVideoPlayerStore((s) => s.setPlaybackRate);
 
@@ -88,7 +89,7 @@ export function PlaybackRateSelect() {
                 setPlaybackRate(rate);
             }}
         >
-            <SelectTrigger size="sm" className="w-20">
+            <SelectTrigger size="sm" className="w-20" aria-label={t("playbackRate")} title={t("playbackRate")}>
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>

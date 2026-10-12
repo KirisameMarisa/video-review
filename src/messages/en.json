@@ -24,7 +24,8 @@
         "selectRes": "Select resolution",
         "cancel": "Cancel",
         "downloading": "Downloading...",
-        "prepare": "Download"
+        "prepare": "Download",
+        "saved": "Video saved"
     },
     "video-upload": {
         "title": "Upload video",
@@ -118,10 +119,13 @@
     },
     "video-control-panel": {
         "normal": "Normal",
+        "playbackRate": "Playback rate",
         "loop": "Loop playback",
         "next": "Auto play next video",
         "playMode": "Play mode",
         "saveScreenshot": "Save screenshot",
+        "screenshotSaved": "Screenshot saved",
+        "downloadVideo": "Download video",
         "captureDrawing": "Include drawing in screenshots",
         "fullscreen": "Fullscreen",
         "exitFullscreen": "Exit fullscreen"
