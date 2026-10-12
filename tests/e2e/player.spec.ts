@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 
 // Seeded admin user (see prisma/seed.ts).
 const USER = { email: "Bocchi@example.com", password: "pass123" };
+const STAGE = '[data-slot="video-stage"]';
 
 async function login(page: import("@playwright/test").Page) {
     await page.goto("/login");
@@ -41,5 +42,22 @@ test.describe("player", () => {
         await expect(listbox).toBeVisible();
         // Only the fullscreen element's subtree is shown, so a list portalled to body would be unseen.
         expect(await listbox.evaluate((el) => document.fullscreenElement!.contains(el))).toBe(true);
+    });
+
+    test("clicking beside the picture plays and pauses", async ({ page }) => {
+        const stage = (await page.locator(STAGE).boundingBox())!;
+        const video = (await page.locator(`${STAGE} video`).boundingBox())!;
+        // A point in the black bar: left of the picture when the stage is wider, above it otherwise.
+        const bar = stage.width - video.width > stage.height - video.height
+            ? { x: stage.x + (stage.width - video.width) / 4, y: stage.y + stage.height / 2 }
+            : { x: stage.x + stage.width / 2, y: stage.y + (stage.height - video.height) / 4 };
+
+        expect(await page.evaluate((p) => document.elementFromPoint(p.x, p.y)?.getAttribute("data-slot"), bar)).toBe("video-stage");
+
+        await page.mouse.click(bar.x, bar.y);
+        await expect(page.getByRole("button", { name: "Pause", exact: true })).toBeVisible();
+
+        await page.mouse.click(bar.x, bar.y);
+        await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
     });
 });

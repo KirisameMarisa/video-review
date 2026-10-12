@@ -119,6 +119,8 @@
     },
     "video-control-panel": {
         "normal": "Normal",
+        "play": "Play",
+        "pause": "Pause",
         "playbackRate": "Playback rate",
         "loop": "Loop playback",
         "next": "Auto play next video",

@@ -119,6 +119,8 @@
     },
     "video-control-panel": {
         "normal": "일반 재생",
+        "play": "재생",
+        "pause": "일시 정지",
         "playbackRate": "재생 속도",
         "loop": "반복 재생",
         "next": "다음 동영상 자동 재생",

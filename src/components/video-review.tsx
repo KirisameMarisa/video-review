@@ -1,5 +1,5 @@
 "use client"
-import { useRef, useEffect, useState, useMemo, useCallback, type CSSProperties } from "react";
+import { useRef, useEffect, useState, useMemo, useCallback, type CSSProperties, type MouseEvent } from "react";
 import { useVideoReviewStore } from "@/stores/video-review-store";
 import { usePlayback } from "@/stores/playback-store";
 import VideoTimelineBar from "@/components/video-timeline-bar";
@@ -113,6 +113,13 @@ export default function VideoReview() {
         }
         v.currentTime = target;
     }
+
+    // Black bars beside the picture play and pause like the picture; canvas clicks are strokes.
+    const onStageClick = (e: MouseEvent<HTMLDivElement>) => {
+        if (e.target === e.currentTarget || e.target === videoRef.current) {
+            togglePlay();
+        }
+    };
 
     useEffect(() => {
         if (!token)
@@ -262,13 +269,12 @@ export default function VideoReview() {
                         <VideoTitle />
                         {selectedRevision ? (
                             <>
-                                <div className="video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative">
+                                <div data-slot="video-stage" onClick={onStageClick} className="video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative cursor-pointer">
                                     <div className="video-fit relative" style={{ "--video-aspect": videoAspect } as CSSProperties}>
                                         <video
                                             ref={attachVideo}
                                             src={playbackUrl ?? undefined}
-                                            onClick={togglePlay}
-                                            className="w-full h-full rounded cursor-pointer"
+                                            className="w-full h-full rounded"
                                         />
                                         <DrawingLayer />
                                     </div>
