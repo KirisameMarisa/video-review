@@ -30,7 +30,7 @@ export default function VideoListPanelHeader(
 }) {
     const t = useTranslations("video-list-panel");
     const tChat = useTranslations("chat-search");
-    const { isMobile } = useSidebar();
+    const { isMobile, setOpenMobile } = useSidebar();
     const { role } = useAuthStore();
     const { reloadOnViewChange } = useVideoStore();
     const { filterTree, setFilterTree, isFiltering, clear } = useVideoSearchStore();
@@ -60,9 +60,9 @@ export default function VideoListPanelHeader(
 
     return (
         <SidebarHeader>
-            <div className="flex justify-between text-primary font-semibold text-sm">
+            <div className="flex justify-between font-semibold text-sm">
                 <div className="flex items-center">
-                    <span>{t("title")}</span>
+                    <span className="text-primary">{t("title")}</span>
                     <Button variant="toolbar" size="icon-sm" data-active={filtering} onClick={() => onSearchDialogShow()}>
                         <FontAwesomeIcon icon={faSearch} />
                     </Button>
@@ -106,6 +106,10 @@ export default function VideoListPanelHeader(
                         title={t("upload")}
                     >
                         <Plus className="size-5" />
+                    </Button>
+                    {/* The sheet covers a phone's whole screen, so it needs its own way back. */}
+                    <Button variant="ghost" size="icon-sm" hidden={!isMobile} onClick={() => setOpenMobile(false)}>
+                        <X className="size-5" />
                     </Button>
                 </div>
             </div>

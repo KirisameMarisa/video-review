@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sidebar, SidebarContent, SidebarFooter } from "@/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarFooter, useSidebar } from "@/ui/sidebar"
 import { AccountMenu } from "@/components/setting";
 import VideoUploadDialog from "@/components/dialog/video-upload";
 import VideoListPanelHeader from "@/components/video-browser/header";
@@ -40,7 +40,13 @@ export default function VideoListPanel() {
     const folderList = useFolderList(videos, { filtering: searching || dateFiltering });
     const organizing = useOrganizing();
 
-    const openVideo = (id: string) => router.replace(`/video-review/review/${id}`);
+    const { setOpenMobile } = useSidebar();
+
+    // Below the sidebar breakpoint the list is a sheet over the whole screen, so picking a video also closes it.
+    const openVideo = (id: string) => {
+        router.replace(`/video-review/review/${id}`);
+        setOpenMobile(false);
+    };
 
     useEffect(() => {
         recordVisit();
