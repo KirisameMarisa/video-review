@@ -125,6 +125,8 @@ export async function generateDownScaled(storageKey: string, tempMoviePath: stri
         await execFFmpeg([
             "-i", tempMoviePath,
             "-vf", `scale=${width}:-2`,
+            // Emit 8-bit 4:2:0 explicitly for broad browser and device compatibility.
+            "-pix_fmt", "yuv420p",
             "-f", "mp4",
             "-movflags", "frag_keyframe+empty_moov",
             outputTemp,
