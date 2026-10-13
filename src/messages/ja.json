@@ -130,7 +130,9 @@
         "downloadVideo": "動画をダウンロード",
         "captureDrawing": "スクリーンショットに描画を含める",
         "fullscreen": "全画面",
-        "exitFullscreen": "全画面を終了"
+        "exitFullscreen": "全画面を終了",
+        "playbackResolution": "再生解像度",
+        "originalResolution": "Original"
     },
     "video-comment-panel": {
         "title": "Comments",

@@ -130,7 +130,9 @@
         "downloadVideo": "동영상 다운로드",
         "captureDrawing": "스크린샷에 그림 포함",
         "fullscreen": "전체 화면",
-        "exitFullscreen": "전체 화면 종료"
+        "exitFullscreen": "전체 화면 종료",
+        "playbackResolution": "재생 해상도",
+        "originalResolution": "원본"
     },
     "video-comment-panel": {
         "title": "댓글",

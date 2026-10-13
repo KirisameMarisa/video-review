@@ -8,10 +8,13 @@ interface VideoPlayerState {
     volumeEnabled: boolean;
     playMode: EPlayMode,
     playbackRate: number;
+    // Preset width to play at; null plays the original file.
+    playbackWidth: number | null;
     listPanelOpen: boolean;
     sidePanelOpen: boolean;
 
     setPlaybackRate: (rate: number) => void;
+    setPlaybackWidth: (width: number | null) => void;
     setVolume: (vol: number) => void;
     setVolumeEnabled: (enabled: boolean) => void;
     setMode(mode: EPlayMode): void;
@@ -27,10 +30,12 @@ export const useVideoPlayerStore = create<VideoPlayerState>()(
             volumeEnabled: true,
             playMode: 'normal',
             playbackRate: 1.0,
+            playbackWidth: null,
             listPanelOpen: true,
             sidePanelOpen: true,
 
             setPlaybackRate: (rate) => set({ playbackRate: rate }),
+            setPlaybackWidth: (width) => set({ playbackWidth: width }),
             setMode: (mode) => set({ playMode: mode }),
             toggleMode: () => {
                 const currMode = get().playMode;
@@ -51,6 +56,7 @@ export const useVideoPlayerStore = create<VideoPlayerState>()(
                 volume: state.volume,
                 volumeEnabled: state.volumeEnabled,
                 playbackRate: state.playbackRate,
+                playbackWidth: state.playbackWidth,
                 listPanelOpen: state.listPanelOpen,
                 sidePanelOpen: state.sidePanelOpen,
             }),

@@ -5,7 +5,7 @@ import { createVideoTimeLink } from "@/lib/url";
 import { useVideoStore } from "@/stores/video-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { isGuest } from "@/lib/role";
-import { PlayButton, VolumeControl, TimeDisplay, PlaybackRateSelect, PlayModeButtons } from "./playback";
+import { PlayButton, VolumeControl, TimeDisplay, PlaybackRateSelect, PlaybackResolutionSelect, PlayModeButtons } from "./playback";
 import { ScreenshotButton, ShareLinkButton, DownloadButton, OpenSceneButton, FullscreenButton } from "./actions";
 
 export default function VideoControlPanel() {
@@ -30,6 +30,7 @@ export default function VideoControlPanel() {
             <VolumeControl />
             <TimeDisplay />
             <PlaybackRateSelect />
+            <PlaybackResolutionSelect />
             <PlayModeButtons />
 
             <div className="ml-auto flex gap-1">

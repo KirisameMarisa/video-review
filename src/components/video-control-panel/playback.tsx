@@ -18,6 +18,8 @@ import { useTranslations } from "next-intl";
 import { formatTime } from "@/lib/utils";
 import { usePlayback } from "@/stores/playback-store";
 import { EPlayMode, useVideoPlayerStore } from "@/stores/video-player-store";
+import { useConfigStore } from "@/stores/config-store";
+import { usePlaybackWidth } from "@/lib/hooks/use-playback-width";
 
 export function PlayButton() {
     const t = useTranslations("video-control-panel");
@@ -97,6 +99,37 @@ export function PlaybackRateSelect() {
                 {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4].map((r) => (
                     <SelectItem key={r} value={r.toString()}>
                         {r}x
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+    );
+}
+
+export function PlaybackResolutionSelect() {
+    const ORIGINAL = "original";
+    const t = useTranslations("video-control-panel");
+    const presets = useConfigStore((s) => s.resolutionPresets);
+    const width = usePlaybackWidth();
+    const setPlaybackWidth = useVideoPlayerStore((s) => s.setPlaybackWidth);
+
+    if (presets.length === 0) {
+        return <></>;
+    }
+
+    return (
+        <Select
+            value={width === null ? ORIGINAL : width.toString()}
+            onValueChange={(val) => setPlaybackWidth(val === ORIGINAL ? null : parseInt(val))}
+        >
+            <SelectTrigger size="sm" className="w-24" aria-label={t("playbackResolution")} title={t("playbackResolution")}>
+                <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value={ORIGINAL}>{t("originalResolution")}</SelectItem>
+                {[...presets].sort((a, b) => b - a).map((w) => (
+                    <SelectItem key={w} value={w.toString()}>
+                        {w}p
                     </SelectItem>
                 ))}
             </SelectContent>
