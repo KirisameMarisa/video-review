@@ -3,7 +3,8 @@
 import Markdown from "react-markdown";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { ChatTurn } from "@/stores/chat-search-store";
+import { ChatTurn, useChatSearchStore } from "@/stores/chat-search-store";
+import { useSidebar } from "@/ui/sidebar";
 
 function toInternalPath(href: string | undefined): string | null {
     if (!href) return null;
@@ -19,6 +20,17 @@ function toInternalPath(href: string | undefined): string | null {
 
 export function ChatMessage({ turn }: { turn: ChatTurn }) {
     const isUser = turn.role === "user";
+    const close = useChatSearchStore((s) => s.close);
+    const { isMobile, setOpenMobile } = useSidebar();
+
+    // On a phone the chat and the video list are both sheets over the player, so following a link closes them.
+    const handleNavigate = () => {
+        if (isMobile) {
+            close();
+            setOpenMobile(false);
+        }
+    };
+
     return (
         <div className={cn("flex flex-col gap-1", isUser ? "items-end" : "items-start")}>
             <div
@@ -46,7 +58,7 @@ export function ChatMessage({ turn }: { turn: ChatTurn }) {
                                     const internal = toInternalPath(href);
                                     if (internal) {
                                         return (
-                                            <Link href={internal} className="underline text-primary hover:text-primary-strong">
+                                            <Link href={internal} onClick={handleNavigate} className="underline text-primary hover:text-primary-strong">
                                                 {children}
                                             </Link>
                                         );
