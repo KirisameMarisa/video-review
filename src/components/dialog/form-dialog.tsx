@@ -26,7 +26,7 @@ export function FormDialog({ open, onClose, title, onSubmit, submitLabel, cancel
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 min-w-90">{children}</div>
+                <div className="space-y-4">{children}</div>
                 {message && <div className="text-sm text-muted-foreground mt-2">{message}</div>}
                 <DialogFooter>
                     <div className="flex justify-end gap-2 mt-4">
