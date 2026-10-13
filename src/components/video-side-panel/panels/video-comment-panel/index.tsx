@@ -26,7 +26,7 @@ export function useVideoCommentPanelDefinition(): VideoSidePanelDefinition {
     return {
         key: "comments",
         label: tComment("title"),
-        renderPanel: ({ topAreaRef }) => <VideoCommentContent topAreaRef={topAreaRef} />,
+        renderPanel: () => <VideoCommentContent />,
         renderHeaderActions: ({ openDialog }) => (
             <PanelSearchActions
                 filtering={filtering}

@@ -18,6 +18,8 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { LoadingBadge } from "@/components/controls/loading-badge";
 import { useFullscreenSync } from "@/lib/hooks/use-fullscreen-sync";
+import { useIsPhone } from "@/lib/hooks/use-is-phone";
+import { cn } from "@/lib/utils";
 import { PortalContainerContext } from "@/lib/portal-container";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -57,6 +59,7 @@ export default function VideoReview() {
         setActiveComments } = useVideoReviewStore();
 
     useFullscreenSync();
+    const isPhone = useIsPhone();
 
     const {
         isPlaying,
@@ -318,7 +321,8 @@ export default function VideoReview() {
         // Dropdowns and dialogs opened from the player must render inside it while it is fullscreen.
         <PortalContainerContext.Provider value={fullscreen ? playerElement : null}>
             <div ref={setPlayerElement} className="relative flex flex-col h-full w-full border-r">
-                {loading
+                {/* A list refresh must keep the <video> mounted; only the first load shows the badge. */}
+                {loading && !selectedRevision
                     ?
                     <div className="flex-1 flex flex-col items-center justify-center">
                         <LoadingBadge>Videos Syncing...</LoadingBadge>
@@ -328,11 +332,20 @@ export default function VideoReview() {
                         <VideoTitle />
                         {selectedRevision ? (
                             <>
-                                <div data-slot="video-stage" onClick={onStageClick} className="video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative cursor-pointer phone-fullscreen:rounded-none phone-fullscreen:mb-0">
-                                    <div className="video-fit relative" style={{ "--video-aspect": videoAspect } as CSSProperties}>
+                                <div
+                                    data-slot="video-stage"
+                                    onClick={onStageClick}
+                                    className={cn(
+                                        "video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative cursor-pointer phone-fullscreen:rounded-none phone-fullscreen:mb-0",
+                                        isPhone && !fullscreen && "flex-none video-stage-phone",
+                                    )}
+                                    style={{ "--video-aspect": videoAspect } as CSSProperties}
+                                >
+                                    <div className="video-fit relative">
                                         <video
                                             ref={attachVideo}
                                             src={playbackUrl ?? undefined}
+                                            playsInline
                                             className="w-full h-full rounded"
                                         />
                                         <DrawingLayer />

@@ -6,6 +6,7 @@ import { Globe, LogOut, Settings, ShieldUser, UserPen } from "lucide-react";
 import { Locales, useLocale } from "@/app/locale-provider";
 import { useAuthStore } from "@/stores/auth-store";
 import { isAdmin, isGuest } from "@/lib/role";
+import { useIsPhone } from "@/lib/hooks/use-is-phone";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -28,6 +29,7 @@ import AdminSettingsDialog from "@/components/dialog/admin-settings";
 export function AccountMenu() {
     const t = useTranslations("setting");
     const { verifyAuth, role, displayName, email } = useAuthStore();
+    const isPhone = useIsPhone();
 
     const [isLogged, setLogged] = useState(false);
     const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -69,7 +71,8 @@ export function AccountMenu() {
                                     {t("editProfile")}
                                 </DropdownMenuItem>
                             )}
-                            {isLogged && isAdmin(role) && (
+                            {/* The admin screen is not laid out for a phone. */}
+                            {isLogged && isAdmin(role) && !isPhone && (
                                 <DropdownMenuItem onSelect={() => setAdminSettingsOpen(true)}>
                                     <ShieldUser />
                                     {t("administration")}

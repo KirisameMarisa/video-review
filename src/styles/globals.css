@@ -4,7 +4,13 @@
 @custom-variant dark (&:is(.dark *));
 /* Inside an element that is fullscreen (the player). */
 @custom-variant fullscreen (&:where(:fullscreen *));
-/* The same, on a phone: touch-driven with its short side under the sidebar breakpoint. */
+/* A phone: touch-driven with its short side under the sidebar breakpoint. */
+@custom-variant phone {
+  @media (pointer: coarse) and ((max-width: 767px) or (max-height: 767px)) {
+    @slot;
+  }
+}
+/* The same, inside the fullscreen player. */
 @custom-variant phone-fullscreen {
   @media (pointer: coarse) and ((max-width: 767px) or (max-height: 767px)) {
     &:where(:fullscreen *) {
@@ -166,6 +172,13 @@
 /* The video is sized against the stage's box (cqw/cqh in video-fit), not the viewport. */
 @utility video-stage {
   container-type: size;
+}
+
+/* On a phone the stage takes its height from the video's ratio, so the comments below get the rest.
+   Capped so a portrait clip leaves room for the controls and the comment input. */
+@utility video-stage-phone {
+  aspect-ratio: var(--video-aspect);
+  max-height: 50dvh;
 }
 
 /* The largest box with the video's own ratio that fits the stage. The box is the picture
