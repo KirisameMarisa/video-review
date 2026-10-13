@@ -58,7 +58,8 @@ export default function VideoTitle() {
     };
 
     return (
-        <div className="py-1 px-2 mb-2 flex items-center justify-between phone-fullscreen:hidden">
+        // On a phone held sideways the row sits over the picture and fades with the controls.
+        <div className="py-1 px-2 mb-2 flex items-center justify-between phone-landscape:absolute phone-landscape:inset-x-0 phone-landscape:top-0 phone-landscape:z-10 phone-landscape:mb-0 phone-landscape:bg-background transition-opacity duration-300 idle:opacity-0 idle:pointer-events-none phone-fullscreen:hidden">
             <div className="min-w-0">
                 <div className="flex items-center justify-between">
                     <h2 className="flex items-center gap-1 px-2 min-w-0 text-lg font-semibold tracking-wide">
@@ -99,7 +100,8 @@ export default function VideoTitle() {
                         )}
                     </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
+                {/* On a phone held sideways only the title line fits over the picture. */}
+                <p className="text-xs text-muted-foreground mt-1 phone-landscape:hidden">
                     {selectedRevision
                         ? t("revisionInfo", {
                             revision: selectedRevision.revision,
@@ -109,7 +111,7 @@ export default function VideoTitle() {
                 </p>
 
                 {selectedRevision && (
-                    <div className="px-2 mt-2">
+                    <div className="px-2 mt-2 phone-landscape:hidden">
                         <div className="flex flex-wrap items-center gap-1">
                             <span className="text-xs text-muted-foreground">
                                 {t("tagsLabel")}:
