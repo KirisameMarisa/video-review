@@ -1,5 +1,5 @@
 "use client"
-import { useRef, useEffect, useState, useMemo, useCallback } from "react";
+import { useRef, useEffect, useState, useMemo, useCallback, type CSSProperties, type MouseEvent } from "react";
 import { useVideoReviewStore } from "@/stores/video-review-store";
 import { usePlayback } from "@/stores/playback-store";
 import VideoTimelineBar from "@/components/video-timeline-bar";
@@ -15,6 +15,9 @@ import { resolveMediaUrl } from "@/lib/media-url";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { LoadingBadge } from "@/components/controls/loading-badge";
+import { useFullscreenSync } from "@/lib/hooks/use-fullscreen-sync";
+import { PortalContainerContext } from "@/lib/portal-container";
+import { Toaster } from "@/components/ui/sonner";
 
 // Well under one frame at any frame rate, so only the time a paused video already shows
 // counts as the same.
@@ -25,6 +28,8 @@ export default function VideoReview() {
     const router = useRouter();
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
+    // Feeds video-fit; 16/9 until loadedmetadata.
+    const [videoAspect, setVideoAspect] = useState("16 / 9");
 
     const { token } = useAuthStore();
 
@@ -39,9 +44,14 @@ export default function VideoReview() {
     const { comments, fetchComments } = useCommentStore();
     const {
         setVideoRefElement,
+        setPlayerElement,
+        playerElement,
+        fullscreen,
         selectedComment,
         setSelectComment,
         setActiveComments } = useVideoReviewStore();
+
+    useFullscreenSync();
 
     const {
         isPlaying,
@@ -104,6 +114,13 @@ export default function VideoReview() {
         v.currentTime = target;
     }
 
+    // Black bars beside the picture play and pause like the picture; canvas clicks are strokes.
+    const onStageClick = (e: MouseEvent<HTMLDivElement>) => {
+        if (e.target === e.currentTarget || e.target === videoRef.current) {
+            togglePlay();
+        }
+    };
+
     useEffect(() => {
         if (!token)
             router.replace("/video-review/login");
@@ -153,6 +170,7 @@ export default function VideoReview() {
         const onPause = () => setIsPlaying(false);
         const onMeta = () => {
             setDuration(v.duration);
+            setVideoAspect(`${v.videoWidth} / ${v.videoHeight}`);
             v.playbackRate = playbackRate;
             v.volume = volumeEnabled ? volume : 0.0;
         }
@@ -238,8 +256,9 @@ export default function VideoReview() {
     }, [selectedRevision, timelineTime]);
 
     return (
-        <>
-            <div className="flex flex-col h-full w-full border-r">
+        // Dropdowns and dialogs opened from the player must render inside it while it is fullscreen.
+        <PortalContainerContext.Provider value={fullscreen ? playerElement : null}>
+            <div ref={setPlayerElement} className="relative flex flex-col h-full w-full border-r">
                 {loading
                     ?
                     <div className="flex-1 flex flex-col items-center justify-center">
@@ -250,20 +269,22 @@ export default function VideoReview() {
                         <VideoTitle />
                         {selectedRevision ? (
                             <>
-                                <div className="flex-1 flex flex-col items-center justify-center bg-black rounded mb-3 relative">
-                                    <div className="relative inline-block">
+                                <div data-slot="video-stage" onClick={onStageClick} className="video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative cursor-pointer phone-fullscreen:rounded-none phone-fullscreen:mb-0">
+                                    <div className="video-fit relative" style={{ "--video-aspect": videoAspect } as CSSProperties}>
                                         <video
                                             ref={attachVideo}
                                             src={playbackUrl ?? undefined}
-                                            onClick={togglePlay}
-                                            className="video-stage max-w-full rounded cursor-pointer object-contain"
+                                            className="w-full h-full rounded"
                                         />
                                         <DrawingLayer />
                                     </div>
                                 </div>
 
-                                <VideoTimelineBar />
-                                <VideoControlPanel />
+                                {/* In phone fullscreen these overlay the picture so the video can fill the screen. */}
+                                <div className="phone-fullscreen:absolute phone-fullscreen:inset-x-0 phone-fullscreen:bottom-0 phone-fullscreen:px-2">
+                                    <VideoTimelineBar />
+                                    <VideoControlPanel />
+                                </div>
                             </>
                         ) : (
                             <div className="flex-1 flex items-center justify-center text-muted-foreground">
@@ -272,8 +293,11 @@ export default function VideoReview() {
                         )}
                     </>
                 }
+                {/* The app's toaster sits in body, which the browser hides while the player is fullscreen.
+                    Lifted above the timeline and the control bar so it covers no buttons. */}
+                {fullscreen && <Toaster offset={{ bottom: "6.5rem" }} />}
             </div>
-        </>
+        </PortalContainerContext.Provider>
     );
 }
 

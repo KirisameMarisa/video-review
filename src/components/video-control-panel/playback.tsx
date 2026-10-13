@@ -20,11 +20,12 @@ import { usePlayback } from "@/stores/playback-store";
 import { EPlayMode, useVideoPlayerStore } from "@/stores/video-player-store";
 
 export function PlayButton() {
+    const t = useTranslations("video-control-panel");
     const isPlaying = usePlayback((s) => s.isPlaying);
     const togglePlay = usePlayback((s) => s.togglePlay);
 
     return (
-        <Button variant="ghost" size="icon-round" onClick={togglePlay}>
+        <Button variant="ghost" size="icon-round" aria-label={isPlaying ? t("pause") : t("play")} onClick={togglePlay}>
             <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} />
         </Button>
     );
@@ -77,6 +78,7 @@ export function TimeDisplay() {
 }
 
 export function PlaybackRateSelect() {
+    const t = useTranslations("video-control-panel");
     const playbackRate = useVideoPlayerStore((s) => s.playbackRate);
     const setPlaybackRate = useVideoPlayerStore((s) => s.setPlaybackRate);
 
@@ -88,7 +90,7 @@ export function PlaybackRateSelect() {
                 setPlaybackRate(rate);
             }}
         >
-            <SelectTrigger size="sm" className="w-20">
+            <SelectTrigger size="sm" className="w-20" aria-label={t("playbackRate")} title={t("playbackRate")}>
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>

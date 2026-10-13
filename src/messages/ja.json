@@ -24,7 +24,8 @@
         "selectRes": "解像度を選択",
         "cancel": "キャンセル",
         "downloading": "ダウンロード中...",
-        "prepare": "ダウンロード"
+        "prepare": "ダウンロード",
+        "saved": "動画を保存しました"
     },
     "video-upload": {
         "title": "動画アップロード",
@@ -118,11 +119,18 @@
     },
     "video-control-panel": {
         "normal": "通常再生",
+        "play": "再生",
+        "pause": "一時停止",
+        "playbackRate": "再生速度",
         "loop": "ループ再生",
         "next": "次の動画を自動再生",
         "playMode": "再生モード",
         "saveScreenshot": "スクリーンショットを保存",
-        "captureDrawing": "スクリーンショットに描画を含める"
+        "screenshotSaved": "スクリーンショットを保存しました",
+        "downloadVideo": "動画をダウンロード",
+        "captureDrawing": "スクリーンショットに描画を含める",
+        "fullscreen": "全画面",
+        "exitFullscreen": "全画面を終了"
     },
     "video-comment-panel": {
         "title": "Comments",

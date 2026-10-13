@@ -7,7 +7,7 @@ import { Button } from "@/ui/button";
 import { VideoRevision } from "@/lib/db-types";
 import { usePlaybackStoreApi } from "@/stores/playback-store";
 
-export function CompareButton({ revisions, selected }: { revisions: VideoRevision[], selected: VideoRevision }) {
+export function CompareButton({ revisions, selected, className }: { revisions: VideoRevision[], selected: VideoRevision, className?: string }) {
     const t = useTranslations("revision-diff-view");
     const router = useRouter();
     const playback = usePlaybackStoreApi();
@@ -22,7 +22,7 @@ export function CompareButton({ revisions, selected }: { revisions: VideoRevisio
     };
 
     return (
-        <Button variant="ghost" size="sm" onClick={open}>
+        <Button variant="ghost" size="sm" className={className} onClick={open}>
             <FontAwesomeIcon icon={faCodeCompare} />
             {t("compare")}
         </Button>

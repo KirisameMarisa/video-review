@@ -6,7 +6,7 @@ import { useVideoStore } from "@/stores/video-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { isGuest } from "@/lib/role";
 import { PlayButton, VolumeControl, TimeDisplay, PlaybackRateSelect, PlayModeButtons } from "./playback";
-import { ScreenshotButton, ShareLinkButton, DownloadButton, OpenSceneButton } from "./actions";
+import { ScreenshotButton, ShareLinkButton, DownloadButton, OpenSceneButton, FullscreenButton } from "./actions";
 
 export default function VideoControlPanel() {
     const role = useAuthStore((s) => s.role);
@@ -38,6 +38,7 @@ export default function VideoControlPanel() {
                 <OpenSceneButton scenePath={selectedVideo?.scenePath ?? null} />
                 {!isGuest(role) && <DownloadButton videoId={selectedVideo?.id ?? null} videoRevId={selectedRevision?.id ?? null} />}
                 <ShareLinkButton url={createLink()} />
+                <FullscreenButton />
             </div>
         </div>
     );

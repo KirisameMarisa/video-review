@@ -24,7 +24,8 @@
         "selectRes": "해상도 선택",
         "cancel": "취소",
         "downloading": "다운로드 중...",
-        "prepare": "다운로드"
+        "prepare": "다운로드",
+        "saved": "동영상을 저장했습니다"
     },
     "video-upload": {
         "title": "동영상 업로드",
@@ -118,11 +119,18 @@
     },
     "video-control-panel": {
         "normal": "일반 재생",
+        "play": "재생",
+        "pause": "일시 정지",
+        "playbackRate": "재생 속도",
         "loop": "반복 재생",
         "next": "다음 동영상 자동 재생",
         "playMode": "재생 모드",
         "saveScreenshot": "스크린샷 저장",
-        "captureDrawing": "스크린샷에 그림 포함"
+        "screenshotSaved": "스크린샷을 저장했습니다",
+        "downloadVideo": "동영상 다운로드",
+        "captureDrawing": "스크린샷에 그림 포함",
+        "fullscreen": "전체 화면",
+        "exitFullscreen": "전체 화면 종료"
     },
     "video-comment-panel": {
         "title": "댓글",
