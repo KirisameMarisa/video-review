@@ -13,6 +13,7 @@ import { OrganizeTree } from "@/components/video-browser/video-tree/organize-tre
 import { useOrganizing } from "@/components/video-browser/video-tree/organize-tree/hooks/use-organizing";
 import { useFolderList } from "@/components/video-browser/video-tree/use-folder-list";
 import { useMarkContext } from "@/components/video-browser/marks/use-mark-context";
+import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useVideoStore } from "@/stores/video-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommentStore } from "@/stores/comment-store";
@@ -40,7 +41,8 @@ export default function VideoListPanel() {
     const folderList = useFolderList(videos, { filtering: searching || dateFiltering });
     const organizing = useOrganizing();
 
-    const { isMobile, setOpenMobile } = useSidebar();
+    const isMobile = useIsMobile();
+    const { setOpenMobile } = useSidebar();
 
     // Below the sidebar breakpoint the list is a sheet over the whole screen, so picking a video also closes it.
     const openVideo = (id: string) => {

@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { LoadingBadge } from "@/components/controls/loading-badge";
 import { useFullscreenSync } from "@/lib/hooks/use-fullscreen-sync";
-import { useIsPhone, useIsPhoneLandscape } from "@/lib/hooks/use-is-phone";
+import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useIdle } from "@/lib/hooks/use-idle";
 import { cn } from "@/lib/utils";
 import { PortalContainerContext } from "@/lib/portal-container";
@@ -61,10 +61,10 @@ export default function VideoReview() {
         setActiveComments } = useVideoReviewStore();
 
     useFullscreenSync();
-    const isPhone = useIsPhone();
-    // On a phone held sideways the title and controls overlay the picture, so they fade when left alone.
-    const isPhoneLandscape = useIsPhoneLandscape();
-    const { idle, wake } = useIdle(isPhoneLandscape, FADE_AFTER_MS);
+    const isMobile = useIsMobile();
+    // While the picture fills the player the title and controls overlay it, so they fade when left alone.
+    const { idle, wake } = useIdle(fullscreen || isMobile, FADE_AFTER_MS);
+    const controlsRef = useRef<HTMLDivElement>(null);
     const tapWakesRef = useRef(false);
 
     const {
@@ -129,7 +129,8 @@ export default function VideoReview() {
 
     // A tap while the controls are faded only brings them back; the click it produces is dropped.
     const onStagePointerDown = () => {
-        tapWakesRef.current = idle;
+        const controls = controlsRef.current;
+        tapWakesRef.current = controls !== null && getComputedStyle(controls).opacity === "0";
     };
 
     // Black bars beside the picture play and pause like the picture; canvas clicks are strokes.
@@ -360,8 +361,8 @@ export default function VideoReview() {
                                     onClick={onStageClick}
                                     onPointerDown={onStagePointerDown}
                                     className={cn(
-                                        "video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative cursor-pointer phone-landscape:rounded-none phone-landscape:mb-0",
-                                        isPhone && !fullscreen && "portrait:flex-none portrait:video-stage-phone",
+                                        "video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative cursor-pointer immersive:rounded-none immersive:mb-0",
+                                        isMobile && !fullscreen && "portrait:flex-none portrait:video-stage-mobile",
                                     )}
                                     style={{ "--video-aspect": videoAspect } as CSSProperties}
                                 >
@@ -376,8 +377,8 @@ export default function VideoReview() {
                                     </div>
                                 </div>
 
-                                {/* On a phone held sideways these overlay the picture so the video can fill the screen. */}
-                                <div className="phone-landscape:absolute phone-landscape:inset-x-0 phone-landscape:bottom-0 phone-landscape:px-2 transition-opacity duration-300 idle:opacity-0 idle:pointer-events-none">
+                                {/* Overlaid so the picture can fill the player. */}
+                                <div ref={controlsRef} className="immersive:absolute immersive:inset-x-0 immersive:bottom-0 immersive:px-2 transition-opacity duration-300 immersive:idle:opacity-0 immersive:idle:pointer-events-none">
                                     <VideoTimelineBar />
                                     <VideoControlPanel />
                                 </div>

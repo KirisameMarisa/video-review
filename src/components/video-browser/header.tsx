@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useVideoSearchStore } from "@/stores/video-search-store";
 import { useVideoDateFilterStore } from "@/stores/date-filter-store";
+import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useVideoStore } from "@/stores/video-store";
 import CalendarDateRadio from "@/components/controls/calendar-date-radio";
 import { Separator } from "../ui/separator";
@@ -31,7 +32,8 @@ export default function VideoListPanelHeader(
 }) {
     const t = useTranslations("video-list-panel");
     const tChat = useTranslations("chat-search");
-    const { isMobile, setOpenMobile } = useSidebar();
+    const isMobile = useIsMobile();
+    const { setOpenMobile } = useSidebar();
     const { role } = useAuthStore();
     const { reloadOnViewChange } = useVideoStore();
     const { filterTree, setFilterTree, isFiltering, clear } = useVideoSearchStore();
@@ -81,7 +83,7 @@ export default function VideoListPanelHeader(
                     <Button
                         variant="toolbar"
                         size="icon-sm"
-                        hidden={!isAdmin(role)}
+                        hidden={!isAdmin(role) || isMobile}
                         onClick={() => setOrganizing(true)}
                         title={t("organize.open")}
                     >
@@ -110,7 +112,7 @@ export default function VideoListPanelHeader(
                     </Button>
                     {/* While the list is a sheet the account menu lives here; a footer would cost the list height. */}
                     {isMobile && <AccountMenu compact />}
-                    {/* The sheet covers a phone's whole screen, so it needs its own way back. */}
+                    {/* On a small screen the sheet can cover everything, so it needs its own way back. */}
                     <Button variant="ghost" size="icon-sm" hidden={!isMobile} onClick={() => setOpenMobile(false)}>
                         <X className="size-5" />
                     </Button>
@@ -121,8 +123,8 @@ export default function VideoListPanelHeader(
             <ChatSearchPanel />
 
             <SidebarGroup>
-                {/* On a phone the date and text filters share a row. */}
-                <div className="phone:flex phone:flex-wrap phone:items-center phone:gap-2">
+                {/* On the mobile layout the date and text filters share a row. */}
+                <div className="mobile:flex mobile:flex-wrap mobile:items-center mobile:gap-2">
                     <CalendarDateRadio
                         mode={videoDate.mode}
                         range={videoDate.mode === "range" && videoDate.from && videoDate.to
@@ -132,9 +134,9 @@ export default function VideoListPanelHeader(
                         onRecent={videoDate.setRecent}
                         onSetRange={videoDate.setRange}
                         onClear={videoDate.clear}
-                        className="h-10 phone:h-auto phone:shrink-0" />
+                        className="h-10 mobile:h-auto mobile:shrink-0" />
 
-                    <SidebarSearchInput value={filterTree} onChange={setFilterTree} placeholder="Filter video..." className="phone:flex-1 phone:min-w-32 phone:mt-0" />
+                    <SidebarSearchInput value={filterTree} onChange={setFilterTree} placeholder="Filter video..." className="mobile:flex-1 mobile:min-w-32 mobile:mt-0" />
                 </div>
             </SidebarGroup>
             <Separator />

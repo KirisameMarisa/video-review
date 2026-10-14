@@ -5,6 +5,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ChatTurn, useChatSearchStore } from "@/stores/chat-search-store";
 import { useSidebar } from "@/ui/sidebar";
+import { useIsMobile } from "@/lib/hooks/use-mobile";
 
 function toInternalPath(href: string | undefined): string | null {
     if (!href) return null;
@@ -21,9 +22,10 @@ function toInternalPath(href: string | undefined): string | null {
 export function ChatMessage({ turn }: { turn: ChatTurn }) {
     const isUser = turn.role === "user";
     const close = useChatSearchStore((s) => s.close);
-    const { isMobile, setOpenMobile } = useSidebar();
+    const isMobile = useIsMobile();
+    const { setOpenMobile } = useSidebar();
 
-    // On a phone the chat and the video list are both sheets over the player, so following a link closes them.
+    // On the mobile layout the chat and the video list are both sheets over the player, so following a link closes them.
     const handleNavigate = () => {
         if (isMobile) {
             close();

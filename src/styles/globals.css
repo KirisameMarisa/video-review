@@ -4,24 +4,19 @@
 @custom-variant dark (&:is(.dark *));
 /* Inside an element that is fullscreen (the player). */
 @custom-variant fullscreen (&:where(:fullscreen *));
-/* A phone: touch-driven with its short side under the sidebar breakpoint. */
-@custom-variant phone {
-  @media (pointer: coarse) and ((max-width: 767px) or (max-height: 767px)) {
+/* Below the sidebar breakpoint, or a phone held sideways: the same test as useIsMobile. */
+@custom-variant mobile {
+  @media (max-width: 767px), ((pointer: coarse) and (max-height: 767px)) {
     @slot;
   }
 }
-/* A phone held sideways. */
-@custom-variant phone-landscape {
+/* Where the picture fills the player: the fullscreen player, or a phone held sideways. */
+@custom-variant immersive {
+  &:where(:fullscreen *) {
+    @slot;
+  }
   @media (pointer: coarse) and (max-height: 767px) and (orientation: landscape) {
     @slot;
-  }
-}
-/* A phone, inside the fullscreen player. */
-@custom-variant phone-fullscreen {
-  @media (pointer: coarse) and ((max-width: 767px) or (max-height: 767px)) {
-    &:where(:fullscreen *) {
-      @slot;
-    }
   }
 }
 /* Inside the player while it has had no pointer activity for a while (data-idle, set by useIdle). */
@@ -182,9 +177,9 @@
   container-type: size;
 }
 
-/* On a phone the stage takes its height from the video's ratio, so the comments below get the rest.
+/* On the mobile layout the stage takes its height from the video's ratio, so the comments below get the rest.
    Capped so a portrait clip leaves room for the controls and the comment input. */
-@utility video-stage-phone {
+@utility video-stage-mobile {
   aspect-ratio: var(--video-aspect);
   max-height: 50dvh;
 }

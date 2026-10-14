@@ -58,8 +58,8 @@ export default function VideoTitle() {
     };
 
     return (
-        // On a phone held sideways the row sits over the picture and fades with the controls.
-        <div className="py-1 px-2 mb-2 flex items-center justify-between phone-landscape:absolute phone-landscape:inset-x-0 phone-landscape:top-0 phone-landscape:z-10 phone-landscape:mb-0 phone-landscape:bg-background transition-opacity duration-300 idle:opacity-0 idle:pointer-events-none phone-fullscreen:hidden">
+        // While the picture fills the player the row sits over it and fades with the controls.
+        <div className="py-1 px-2 mb-2 flex items-center justify-between immersive:absolute immersive:inset-x-0 immersive:top-0 immersive:z-10 immersive:mb-0 immersive:bg-background transition-opacity duration-300 immersive:idle:opacity-0 immersive:idle:pointer-events-none">
             <div className="min-w-0">
                 <div className="flex items-center justify-between">
                     <h2 className="flex items-center gap-1 px-2 min-w-0 text-lg font-semibold tracking-wide">
@@ -73,7 +73,7 @@ export default function VideoTitle() {
                     </h2>
                     <div className="flex items-center gap-3 shrink-0">
                         {revisions.length > 1 && selectedRevision && (
-                            <CompareButton revisions={revisions} selected={selectedRevision} className="fullscreen:hidden phone:hidden" />
+                            <CompareButton revisions={revisions} selected={selectedRevision} className="fullscreen:hidden mobile:hidden" />
                         )}
                         {revisions.length > 1 && (
                             <Select
@@ -100,8 +100,8 @@ export default function VideoTitle() {
                         )}
                     </div>
                 </div>
-                {/* On a phone held sideways only the title line fits over the picture. */}
-                <p className="text-xs text-muted-foreground mt-1 phone-landscape:hidden">
+                {/* Over the picture only the title line fits. */}
+                <p className="text-xs text-muted-foreground mt-1 immersive:hidden">
                     {selectedRevision
                         ? t("revisionInfo", {
                             revision: selectedRevision.revision,
@@ -111,7 +111,7 @@ export default function VideoTitle() {
                 </p>
 
                 {selectedRevision && (
-                    <div className="px-2 mt-2 phone-landscape:hidden">
+                    <div className="px-2 mt-2 immersive:hidden">
                         <div className="flex flex-wrap items-center gap-1">
                             <span className="text-xs text-muted-foreground">
                                 {t("tagsLabel")}:
@@ -190,7 +190,7 @@ export default function VideoTitle() {
                         />
                     </div>
                 )}
-                <SidePanelTrigger className="fullscreen:hidden phone:hidden" />
+                <SidePanelTrigger className="fullscreen:hidden mobile:hidden" />
             </div>
         </div>
     );
