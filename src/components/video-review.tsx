@@ -1,5 +1,5 @@
 "use client"
-import { useRef, useEffect, useState, useMemo, useCallback, type CSSProperties, type MouseEvent } from "react";
+import { useRef, useEffect, useState, useMemo, useCallback, type CSSProperties, type MouseEvent, type PointerEvent } from "react";
 import { useVideoReviewStore } from "@/stores/video-review-store";
 import { usePlayback } from "@/stores/playback-store";
 import VideoTimelineBar from "@/components/video-timeline-bar";
@@ -127,10 +127,10 @@ export default function VideoReview() {
         v.currentTime = target;
     }
 
-    // A tap while the controls are faded only brings them back; the click it produces is dropped.
-    const onStagePointerDown = () => {
+    // A touch while the controls are faded only brings them back; a mouse click still plays or pauses.
+    const onStagePointerDown = (e: PointerEvent<HTMLDivElement>) => {
         const controls = controlsRef.current;
-        tapWakesRef.current = controls !== null && getComputedStyle(controls).opacity === "0";
+        tapWakesRef.current = e.pointerType === "touch" && controls !== null && getComputedStyle(controls).opacity === "0";
     };
 
     // Black bars beside the picture play and pause like the picture; canvas clicks are strokes.
