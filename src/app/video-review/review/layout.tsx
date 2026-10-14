@@ -5,11 +5,5 @@ export default function VideoReviewLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    return (
-        <div className="w-screen h-screen">
-            <div>
-                <ReviewFrame>{children}</ReviewFrame>
-            </div>
-        </div>
-    );
+    return <ReviewFrame>{children}</ReviewFrame>;
 }

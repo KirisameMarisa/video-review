@@ -94,7 +94,7 @@ export default function VideoReviewPage() {
     }, [loading]);
 
     return (
-        <div className="flex h-screen">
+        <div className="flex h-full">
             <VideoReview />
         </div>
     );

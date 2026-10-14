@@ -18,12 +18,16 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { LoadingBadge } from "@/components/controls/loading-badge";
 import { useFullscreenSync } from "@/lib/hooks/use-fullscreen-sync";
+import { useIsMobile } from "@/lib/hooks/use-mobile";
+import { useIdle } from "@/lib/hooks/use-idle";
+import { cn } from "@/lib/utils";
 import { PortalContainerContext } from "@/lib/portal-container";
 import { Toaster } from "@/components/ui/sonner";
 
-// Well under one frame at any frame rate, so only the time a paused video already shows
-// counts as the same.
+// Well under one frame, so two times this close apart show the same picture.
 const SAME_TIME_S = 0.001;
+// How long the overlaid title and controls stay before fading.
+const FADE_AFTER_MS = 3000;
 
 export default function VideoReview() {
     const t = useTranslations("video-review");
@@ -57,6 +61,11 @@ export default function VideoReview() {
         setActiveComments } = useVideoReviewStore();
 
     useFullscreenSync();
+    const isMobile = useIsMobile();
+    // While the picture fills the player the title and controls overlay it, so they fade when left alone.
+    const { idle, wake } = useIdle(fullscreen || isMobile, FADE_AFTER_MS);
+    const controlsRef = useRef<HTMLDivElement>(null);
+    const tapWakesRef = useRef(false);
 
     const {
         isPlaying,
@@ -111,16 +120,24 @@ export default function VideoReview() {
         }
 
         setCurrentTime(target);
-        // Seeking to where a paused video already is can show the neighbouring frame, so selecting
-        // a comment written there would nudge the picture.
+        // Seeking a paused video to where it already is can show the neighbouring frame.
         if (v.paused && Math.abs(v.currentTime - target) < SAME_TIME_S) {
             return;
         }
         v.currentTime = target;
     }
 
+    // A tap while the controls are faded only brings them back; the click it produces is dropped.
+    const onStagePointerDown = () => {
+        const controls = controlsRef.current;
+        tapWakesRef.current = controls !== null && getComputedStyle(controls).opacity === "0";
+    };
+
     // Black bars beside the picture play and pause like the picture; canvas clicks are strokes.
     const onStageClick = (e: MouseEvent<HTMLDivElement>) => {
+        if (tapWakesRef.current) {
+            return;
+        }
         if (e.target === e.currentTarget || e.target === videoRef.current) {
             togglePlay();
         }
@@ -161,6 +178,11 @@ export default function VideoReview() {
         }
         fetchComments(selectedRevision);
     }, [selectedRevision]);
+
+    // The video list is outside the player, so picking there would otherwise leave the new title faded.
+    useEffect(() => {
+        wake();
+    }, [selectedRevision, wake]);
 
     useEffect(() => {
         if (selectedRevision == null) return
@@ -222,8 +244,7 @@ export default function VideoReview() {
                 }
             }
         }
-        // Falls back to the original when the variant fails to load: some storage resolves a URL without
-        // checking the file exists.
+        // Falls back to the original: some storage resolves a URL without checking the file exists.
         const onError = () => {
             if (!variantLoaded) {
                 return;
@@ -317,8 +338,15 @@ export default function VideoReview() {
     return (
         // Dropdowns and dialogs opened from the player must render inside it while it is fullscreen.
         <PortalContainerContext.Provider value={fullscreen ? playerElement : null}>
-            <div ref={setPlayerElement} className="relative flex flex-col h-full w-full border-r">
-                {loading
+            <div
+                ref={setPlayerElement}
+                data-idle={idle || undefined}
+                onPointerDown={wake}
+                onPointerMove={wake}
+                className="relative flex flex-col h-full w-full border-r"
+            >
+                {/* A list refresh must keep the <video> mounted; only the first load shows the badge. */}
+                {loading && !selectedRevision
                     ?
                     <div className="flex-1 flex flex-col items-center justify-center">
                         <LoadingBadge>Videos Syncing...</LoadingBadge>
@@ -328,19 +356,29 @@ export default function VideoReview() {
                         <VideoTitle />
                         {selectedRevision ? (
                             <>
-                                <div data-slot="video-stage" onClick={onStageClick} className="video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative cursor-pointer phone-fullscreen:rounded-none phone-fullscreen:mb-0">
-                                    <div className="video-fit relative" style={{ "--video-aspect": videoAspect } as CSSProperties}>
+                                <div
+                                    data-slot="video-stage"
+                                    onClick={onStageClick}
+                                    onPointerDown={onStagePointerDown}
+                                    className={cn(
+                                        "video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative cursor-pointer immersive:rounded-none immersive:mb-0",
+                                        isMobile && !fullscreen && "portrait:flex-none portrait:video-stage-mobile",
+                                    )}
+                                    style={{ "--video-aspect": videoAspect } as CSSProperties}
+                                >
+                                    <div className="video-fit relative">
                                         <video
                                             ref={attachVideo}
                                             src={playbackUrl ?? undefined}
+                                            playsInline
                                             className="w-full h-full rounded"
                                         />
                                         <DrawingLayer />
                                     </div>
                                 </div>
 
-                                {/* In phone fullscreen these overlay the picture so the video can fill the screen. */}
-                                <div className="phone-fullscreen:absolute phone-fullscreen:inset-x-0 phone-fullscreen:bottom-0 phone-fullscreen:px-2">
+                                {/* Overlaid so the picture can fill the player. */}
+                                <div ref={controlsRef} className="immersive:absolute immersive:inset-x-0 immersive:bottom-0 immersive:px-2 transition-opacity duration-300 immersive:idle:opacity-0 immersive:idle:pointer-events-none">
                                     <VideoTimelineBar />
                                     <VideoControlPanel />
                                 </div>

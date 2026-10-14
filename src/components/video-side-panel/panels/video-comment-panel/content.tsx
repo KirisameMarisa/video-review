@@ -9,15 +9,13 @@ import { useVideoStore } from "@/stores/video-store";
 import { useCommentEditStore } from "@/stores/comment-edit-store";
 import CommentConfirmed from "@/components/video-side-panel/panels/video-comment-panel/comment-confirmed";
 import { useDrawingStore } from "@/stores/drawing-store";
-import { RefObject, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import CommentCard from "@/components/video-side-panel/panels/video-comment-panel/comment-card";
 import { useCommentSearchStore } from "@/stores/comment-search-store";
 import { useCommentSearchDateFilterStore } from "@/stores/date-filter-store";
 import { chatToast } from "@/components/chat-notice";
 
-export default function VideoCommentContent(props: {
-    topAreaRef: RefObject<HTMLDivElement | null>,
-}) {
+export default function VideoCommentContent() {
     const containerRef = useRef<HTMLDivElement>(null);
     const commentCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const { displayName, email, userId } = useAuthStore();
@@ -83,7 +81,7 @@ export default function VideoCommentContent(props: {
         // Find the latest comment whose timestamp is <= current playback time.
         // We assume `comments` is sorted by time in ascending order.
         let target = comments[0];
-        if (target === undefined || !props.topAreaRef.current) {
+        if (target === undefined) {
             return;
         }
 
@@ -95,16 +93,14 @@ export default function VideoCommentContent(props: {
             }
         }
 
-        // Calculate the vertical offset to keep the target comment fully visible.
-        // Add a small margin (+5px) because the comment tends to be partially hidden
-        // under the fixed header without this extra spacing.
-        const headerHeight = props.topAreaRef.current.getBoundingClientRect().height + 5;
         const el = commentCardRefs.current[target.id];
 
         if (!el || !containerRef.current) return;
 
+        // Both offsets are from the same offset parent, so the difference is the card's position in the list.
+        // The 5px keeps the card clear of the list's edge.
         containerRef.current.scrollTo({
-            top: el.offsetTop - headerHeight,
+            top: el.offsetTop - containerRef.current.offsetTop - 5,
             behavior: "smooth",
         });
     }, [currentTime, comments]);

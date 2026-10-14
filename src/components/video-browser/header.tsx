@@ -12,11 +12,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useVideoSearchStore } from "@/stores/video-search-store";
 import { useVideoDateFilterStore } from "@/stores/date-filter-store";
+import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useVideoStore } from "@/stores/video-store";
 import CalendarDateRadio from "@/components/controls/calendar-date-radio";
 import { Separator } from "../ui/separator";
 import { useChatSearchStore } from "@/stores/chat-search-store";
 import { ChatSearchPanel } from "@/components/chat-search";
+import { AccountMenu } from "@/components/setting";
 import { OrganizeHeader } from "@/components/video-browser/video-tree/organize-tree/organize-header";
 import { useOrganizing } from "@/components/video-browser/video-tree/organize-tree/hooks/use-organizing";
 import { useVideoListStore } from "@/stores/video-list-store";
@@ -30,7 +32,8 @@ export default function VideoListPanelHeader(
 }) {
     const t = useTranslations("video-list-panel");
     const tChat = useTranslations("chat-search");
-    const { isMobile } = useSidebar();
+    const isMobile = useIsMobile();
+    const { setOpenMobile } = useSidebar();
     const { role } = useAuthStore();
     const { reloadOnViewChange } = useVideoStore();
     const { filterTree, setFilterTree, isFiltering, clear } = useVideoSearchStore();
@@ -60,9 +63,9 @@ export default function VideoListPanelHeader(
 
     return (
         <SidebarHeader>
-            <div className="flex justify-between text-primary font-semibold text-sm">
+            <div className="flex justify-between font-semibold text-sm">
                 <div className="flex items-center">
-                    <span>{t("title")}</span>
+                    <span className="text-primary">{t("title")}</span>
                     <Button variant="toolbar" size="icon-sm" data-active={filtering} onClick={() => onSearchDialogShow()}>
                         <FontAwesomeIcon icon={faSearch} />
                     </Button>
@@ -80,7 +83,7 @@ export default function VideoListPanelHeader(
                     <Button
                         variant="toolbar"
                         size="icon-sm"
-                        hidden={!isAdmin(role)}
+                        hidden={!isAdmin(role) || isMobile}
                         onClick={() => setOrganizing(true)}
                         title={t("organize.open")}
                     >
@@ -107,6 +110,12 @@ export default function VideoListPanelHeader(
                     >
                         <Plus className="size-5" />
                     </Button>
+                    {/* While the list is a sheet the account menu lives here; a footer would cost the list height. */}
+                    {isMobile && <AccountMenu compact />}
+                    {/* On a small screen the sheet can cover everything, so it needs its own way back. */}
+                    <Button variant="ghost" size="icon-sm" hidden={!isMobile} onClick={() => setOpenMobile(false)}>
+                        <X className="size-5" />
+                    </Button>
                 </div>
             </div>
             <Separator />
@@ -114,18 +123,21 @@ export default function VideoListPanelHeader(
             <ChatSearchPanel />
 
             <SidebarGroup>
-                <CalendarDateRadio
-                    mode={videoDate.mode}
-                    range={videoDate.mode === "range" && videoDate.from && videoDate.to
-                        ? { from: new Date(videoDate.from), to: new Date(videoDate.to) }
-                        : undefined}
-                    onToday={videoDate.setToday}
-                    onRecent={videoDate.setRecent}
-                    onSetRange={videoDate.setRange}
-                    onClear={videoDate.clear}
-                    className="size-10" />
+                {/* On the mobile layout the date and text filters share a row. */}
+                <div className="mobile:flex mobile:flex-wrap mobile:items-center mobile:gap-2">
+                    <CalendarDateRadio
+                        mode={videoDate.mode}
+                        range={videoDate.mode === "range" && videoDate.from && videoDate.to
+                            ? { from: new Date(videoDate.from), to: new Date(videoDate.to) }
+                            : undefined}
+                        onToday={videoDate.setToday}
+                        onRecent={videoDate.setRecent}
+                        onSetRange={videoDate.setRange}
+                        onClear={videoDate.clear}
+                        className="h-10 mobile:h-auto mobile:shrink-0" />
 
-                <SidebarSearchInput value={filterTree} onChange={setFilterTree} placeholder="Filter video..." />
+                    <SidebarSearchInput value={filterTree} onChange={setFilterTree} placeholder="Filter video..." className="mobile:flex-1 mobile:min-w-32 mobile:mt-0" />
+                </div>
             </SidebarGroup>
             <Separator />
         </SidebarHeader>

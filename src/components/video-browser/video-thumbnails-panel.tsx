@@ -6,6 +6,7 @@ import { Button } from "@/ui/button";
 import { useTranslations } from "next-intl";
 import { VideoWithRevision } from "@/lib/db-types";
 import { useSidebar } from "@/ui/sidebar";
+import { useIsMobile } from "@/lib/hooks/use-mobile";
 import VideoThumbnails from "@/components/video-browser/video-thumbnails";
 import type { MarkContext } from "@/components/video-browser/marks/use-mark-context";
 
@@ -30,7 +31,8 @@ export default function VideoThumbnailsPanel({
     onClose,
 }: Props) {
     const panelRef = useRef<HTMLDivElement>(null);
-    const { state, isMobile } = useSidebar();
+    const { state } = useSidebar();
+    const isMobile = useIsMobile();
     // --sidebar-width stays set while the sidebar is collapsed off-canvas.
     const offset = state === "collapsed" ? "0px" : "var(--sidebar-width)";
 

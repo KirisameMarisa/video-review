@@ -4,14 +4,23 @@
 @custom-variant dark (&:is(.dark *));
 /* Inside an element that is fullscreen (the player). */
 @custom-variant fullscreen (&:where(:fullscreen *));
-/* The same, on a phone: touch-driven with its short side under the sidebar breakpoint. */
-@custom-variant phone-fullscreen {
-  @media (pointer: coarse) and ((max-width: 767px) or (max-height: 767px)) {
-    &:where(:fullscreen *) {
-      @slot;
-    }
+/* Below the sidebar breakpoint, or a phone held sideways: the same test as useIsMobile. */
+@custom-variant mobile {
+  @media (max-width: 767px), ((pointer: coarse) and (max-height: 767px)) {
+    @slot;
   }
 }
+/* Where the picture fills the player: the fullscreen player, or a phone held sideways. */
+@custom-variant immersive {
+  &:where(:fullscreen *) {
+    @slot;
+  }
+  @media (pointer: coarse) and (max-height: 767px) and (orientation: landscape) {
+    @slot;
+  }
+}
+/* Inside the player while it has had no pointer activity for a while (data-idle, set by useIdle). */
+@custom-variant idle (&:where([data-idle] *));
 
 @theme inline {
   --color-background: var(--background);
@@ -146,8 +155,8 @@
   max-width: calc(100vw - var(--panel-offset, 0px));
 }
 
-/* Review screen: player on the left, side panel on the right. The panel slides like the video
-   list and keeps its width while it does, so its contents don't squeeze. */
+/* Player on the left, side panel on the right.
+   The panel keeps its width while it slides, so its contents don't squeeze. */
 @utility review-columns {
   grid-template-columns: 73% 27%;
   transition: grid-template-columns 200ms linear;
@@ -168,8 +177,15 @@
   container-type: size;
 }
 
-/* The largest box with the video's own ratio that fits the stage. The box is the picture
-   (no letterboxing inside it), which the drawing layer relies on. */
+/* On the mobile layout the stage takes its height from the video's ratio, so the comments below get the rest.
+   Capped so a portrait clip leaves room for the controls and the comment input. */
+@utility video-stage-mobile {
+  aspect-ratio: var(--video-aspect);
+  max-height: 50dvh;
+}
+
+/* The largest box with the video's own ratio that fits the stage.
+   The box is exactly the picture (no letterboxing), which the drawing layer relies on. */
 @utility video-fit {
   width: min(100cqw, calc(100cqh * var(--video-aspect)));
   aspect-ratio: var(--video-aspect);
@@ -205,8 +221,8 @@
   scrollbar-width: none;
 }
 
-/* Hue ring of the drawing tool panel. A rainbow by nature, so it is the one place
-   colours are not theme tokens. --ring-inner is the hole radius set at runtime. */
+/* Hue ring of the drawing tool panel: a rainbow, so it is the one place colours are not theme tokens.
+   --ring-inner is the hole radius set at runtime. */
 @utility hue-ring {
   border-radius: 9999px;
   background: conic-gradient(from 0deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
@@ -218,8 +234,8 @@
   cursor: var(--brush-cursor, crosshair);
 }
 
-/* Eyedropper preview: a ring whose top half is the colour being picked and bottom half
-   the one it replaces; the hole keeps the sampled spot visible. */
+/* Eyedropper preview: top half the colour being picked, bottom half the one it replaces.
+   The hole keeps the sampled spot visible. */
 @utility pick-preview {
   border-radius: 9999px;
   background: linear-gradient(to bottom, var(--pick-new) 50%, var(--pick-old) 50%);
