@@ -21,7 +21,7 @@ export default function RevisionDiffPage() {
     }, []);
 
     return (
-        <div className="flex w-screen h-screen">
+        <div className="flex w-screen h-full">
             <RevisionDiffView videoId={videoId as string} />
         </div>
     );

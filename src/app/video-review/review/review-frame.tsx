@@ -17,13 +17,13 @@ export function ReviewFrame({ children }: { children: ReactNode }) {
     const isMobile = useIsMobile();
 
     return (
-        <SidebarProvider open={listPanelOpen} onOpenChange={setListPanelOpen}>
+        <SidebarProvider open={listPanelOpen} onOpenChange={setListPanelOpen} className="h-full">
             <PlaybackStoreProvider>
                 <VideoListPanel />
                 {isMobile ? (
                     // Mobile (portrait): Player stacks above comments. Tabs/filters are desktop-only.
                     // Landscape: Only the player fits (comments hidden).
-                    <div data-slot="review-main" className="w-screen h-dvh flex flex-col">
+                    <div data-slot="review-main" className="w-screen h-full flex flex-col">
                         <div className="shrink-0 min-w-0 landscape:flex-1 landscape:min-h-0">
                             {children}
                         </div>
@@ -32,7 +32,7 @@ export function ReviewFrame({ children }: { children: ReactNode }) {
                         </div>
                     </div>
                 ) : (
-                    <div data-slot="review-main" className={cn("@container w-screen h-screen grid", sidePanelOpen ? "review-columns" : "review-columns-closed")}>
+                    <div data-slot="review-main" className={cn("@container w-screen h-full grid", sidePanelOpen ? "review-columns" : "review-columns-closed")}>
                         <div className="flex flex-col min-h-0 min-w-0 w-full h-full border-r">
                             {children}
                         </div>
