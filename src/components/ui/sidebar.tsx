@@ -187,7 +187,8 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          // Keeps its own width on a phone held sideways, where the sheet's sm cap would shrink it.
+          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) sm:max-w-(--sidebar-width) p-0 [&>button]:hidden"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,

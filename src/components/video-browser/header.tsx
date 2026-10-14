@@ -17,6 +17,7 @@ import CalendarDateRadio from "@/components/controls/calendar-date-radio";
 import { Separator } from "../ui/separator";
 import { useChatSearchStore } from "@/stores/chat-search-store";
 import { ChatSearchPanel } from "@/components/chat-search";
+import { AccountMenu } from "@/components/setting";
 import { OrganizeHeader } from "@/components/video-browser/video-tree/organize-tree/organize-header";
 import { useOrganizing } from "@/components/video-browser/video-tree/organize-tree/hooks/use-organizing";
 import { useVideoListStore } from "@/stores/video-list-store";
@@ -107,6 +108,8 @@ export default function VideoListPanelHeader(
                     >
                         <Plus className="size-5" />
                     </Button>
+                    {/* While the list is a sheet the account menu lives here; a footer would cost the list height. */}
+                    {isMobile && <AccountMenu compact />}
                     {/* The sheet covers a phone's whole screen, so it needs its own way back. */}
                     <Button variant="ghost" size="icon-sm" hidden={!isMobile} onClick={() => setOpenMobile(false)}>
                         <X className="size-5" />
@@ -118,18 +121,21 @@ export default function VideoListPanelHeader(
             <ChatSearchPanel />
 
             <SidebarGroup>
-                <CalendarDateRadio
-                    mode={videoDate.mode}
-                    range={videoDate.mode === "range" && videoDate.from && videoDate.to
-                        ? { from: new Date(videoDate.from), to: new Date(videoDate.to) }
-                        : undefined}
-                    onToday={videoDate.setToday}
-                    onRecent={videoDate.setRecent}
-                    onSetRange={videoDate.setRange}
-                    onClear={videoDate.clear}
-                    className="size-10" />
+                {/* On a phone the date and text filters share a row. */}
+                <div className="phone:flex phone:flex-wrap phone:items-center phone:gap-2">
+                    <CalendarDateRadio
+                        mode={videoDate.mode}
+                        range={videoDate.mode === "range" && videoDate.from && videoDate.to
+                            ? { from: new Date(videoDate.from), to: new Date(videoDate.to) }
+                            : undefined}
+                        onToday={videoDate.setToday}
+                        onRecent={videoDate.setRecent}
+                        onSetRange={videoDate.setRange}
+                        onClear={videoDate.clear}
+                        className="h-10 phone:h-auto phone:shrink-0" />
 
-                <SidebarSearchInput value={filterTree} onChange={setFilterTree} placeholder="Filter video..." />
+                    <SidebarSearchInput value={filterTree} onChange={setFilterTree} placeholder="Filter video..." className="phone:flex-1 phone:min-w-32 phone:mt-0" />
+                </div>
             </SidebarGroup>
             <Separator />
         </SidebarHeader>

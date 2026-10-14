@@ -23,10 +23,12 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/ui/sidebar";
 import { Button } from "@/ui/button";
 import { AccountSummary } from "@/components/controls/account-summary";
+import { AccountAvatar } from "@/components/controls/account-avatar";
 import EditUserProfileDialog from "@/components/dialog/edit-user-profile";
 import AdminSettingsDialog from "@/components/dialog/admin-settings";
 
-export function AccountMenu() {
+// `compact` renders an avatar-only trigger for a title row instead of the footer row.
+export function AccountMenu({ compact = false }: { compact?: boolean }) {
     const t = useTranslations("setting");
     const { verifyAuth, role, displayName, email } = useAuthStore();
     const isPhone = useIsPhone();
@@ -45,63 +47,73 @@ export function AccountMenu() {
         })();
     }, []);
 
+    const menu = (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                {compact ? (
+                    <Button variant="ghost" size="icon-sm" aria-label={t("title")}>
+                        <AccountAvatar email={email} className="size-6" />
+                    </Button>
+                ) : (
+                    <SidebarMenuButton size="lg" aria-label={t("title")}>
+                        <AccountSummary displayName={displayName ?? ""} email={email} />
+                        <Settings />
+                    </SidebarMenuButton>
+                )}
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent side={compact ? "bottom" : "top"} align={compact ? "end" : "start"} className="w-60">
+                <DropdownMenuLabel className="font-normal">
+                    <div className="flex items-center gap-2">
+                        <AccountSummary displayName={displayName ?? ""} email={email} />
+                    </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                {isLogged && !isGuest(role) && (
+                    <DropdownMenuItem onSelect={() => setEditProfileOpen(true)}>
+                        <UserPen />
+                        {t("editProfile")}
+                    </DropdownMenuItem>
+                )}
+                {/* The admin screen is not laid out for a phone. */}
+                {isLogged && isAdmin(role) && !isPhone && (
+                    <DropdownMenuItem onSelect={() => setAdminSettingsOpen(true)}>
+                        <ShieldUser />
+                        {t("administration")}
+                    </DropdownMenuItem>
+                )}
+
+                <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                        <Globe />
+                        {t("language")}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                        <LanguageItems />
+                    </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                {isLogged && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => useAuthStore.getState().logout()}>
+                            <LogOut />
+                            {t("logout")}
+                        </DropdownMenuItem>
+                    </>
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+
     return (
         <>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <SidebarMenuButton size="lg" aria-label={t("title")}>
-                                <AccountSummary displayName={displayName ?? ""} email={email} />
-                                <Settings />
-                            </SidebarMenuButton>
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuContent side="top" align="start" className="w-60">
-                            <DropdownMenuLabel className="font-normal">
-                                <div className="flex items-center gap-2">
-                                    <AccountSummary displayName={displayName ?? ""} email={email} />
-                                </div>
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-
-                            {isLogged && !isGuest(role) && (
-                                <DropdownMenuItem onSelect={() => setEditProfileOpen(true)}>
-                                    <UserPen />
-                                    {t("editProfile")}
-                                </DropdownMenuItem>
-                            )}
-                            {/* The admin screen is not laid out for a phone. */}
-                            {isLogged && isAdmin(role) && !isPhone && (
-                                <DropdownMenuItem onSelect={() => setAdminSettingsOpen(true)}>
-                                    <ShieldUser />
-                                    {t("administration")}
-                                </DropdownMenuItem>
-                            )}
-
-                            <DropdownMenuSub>
-                                <DropdownMenuSubTrigger>
-                                    <Globe />
-                                    {t("language")}
-                                </DropdownMenuSubTrigger>
-                                <DropdownMenuSubContent>
-                                    <LanguageItems />
-                                </DropdownMenuSubContent>
-                            </DropdownMenuSub>
-
-                            {isLogged && (
-                                <>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onSelect={() => useAuthStore.getState().logout()}>
-                                        <LogOut />
-                                        {t("logout")}
-                                    </DropdownMenuItem>
-                                </>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </SidebarMenuItem>
-            </SidebarMenu>
+            {compact ? menu : (
+                <SidebarMenu>
+                    <SidebarMenuItem>{menu}</SidebarMenuItem>
+                </SidebarMenu>
+            )}
 
             {/* Outside the menu, which closes when an item is chosen. */}
             <EditUserProfileDialog open={editProfileOpen} onClose={() => setEditProfileOpen(false)} />

@@ -40,7 +40,7 @@ export default function VideoListPanel() {
     const folderList = useFolderList(videos, { filtering: searching || dateFiltering });
     const organizing = useOrganizing();
 
-    const { setOpenMobile } = useSidebar();
+    const { isMobile, setOpenMobile } = useSidebar();
 
     // Below the sidebar breakpoint the list is a sheet over the whole screen, so picking a video also closes it.
     const openVideo = (id: string) => {
@@ -97,9 +97,12 @@ export default function VideoListPanel() {
                         )}
                     </SidebarContent>
 
-                    <SidebarFooter>
-                        <AccountMenu />
-                    </SidebarFooter>
+                    {/* While the list is a sheet the account menu sits in its header instead. */}
+                    {!isMobile && (
+                        <SidebarFooter>
+                            <AccountMenu />
+                        </SidebarFooter>
+                    )}
                 </div>
 
                 <VideoSearchDialog open={searchDialogOpen} onClose={() => setSearchDialogOpen(false)} />
