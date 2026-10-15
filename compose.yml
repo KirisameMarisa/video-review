@@ -40,9 +40,11 @@ services:
     volumes:
       - videoreview-db:/var/lib/postgresql/data
 
+  # Only with --profile ollama; the image is large and most development does not need it.
   ollama:
     image: ollama/ollama:latest
     container_name: videoreview-ollama
+    profiles: [ollama]
     ports:
       - "11434:11434"
     volumes:
@@ -67,7 +69,9 @@ services:
       db:
         condition: service_healthy
 
+  # Only with --profile s3: a local S3 for the s3 storage driver.
   localstack:
+      profiles: [s3]
       env_file:
         - path: .env
           required: false
@@ -83,7 +87,9 @@ services:
       volumes:
           - ./docker/localstack:/etc/localstack/init/ready.d
 
+  # Only with --profile nextcloud: the Nextcloud storage driver's test target.
   nextcloud-db:
+    profiles: [nextcloud]
     image: mariadb:10.6
     restart: always
     environment:
@@ -95,6 +101,7 @@ services:
       - nextcloud-db:/var/lib/mysql
 
   nextcloud-data:
+    profiles: [nextcloud]
     image: nextcloud:29
     restart: always
     ports:
@@ -112,9 +119,11 @@ services:
     depends_on:
       - nextcloud-db
 
+  # Only with --profile smtp: a relay for the email integration.
   smtp:
     image: boky/postfix
     container_name: videoreview-smtp
+    profiles: [smtp]
     environment:
       HOSTNAME: "videoreview.local"
       ALLOW_EMPTY_SENDER_DOMAINS: "true"
