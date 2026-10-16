@@ -209,4 +209,31 @@ describe("admin integration settings", () => {
         expect((await res.json()).result.ok).toBe(false);
         expect(fetchMock).not.toHaveBeenCalled();
     });
+
+    it("tests Jira Cloud with the account email and the token as Basic, then saves both", async () => {
+        const fetchMock = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ issueTypes: [] }) }));
+        vi.stubGlobal("fetch", fetchMock);
+
+        const res = await testAndSave({ deployment: "cloud", baseUrl: "https://example.atlassian.net", email: "bot@example.com", token: TOKEN, project: "VR" });
+
+        expect((await res.json()).result.ok).toBe(true);
+        const basic = Buffer.from(`bot@example.com:${TOKEN}`).toString("base64");
+        expect(fetchMock).toHaveBeenCalledWith(
+            "https://example.atlassian.net/rest/api/2/project/VR",
+            expect.objectContaining({ headers: expect.objectContaining({ Authorization: `Basic ${basic}` }) }),
+        );
+        expect(await getJiraConfig()).toMatchObject({ deployment: "cloud", email: "bot@example.com" });
+    });
+
+    it("refuses Jira Cloud without the account email, before calling Jira or saving", async () => {
+        const fetchMock = vi.fn();
+        vi.stubGlobal("fetch", fetchMock);
+
+        const res = await testAndSave({ deployment: "cloud", baseUrl: "https://example.atlassian.net", token: TOKEN, project: "VR" });
+
+        expect((await res.json()).result.ok).toBe(false);
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(db.settings.size).toBe(0);
+        expect(db.secrets.size).toBe(0);
+    });
 });
