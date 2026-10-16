@@ -7,7 +7,7 @@ import type { LoginType } from "@/lib/auth-types";
 // value saved on the admin screen applies on the next page load without a rebuild.
 interface ConfigState {
     // Read before login. null until the answer is in, so the login screen doesn't guess.
-    guestEnabled: boolean | null;
+    loginMethods: LoginType[] | null;
     loginDefaultType: LoginType | null;
     // Read once logged in.
     urlSchema: string | null;
@@ -18,7 +18,7 @@ interface ConfigState {
 }
 
 export const useConfigStore = create<ConfigState>()((set) => ({
-    guestEnabled: null,
+    loginMethods: null,
     loginDefaultType: null,
     urlSchema: null,
     resolutionPresets: [],
@@ -30,7 +30,9 @@ export const useConfigStore = create<ConfigState>()((set) => ({
             api.auth["guest-enabled"].$get().then(res => res.status === 200 ? res.json() : null).catch(() => null),
             api.auth["login-default-type"].$get().then(res => res.status === 200 ? res.json() : null).catch(() => null),
         ]);
-        set({ guestEnabled: guest?.enabled ?? true, loginDefaultType: type?.type ?? "guest" });
+        const guestEnabled = guest?.enabled ?? true;
+        const methods: LoginType[] = guestEnabled ? ["guest", "jira", "password"] : ["jira", "password"];
+        set({ loginMethods: methods, loginDefaultType: type?.type ?? "guest" });
     },
 
     loadConfig: async () => {
