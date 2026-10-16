@@ -25,7 +25,7 @@ const LoginResponseSchema = z.object({
     email: z.string().nullable().optional(),
     displayName: z.string(),
     role: z.enum(["guest", "viewer", "admin"]),
-    provider: z.enum(["guest", "jira", "password"]),
+    provider: z.enum(["guest", "jira", "password", "oidc"]),
 });
 
 export const loginRouter = createRouter()

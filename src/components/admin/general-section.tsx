@@ -12,6 +12,7 @@ const LOGIN_TYPES = [
     { value: "guest", label: "Guest" },
     { value: "jira", label: "JIRA" },
     { value: "password", label: "Email & Password" },
+    { value: "oidc", label: "SSO" },
 ];
 
 export function GeneralSection() {

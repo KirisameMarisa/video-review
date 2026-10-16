@@ -225,6 +225,7 @@
         "displayName": "表示名",
         "email": "メールアドレス",
         "password": "パスワード",
+        "sso": "SSO でログイン",
         "ok": "ログイン",
         "accountDisabledMsg": "このアカウントは無効です"
     },
@@ -408,6 +409,13 @@
                 "assignee": "Assignee",
                 "issueTypeTask": "Task issue type",
                 "issueTypeBug": "Bug issue type"
+            },
+            "oidc": {
+                "title": "SSO (OIDC)",
+                "callbackUrl": "Callback URL",
+                "issuer": "Issuer URL",
+                "clientId": "Client ID",
+                "clientSecret": "Client Secret"
             },
             "slack": {
                 "title": "Slack",

@@ -29,10 +29,34 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const [displayName, setDisplayName] = useState("");
 
+    // A sign-in through a provider comes back here with the session in the cookie, or with an error.
+    const finishRedirectLogin = async () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("error")) {
+            router.replace("/login");
+            alert(t(params.get("error") === "disabled" ? "accountDisabledMsg" : "loginFailedMsg"));
+            return;
+        }
+        if (!params.has("session")) {
+            return;
+        }
+
+        const res = await api.auth.session.$get();
+        if (res.status !== 200) {
+            router.replace("/login");
+            alert(t("loginFailedMsg"));
+            return;
+        }
+        const data = await res.json();
+        setAuth(data.id, data.email, data.role, data.token, data.displayName, data.provider);
+        router.replace("/video-review/review");
+    };
+
     useEffect(() => {
         setEmail(cacheEmail ?? "");
         setDisplayName(cacheDisplayName ?? "");
         void loadLoginOptions();
+        void finishRedirectLogin();
     }, []);
 
     useEffect(() => {
@@ -78,6 +102,7 @@ export default function Login() {
                         {loginMethods?.includes("guest") && <TabsTrigger value="guest">Guest</TabsTrigger>}
                         {loginMethods?.includes("jira") && <TabsTrigger value="jira">JIRA</TabsTrigger>}
                         {loginMethods?.includes("password") && <TabsTrigger value="password">Email & Password</TabsTrigger>}
+                        {loginMethods?.includes("oidc") && <TabsTrigger value="oidc">SSO</TabsTrigger>}
                     </TabsList>
                     {loginMethods?.includes("guest") && (
                         <TabsContent value="guest">
@@ -126,6 +151,14 @@ export default function Login() {
                                         onChange={(x) => setPassword(x.target.value)} />
                                 </div>
                                 <ButtonLogin exec={handleLogin} title={t("ok")} />
+                            </AuthCard>
+                        </TabsContent>
+                    )}
+                    {loginMethods?.includes("oidc") && (
+                        <TabsContent value="oidc">
+                            <AuthCard>
+                                <div className="h-8"></div>
+                                <ButtonLogin exec={() => window.location.assign("/api/v1/auth/oauth/oidc/start")} title={t("sso")} />
                             </AuthCard>
                         </TabsContent>
                     )}

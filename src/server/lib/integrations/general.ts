@@ -5,7 +5,7 @@ import type { LoginType } from "@/lib/auth-types";
 import { defineIntegration, TestResultSchema } from "@/server/lib/integrations/define";
 import { getPlainField } from "@/server/lib/integrations/store";
 
-export const LOGIN_TYPES = ["guest", "jira", "password"] as const;
+export const LOGIN_TYPES = ["guest", "jira", "password", "oidc"] as const;
 
 const DEFAULT_UPLOAD_CHUNK_MB = 16;
 
