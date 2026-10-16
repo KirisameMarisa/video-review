@@ -11,8 +11,10 @@ Jira に接続すると、次の 2 つが使えます
 
 | 項目 | 内容 |
 |---|---|
-| URL | Jira の URL（例 `https://example.atlassian.net`） |
-| Token | Jira の API token（Bearer で送られます） |
+| Deployment | Jira の種類（Data Center か Cloud） |
+| URL | Jira の URL（例 `https://jira.example.com`、Cloud なら `https://example.atlassian.net`） |
+| Email | Cloud のときだけ、Token を発行したアカウントのメールアドレス |
+| Token | Data Center なら personal access token、Cloud ならアカウントの API token |
 | Project | issue を作る project のキー |
 | 担当者 | 作った issue の担当者（任意） |
 | Task の issue type | コメントから Task を作るときの issue type の名前（任意） |
@@ -26,6 +28,7 @@ Test & save を押し、Jira に接続して project と issue type を確かめ
 
 ※ issue type の名前は、その project にあるものと同じ文字で書きます（無い名前だと Test & save が通りません）  
 ※ Token を保存すると URL と Token は変えられなくなるので、変えるときは Reset で保存した Token を消してから入れ直します
+※ Cloud の API token は最長 1 年で切れるので、切れたら Reset して新しい token を入れ直します
 
 ---
 

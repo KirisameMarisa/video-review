@@ -11,8 +11,10 @@ Connecting to Jira gives you two things:
 
 | Field | Meaning |
 |---|---|
-| URL | The Jira URL (e.g. `https://example.atlassian.net`) |
-| Token | A Jira API token (sent as Bearer) |
+| Deployment | The kind of Jira: Data Center or Cloud |
+| URL | The Jira URL (e.g. `https://jira.example.com`, or `https://example.atlassian.net` for Cloud) |
+| Email | Cloud only: the email of the account that issued the token |
+| Token | A personal access token on Data Center; the account's API token on Cloud |
 | Project | The key of the project issues are created in |
 | Assignee | The assignee of created issues (optional) |
 | Task issue type | The issue type name used when a Task is created from a comment (optional) |
@@ -25,6 +27,7 @@ Test & save connects to Jira, checks the project and the issue types, and saves 
 
 Note: write issue type names exactly as they are in the project (an unknown name fails Test & save).  
 Note: once the token is saved, the URL and the token cannot be changed; press Reset to drop the saved token and enter it again.
+Note: a Cloud API token expires (after a year at most); when it does, press Reset and enter a new one.
 
 ---
 
