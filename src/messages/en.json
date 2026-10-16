@@ -400,7 +400,9 @@
             "cancel": "Cancel",
             "jira": {
                 "title": "Jira",
+                "deployment": "Deployment",
                 "baseUrl": "URL",
+                "email": "Email",
                 "token": "Token",
                 "project": "Project",
                 "assignee": "Assignee",
