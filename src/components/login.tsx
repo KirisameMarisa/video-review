@@ -21,7 +21,7 @@ export default function Login() {
     const cacheDisplayName = useAuthStore((e) => e.displayName);
     const cacheEmail = useAuthStore((e) => e.email);
     const { setAuth } = useAuthStore();
-    const { guestEnabled, loginDefaultType, loadLoginOptions } = useConfigStore();
+    const { loginMethods, loginDefaultType, loadLoginOptions } = useConfigStore();
 
     // null until the login options are in, so the tabs never open on a guess and then jump.
     const [type, setType] = useState<LoginType | null>(null);
@@ -36,10 +36,12 @@ export default function Login() {
     }, []);
 
     useEffect(() => {
-        if (guestEnabled === null || loginDefaultType === null) return;
-        // Don't open on the guest tab when guest login is hidden.
-        setType(loginDefaultType === "guest" && !guestEnabled ? "password" : loginDefaultType);
-    }, [guestEnabled, loginDefaultType]);
+        if (loginMethods === null || loginDefaultType === null) {
+            return;
+        }
+        // Don't open on a tab that is hidden.
+        setType(loginMethods.includes(loginDefaultType) ? loginDefaultType : "password");
+    }, [loginMethods, loginDefaultType]);
 
     const requestLogin = () => {
         switch (type) {
@@ -73,11 +75,11 @@ export default function Login() {
             {type && (
                 <Tabs value={type} onValueChange={(val) => setType(val as LoginType)}>
                     <TabsList>
-                        {guestEnabled && <TabsTrigger value="guest">Guest</TabsTrigger>}
-                        <TabsTrigger value="jira">JIRA</TabsTrigger>
-                        <TabsTrigger value="password">Email & Password</TabsTrigger>
+                        {loginMethods?.includes("guest") && <TabsTrigger value="guest">Guest</TabsTrigger>}
+                        {loginMethods?.includes("jira") && <TabsTrigger value="jira">JIRA</TabsTrigger>}
+                        {loginMethods?.includes("password") && <TabsTrigger value="password">Email & Password</TabsTrigger>}
                     </TabsList>
-                    {guestEnabled && (
+                    {loginMethods?.includes("guest") && (
                         <TabsContent value="guest">
                             <AuthCard>
                                 <div className="h-8"></div>
@@ -92,37 +94,41 @@ export default function Login() {
                             </AuthCard>
                         </TabsContent>
                     )}
-                    <TabsContent value="jira">
-                        <AuthCard>
-                            <div className="h-8"></div>
-                            <div className="grid gap-3 mb-4">
-                                <Label htmlFor="email">{t("email")}</Label>
-                                <Input id="email"
-                                    type="email"
-                                    value={email ?? ""}
-                                    onChange={(x) => setEmail(x.target.value)} />
-                            </div>
-                            <ButtonLogin exec={handleLogin} title={t("ok")} />
-                        </AuthCard>
-                    </TabsContent>
-                    <TabsContent value="password">
-                        <AuthCard>
-                            <div className="grid gap-3 mb-4">
-                                <Label htmlFor="email">{t("email")}</Label>
-                                <Input type="email"
-                                    value={email ?? ""}
-                                    onChange={(x) => setEmail(x.target.value)} />
-                            </div>
-                            <div className="grid gap-3 mb-4">
-                                <Label htmlFor="password">{t("password")}</Label>
-                                <Input type="password"
-                                    onKeyDown={(x) => x.key === "Enter" && handleLogin()}
-                                    value={password ?? ""}
-                                    onChange={(x) => setPassword(x.target.value)} />
-                            </div>
-                            <ButtonLogin exec={handleLogin} title={t("ok")} />
-                        </AuthCard>
-                    </TabsContent>
+                    {loginMethods?.includes("jira") && (
+                        <TabsContent value="jira">
+                            <AuthCard>
+                                <div className="h-8"></div>
+                                <div className="grid gap-3 mb-4">
+                                    <Label htmlFor="email">{t("email")}</Label>
+                                    <Input id="email"
+                                        type="email"
+                                        value={email ?? ""}
+                                        onChange={(x) => setEmail(x.target.value)} />
+                                </div>
+                                <ButtonLogin exec={handleLogin} title={t("ok")} />
+                            </AuthCard>
+                        </TabsContent>
+                    )}
+                    {loginMethods?.includes("password") && (
+                        <TabsContent value="password">
+                            <AuthCard>
+                                <div className="grid gap-3 mb-4">
+                                    <Label htmlFor="email">{t("email")}</Label>
+                                    <Input type="email"
+                                        value={email ?? ""}
+                                        onChange={(x) => setEmail(x.target.value)} />
+                                </div>
+                                <div className="grid gap-3 mb-4">
+                                    <Label htmlFor="password">{t("password")}</Label>
+                                    <Input type="password"
+                                        onKeyDown={(x) => x.key === "Enter" && handleLogin()}
+                                        value={password ?? ""}
+                                        onChange={(x) => setPassword(x.target.value)} />
+                                </div>
+                                <ButtonLogin exec={handleLogin} title={t("ok")} />
+                            </AuthCard>
+                        </TabsContent>
+                    )}
                 </Tabs>
             )}
         </AuthLayout>

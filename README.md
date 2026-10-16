@@ -78,6 +78,7 @@ Open http://localhost:3489 and register the first administrator.
 
 - [Docker guide](./documents/build.run/docker-guide.md)
 - [Local / On‑premise guide](./documents/build.run/local-guide.md)
+- [https guide](./documents/build.run/https-guide.md)
 
 ### Settings & integrations
 
