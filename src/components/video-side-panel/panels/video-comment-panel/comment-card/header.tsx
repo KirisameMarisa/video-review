@@ -32,7 +32,7 @@ import { TimelineCardHeader } from "@/components/video-side-panel/timeline-card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api-client";
-import { isViewer } from "@/lib/role";
+import { isGuest } from "@/lib/role";
 import { useAvatarStore } from "@/stores/avatar-store";
 
 // Dropdown menu item for copying a shareable link to the selected comment.
@@ -180,8 +180,8 @@ export default function CommentCardHeader(props: { comment: VideoComment }) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                     <DropdownMenu_SharedLink />
-                    <DropdownMenu_CreateIssue disabled={(props.comment.issueId !== "" && props.comment.issueId !== null) || !isViewer(role)} comment={props.comment} translateID="commentItemTask" />
-                    <DropdownMenu_CreateIssue disabled={(props.comment.issueId !== "" && props.comment.issueId !== null) || !isViewer(role)} comment={props.comment} translateID="commentItemBug" />
+                    <DropdownMenu_CreateIssue disabled={(props.comment.issueId !== "" && props.comment.issueId !== null) || isGuest(role)} comment={props.comment} translateID="commentItemTask" />
+                    <DropdownMenu_CreateIssue disabled={(props.comment.issueId !== "" && props.comment.issueId !== null) || isGuest(role)} comment={props.comment} translateID="commentItemBug" />
                     <DropdownMenu_Edit comment={props.comment} />
                     <DropdownMenu_Delete comment={props.comment} />
                 </DropdownMenuContent>
