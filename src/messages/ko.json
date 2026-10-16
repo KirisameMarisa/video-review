@@ -400,7 +400,9 @@
             "cancel": "취소",
             "jira": {
                 "title": "Jira",
+                "deployment": "배포 형태",
                 "baseUrl": "URL",
+                "email": "이메일",
                 "token": "토큰",
                 "project": "프로젝트",
                 "assignee": "담당자",

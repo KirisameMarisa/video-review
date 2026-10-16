@@ -3,11 +3,11 @@ import { prisma } from "@/server/lib/db";
 import { Role } from "@/lib/role";
 import { LoginRequest, LoginResponse } from "@/lib/auth-types";
 import { ServerError } from "@/server/lib/server-error";
-import { getJiraConfig } from "@/server/lib/integrations/jira";
+import { getJiraConfig, jiraAccountId, jiraAuthorization, jiraDeployment, searchJiraAccount } from "@/server/lib/integrations/jira";
 
-// What Jira knows about an account; the key is what ties it to a VideoReview user.
+// What Jira knows about an account; the id (key or accountId) is what ties it to a VideoReview user.
 interface JiraUser {
-    key: string;
+    id: string;
     emailAddress: string;
     displayName: string;
 }
@@ -19,24 +19,18 @@ export async function loginWithJira(c: LoginRequest): Promise<LoginResponse> {
 
 // Asks Jira, with the integration's own token, whether an account with this email exists.
 async function searchJira(email: string): Promise<JiraUser> {
-    const { baseUrl: base, token } = await getJiraConfig();
+    const { deployment: saved, baseUrl: base, email: accountEmail, token } = await getJiraConfig();
     if (!base || !token) {
         throw new ServerError("jira is not configured", 401);
     }
 
-    const res = await fetch(`${base}/rest/api/2/user/search?username=${encodeURIComponent(email)}`, {
-        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-    });
-    if (!res.ok) {
-        throw new ServerError("Cannot get Jira info", 401);
-    }
-
-    const users = await res.json();
-    if (!users?.length) {
+    const deployment = jiraDeployment(saved);
+    const account = await searchJiraAccount(deployment, base, jiraAuthorization(deployment, accountEmail, token), email);
+    const id = account && jiraAccountId(deployment, account);
+    if (!id) {
         throw new ServerError("User not found in Jira", 401);
     }
-    const user = users[0];
-    return { key: user.key, emailAddress: email, displayName: user.displayName || email };
+    return { id, emailAddress: email, displayName: account.displayName || email };
 }
 
 export async function loginJiraUser(jiraUser: JiraUser): Promise<LoginResponse> {
@@ -50,9 +44,9 @@ export async function loginJiraUser(jiraUser: JiraUser): Promise<LoginResponse> 
         : await prisma.user.create({ data: { email: jiraUser.emailAddress, displayName: jiraUser.displayName } });
 
     await prisma.identity.upsert({
-        where: { provider_providerUid: { provider: "jira", providerUid: jiraUser.key } },
+        where: { provider_providerUid: { provider: "jira", providerUid: jiraUser.id } },
         update: { userId: user.id },
-        create: { userId: user.id, provider: "jira", providerUid: jiraUser.key },
+        create: { userId: user.id, provider: "jira", providerUid: jiraUser.id },
     });
 
     // Always viewer: this login only checks that the email exists in Jira, so it must never hand out more.
@@ -69,10 +63,10 @@ export async function loginJiraUser(jiraUser: JiraUser): Promise<LoginResponse> 
     };
 }
 
-// The Jira key is looked up first so a changed email keeps the same VideoReview user; email only matches the first time.
+// The Jira id is looked up first so a changed email keeps the same VideoReview user; email only matches the first time.
 async function findLinkedUser(jiraUser: JiraUser) {
     const identity = await prisma.identity.findUnique({
-        where: { provider_providerUid: { provider: "jira", providerUid: jiraUser.key } },
+        where: { provider_providerUid: { provider: "jira", providerUid: jiraUser.id } },
         include: { user: true },
     });
     if (identity) {
