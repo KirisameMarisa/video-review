@@ -7,7 +7,7 @@ import { createSession } from "@/server/lib/upload-session";
 import { UploadStorageType } from "@/lib/db-types";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { UploadSessionSchema } from "@/schema/zod";
-import { v4 as uuidv4 } from 'uuid';
+import { newDrawingKey } from "@/server/lib/videos/drawing-key";
 
 export const initRouter = createRouter()
     .openapi(createRoute({
@@ -15,16 +15,6 @@ export const initRouter = createRouter()
         summary: "Initialize drawing upload",
         description: "Initializes the drawing upload process.",
         path: "/",
-        request: {
-            body: {
-                content: {
-                    "multipart/form-data": {
-                        // Empty means "allocate a new key"; the client sends the existing key when overwriting.
-                        schema: z.object({ path: z.string().optional() }),
-                    },
-                },
-            },
-        },
         responses: {
             200: {
                 description: "Drawing upload initialized successfully",
@@ -34,7 +24,6 @@ export const initRouter = createRouter()
                     },
                 },
             },
-            400: errorResponse("Invalid parameters"),
             401: errorResponse("Unauthorized"),
             403: errorResponse("Forbidden"),
             500: errorResponse("Auth configuration is missing"),
@@ -49,8 +38,7 @@ export const initRouter = createRouter()
             return c.json({ error: "unauthorized" }, 401);
         }
 
-        const { path: savePath } = c.req.valid("form");
-        const storageKey = savePath ? savePath : `drawing/${uuidv4()}.png`;
+        const storageKey = newDrawingKey();
 
         const type = VideoReviewStorage.type();
         const session = await createSession({

@@ -6,6 +6,7 @@ import { getSession } from "@/server/lib/upload-session";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { VideoReviewStorage } from "@/server/lib/storage";
 import { Readable } from "stream";
+import { FileFormat, isFormat } from "@/server/lib/storage/file-format";
 
 const TransferQuerySchema = z.object({
     session_id: z.string().min(1),
@@ -74,6 +75,10 @@ export const transferRouter = createRouter()
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
+        if (!isFormat(FileFormat.Png, buffer)) {
+            return c.json({ error: "the drawing must be a PNG" }, { status: 400 });
+        }
+
         await VideoReviewStorage.directUploadFromBuffer(session.storageKey, Readable.from(buffer), "image/png");
         return c.json({ ok: true });
     });
