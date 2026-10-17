@@ -5,6 +5,7 @@ import { createRouter } from "@/server/lib/openapi/router";
 import { authorizeMedia, roleOf } from "@/server/lib/token";
 import { assertRoleCanSeeVideo, videoIdForStorageKey } from "@/server/lib/videos/guest-access";
 import { ServerError } from "@/server/lib/server-error";
+import { contentTypeOf, formatOfExtension, kindOf } from "@/server/lib/storage/file-format";
 import fs from "fs";
 import path from "path";
 
@@ -63,10 +64,14 @@ export const localRouter = createRouter()
             await assertRoleCanSeeVideo(videoId, role);
         }
 
-        const ext = path.extname(filePath).toLowerCase();
+        const format = formatOfExtension(path.extname(filePath));
+        // Unknown files are opaque bytes.
+        const contentType = format ? contentTypeOf(format) : "application/octet-stream";
+        // Uploaded bytes must never be sniffed into HTML on this origin.
+        c.header("X-Content-Type-Options", "nosniff");
 
         try {
-            if (ext === ".mp4") {
+            if (format && kindOf(format) === "video") {
                 const stat = await fs.promises.stat(filePath);
                 const fileSize = stat.size;
                 const range = c.req.header("range");
@@ -74,7 +79,7 @@ export const localRouter = createRouter()
                 if (!range) {
                     const file = await fs.promises.readFile(filePath);
                     return c.body(file, 200, {
-                        "Content-Type": "video/mp4",
+                        "Content-Type": contentType,
                         "Content-Length": fileSize.toString(),
                     });
                 }
@@ -88,7 +93,7 @@ export const localRouter = createRouter()
                     "Content-Range": `bytes ${start}-${end}/${fileSize}`,
                     "Accept-Ranges": "bytes",
                     "Content-Length": (end - start + 1).toString(),
-                    "Content-Type": "video/mp4",
+                    "Content-Type": contentType,
                 });
             }
 
@@ -99,7 +104,7 @@ export const localRouter = createRouter()
                 c.header("Cache-Control", "no-store");
             }
             const data = await fs.promises.readFile(filePath);
-            return c.body(data, 200);
+            return c.body(data, 200, { "Content-Type": contentType });
         } catch (err: any) {
             if (err?.code === "ENOENT") {
                 return c.text("Not found", 404);
