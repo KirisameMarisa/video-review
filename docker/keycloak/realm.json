@@ -22,31 +22,16 @@
   ],
   "users": [
     {
-      "username": "alice",
+      "username": "test",
       "enabled": true,
-      "email": "alice@example.com",
+      "email": "test@example.com",
       "emailVerified": true,
-      "firstName": "Alice",
-      "lastName": "Example",
+      "firstName": "Test",
+      "lastName": "User",
       "credentials": [
         {
           "type": "password",
-          "value": "alice",
-          "temporary": false
-        }
-      ]
-    },
-    {
-      "username": "bob",
-      "enabled": true,
-      "email": "bob@example.com",
-      "emailVerified": true,
-      "firstName": "Bob",
-      "lastName": "Example",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "bob",
+          "value": "test",
           "temporary": false
         }
       ]

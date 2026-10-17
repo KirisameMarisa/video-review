@@ -40,6 +40,7 @@ Only admins see Administration.
 | Users | List users, create them, change roles | [users.md](users.md) |
 | Videos | List videos, delete videos or revisions | [videos.md](videos.md) |
 | Jira | Connect to Jira, create issues from comments, log in with Jira | [integrations/issue-tracker.md](integrations/issue-tracker.md) |
+| SSO (OIDC) | Connect an identity provider such as OneLogin, sign in with SSO | [integrations/sso.md](integrations/sso.md) |
 | Slack / Webhook / Email | Where comments are announced | [integrations/notify.md](integrations/notify.md) |
 | AI / MCP | The LLM provider, chat search, AI agents | [AI Features Guide](../build.run/ai-guide.md) |
 | VCS | Connect to GitHub and show the code changes behind a video | [integrations/vcs.md](integrations/vcs.md) |
