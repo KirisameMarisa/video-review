@@ -1,11 +1,9 @@
 import "server-only";
 import { z } from "@hono/zod-openapi";
 import { env } from "@/server/lib/env";
-import type { LoginType } from "@/lib/auth-types";
+import { LOGIN_TYPES, type LoginType } from "@/lib/auth-types";
 import { defineIntegration, TestResultSchema } from "@/server/lib/integrations/define";
 import { getPlainField } from "@/server/lib/integrations/store";
-
-export const LOGIN_TYPES = ["guest", "jira", "password", "oidc"] as const;
 
 const DEFAULT_UPLOAD_CHUNK_MB = 16;
 

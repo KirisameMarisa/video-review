@@ -2,7 +2,8 @@ import { Role } from "@/lib/role";
 
 // How the current session authenticated. One vocabulary across the DB Identity.provider,
 // the JWT `provider` claim, and the login routes.
-export type LoginType = "guest" | "jira" | "password" | "oidc";
+export const LOGIN_TYPES = ["guest", "jira", "password", "oidc"] as const;
+export type LoginType = typeof LOGIN_TYPES[number];
 
 export const MIN_PASSWORD_LENGTH = 6;
 

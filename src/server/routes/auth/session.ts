@@ -6,7 +6,7 @@ import { AUTH_COOKIE, verifyToken } from "@/server/lib/token";
 import { prisma } from "@/server/lib/db";
 import { ServerError } from "@/server/lib/server-error";
 import { ROLES } from "@/lib/role";
-import { LOGIN_TYPES } from "@/server/lib/integrations/general";
+import { LOGIN_TYPES } from "@/lib/auth-types";
 
 const ClaimsSchema = z.object({
     id: z.string(),

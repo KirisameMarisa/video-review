@@ -1,6 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { createRouter } from "@/server/lib/openapi/router";
-import { getLoginDefaultType, LOGIN_TYPES } from "@/server/lib/integrations/general";
+import { getLoginDefaultType } from "@/server/lib/integrations/general";
+import { LOGIN_TYPES } from "@/lib/auth-types";
 
 // Unauthenticated: the login screen opens on this tab. Which tab is selected is visible on the
 // screen anyway, and the schema is fixed to this one field.

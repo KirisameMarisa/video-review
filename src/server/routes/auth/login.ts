@@ -4,7 +4,8 @@ import { loginUser, loginAsGuest, loginWithJira } from "@/server/lib/login";
 import { ServerError } from "@/server/lib/server-error";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { setAuthCookie } from "@/server/lib/set-auth-cookie";
-import { isGuestAllowed, LOGIN_TYPES } from "@/server/lib/integrations/general";
+import { isGuestAllowed } from "@/server/lib/integrations/general";
+import { LOGIN_TYPES } from "@/lib/auth-types";
 
 const loginUserSchema = z.object({
     email: z.email(),
