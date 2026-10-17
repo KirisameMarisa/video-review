@@ -58,8 +58,8 @@ let ServerError: typeof import("@/server/lib/server-error").ServerError;
 let workDir: string;
 let getJiraConfig: typeof import("@/server/lib/integrations/jira").getJiraConfig;
 
-function testAndSave(body: object) {
-    return app.request("/settings/jira/test-and-save", {
+function testAndSave(body: object, name = "jira") {
+    return app.request(`/settings/${name}/test-and-save`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
@@ -74,7 +74,7 @@ function put(body: object) {
     });
 }
 
-// Jira stands in for the shared rules (store and router); Email has its own case because its test sends a mail.
+// Jira stands in for the shared rules (store and router); Email and SSO have their own cases because their tests call out.
 describe("admin integration settings", () => {
     beforeEach(async () => {
         db.settings.clear();
@@ -225,6 +225,7 @@ describe("admin integration settings", () => {
         expect(await getJiraConfig()).toMatchObject({ deployment: "cloud", email: "bot@example.com" });
     });
 
+
     it("refuses Jira Cloud without the account email, before calling Jira or saving", async () => {
         const fetchMock = vi.fn();
         vi.stubGlobal("fetch", fetchMock);
@@ -235,5 +236,44 @@ describe("admin integration settings", () => {
         expect(fetchMock).not.toHaveBeenCalled();
         expect(db.settings.size).toBe(0);
         expect(db.secrets.size).toBe(0);
+    });
+    // The identity provider answers discovery, then the token endpoint; what it says about the made-up code decides the save.
+    function identityProvider(tokenError: string) {
+        return vi.fn(async (url: string, init?: RequestInit) => {
+            if (init?.method === "POST") {
+                return { ok: false, status: 400, json: async () => ({ error: tokenError }) };
+            }
+            return { ok: true, status: 200, json: async () => ({
+                authorization_endpoint: "https://idp.example/auth",
+                token_endpoint: "https://idp.example/token",
+                userinfo_endpoint: "https://idp.example/userinfo",
+            }) };
+        });
+    }
+
+    it("saves the SSO client once the identity provider only rejects the made-up code", async () => {
+        const fetchMock = identityProvider("invalid_grant");
+        vi.stubGlobal("fetch", fetchMock);
+
+        const res = await testAndSave({ issuer: "https://idp.example/realms/vr", clientId: "video-review", clientSecret: "s3cret" }, "oidc");
+
+        expect((await res.json()).result.ok).toBe(true);
+        expect(fetchMock).toHaveBeenCalledWith("https://idp.example/realms/vr/.well-known/openid-configuration", expect.anything());
+        expect(fetchMock).toHaveBeenCalledWith("https://idp.example/token", expect.objectContaining({
+            method: "POST",
+            headers: expect.objectContaining({ Authorization: `Basic ${Buffer.from("video-review:s3cret").toString("base64")}` }),
+        }));
+        expect(db.settings.get("oidc.clientId")).toBe("video-review");
+        expect(db.secrets.has("oidc.clientSecret")).toBe(true);
+    });
+
+    it("does not keep an SSO client the identity provider turns away", async () => {
+        vi.stubGlobal("fetch", identityProvider("unauthorized_client"));
+
+        const res = await testAndSave({ issuer: "https://idp.example/realms/vr", clientId: "video-review", clientSecret: "wrong" }, "oidc");
+
+        expect((await res.json()).result.ok).toBe(false);
+        expect(db.settings.has("oidc.clientId")).toBe(false);
+        expect(db.secrets.has("oidc.clientSecret")).toBe(false);
     });
 });
