@@ -15,7 +15,6 @@ const GetQuerySchema = z.object({
 });
 
 const UploadBodySchema = z.object({
-    email: z.string().optional(),
     // Binary format must be spelled out: zod-openapi cannot map z.file() on its own.
     file: z.file().optional().openapi({ type: "string", format: "binary" }),
 });
@@ -37,6 +36,7 @@ export const avatarRouter = createRouter()
             },
         },
     }), async (c) => {
+        await authorize(c.req.raw, ["guest", "viewer", "admin"]);
         try {
             const { email } = c.req.valid("query");
 
@@ -62,6 +62,7 @@ export const avatarRouter = createRouter()
             }
         },
     }), async (c) => {
+        await authorize(c.req.raw, ["guest", "viewer", "admin"]);
         try {
             const { email } = c.req.valid("query");
 
@@ -107,22 +108,18 @@ export const avatarRouter = createRouter()
             500: errorResponse("Failed to upload avatar"),
         },
     }), async (c) => {
-        try {
-            try {
-                await authorize(c.req.raw, ["viewer", "admin"]);
-            } catch (e) {
-                if (e instanceof ServerError) {
-                    return c.json({ error: e.message }, e.status as 401 | 403 | 500);
-                }
-                return c.json({ error: "unauthorized" }, 401);
-            }
+        // The avatar is the caller's own; the API token has no user to hang one on.
+        const auth = await authorize(c.req.raw, ["viewer", "admin"]);
+        if (auth.type !== "jwt") {
+            throw new ServerError("forbidden", 403);
+        }
 
+        try {
             const body = await c.req.parseBody();
-            const email = body.email;
             const file = body.file;
 
-            if (typeof email !== "string" || !(file instanceof File)) {
-                return c.json({ error: "email and file are required" }, 400);
+            if (!(file instanceof File)) {
+                return c.json({ error: "file is required" }, 400);
             }
 
             if (file.size > 1_000_000) {
@@ -133,7 +130,7 @@ export const avatarRouter = createRouter()
             const storageKey = `avatars/${uuidv4()}.png`;
             await VideoReviewStorage.directUploadFromBuffer(storageKey, Readable.from(buffer), "image/png")
             await prisma.user.update({
-                where: { email },
+                where: { id: auth.decoded.id },
                 data: { avatarPath: storageKey },
             });
             return c.json({ ok: true }, 200);
