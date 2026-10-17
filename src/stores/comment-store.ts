@@ -20,7 +20,7 @@ interface CommentState {
     updateComment: (comment: VideoComment) => void;
     deleteComment: (id: string) => Promise<void>;
     incrementThumbsUpCount: (id: string) => Promise<void>;
-    issueLinkedComment: (id: string, email: string, issueType: string, screenshot: Blob | null) => Promise<void>;
+    issueLinkedComment: (id: string, issueType: string, screenshot: Blob | null) => Promise<void>;
     loadUnread: (userId: string | null) => Promise<void>;
     markRead: (userId: string, videoId: string) => Promise<void>;
 }
@@ -71,7 +71,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
         });
     },
 
-    issueLinkedComment: async (id, email, issueType, screenshot) => {
+    issueLinkedComment: async (id, issueType, screenshot) => {
         const comment = get().comments.find((c) => c.id === id);
         if (!comment) return;
 
@@ -80,7 +80,6 @@ export const useCommentStore = create<CommentState>((set, get) => ({
             form: {
                 baseURL: window.location.origin,
                 issueType,
-                reporterEmail: email,
                 ...(screenshot ? { file: new File([screenshot], "screenshot.png") } : {}),
             },
         });
