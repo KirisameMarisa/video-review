@@ -40,8 +40,8 @@ export const general = defineIntegration({
 // Each reader returns one field only. The routes that hand a value to the login screen or to
 // logged-in users go through these, so nothing else from the group can reach them.
 
-// Default on for compatibility; only an explicit "false" disables guest login.
-export const isGuestAllowed = async () => (await getPlainField(general, "allowGuest")) !== "false";
+// Off until an admin turns it on: a guest is anyone who knows the URL.
+export const isGuestAllowed = async () => (await getPlainField(general, "allowGuest")) === "true";
 
 export async function getLoginDefaultType(): Promise<LoginType> {
     const type = await getPlainField(general, "loginDefaultType");

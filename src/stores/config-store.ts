@@ -31,7 +31,7 @@ export const useConfigStore = create<ConfigState>()((set) => ({
             api.auth["login-default-type"].$get().then(res => res.status === 200 ? res.json() : null).catch(() => null),
             api.auth.oauth.$get().then(res => res.status === 200 ? res.json() : null).catch(() => null),
         ]);
-        const guestEnabled = guest?.enabled ?? true;
+        const guestEnabled = guest?.enabled ?? false;
         const methods: LoginType[] = guestEnabled ? ["guest", "jira", "password"] : ["jira", "password"];
         if (oauth?.providers.includes("oidc")) {
             methods.push("oidc");

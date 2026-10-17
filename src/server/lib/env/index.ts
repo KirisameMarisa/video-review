@@ -9,7 +9,7 @@ export const env = {
     DB_IDLE_DISCONNECT_MS: process.env.VIDEO_REVIEW_DB_IDLE_DISCONNECT_MS,
     VIDEO_REVIEW_API_TOKEN: process.env.VIDEO_REVIEW_API_TOKEN,
     // Deprecated: the admin screen's General section overrides these. The NEXT_PUBLIC_ names are
-    // accepted so existing .env files keep working; "false" under either name disables guest login.
+    // accepted so existing .env files keep working; only "true" enables guest login, and "false" wins.
     ALLOW_GUEST: [process.env.VIDEO_REVIEW_ALLOW_GUEST, process.env.NEXT_PUBLIC_VIDEO_REVIEW_ALLOW_GUEST].includes("false")
         ? "false"
         : resolveEnv(process.env.VIDEO_REVIEW_ALLOW_GUEST, process.env.NEXT_PUBLIC_VIDEO_REVIEW_ALLOW_GUEST),

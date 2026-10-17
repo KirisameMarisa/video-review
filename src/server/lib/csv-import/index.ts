@@ -89,7 +89,7 @@ export function readCsv<C extends Columns>(columns: C, csv: string): { records: 
         const cells: Record<string, string> = {};
         for (const [name, column] of Object.entries(columns)) {
             const at = header.indexOf(name);
-            const cell = at < 0 ? "" : filled[at];
+            const cell = unquoteFormula(at < 0 ? "" : filled[at]);
             cells[name] = column.trim === false ? cell : cell.trim();
         }
         records.push({ line, cells: cells as CsvRecord<C>["cells"] });
@@ -180,6 +180,16 @@ export function writeCsv(header: string[], rows: string[][]): string {
     return "\uFEFF" + [header, ...rows].map(line).join("\r\n") + "\r\n";
 }
 
+// A cell that starts like a formula gets a leading quote, the spreadsheet convention for "this is text".
+// The quote itself is in the set so a name that already starts with one survives the import.
+const FORMULA_START = /^['=+\-@\t\r]/;
+
 function escapeCell(cell: string): string {
-    return /[",\r\n]/.test(cell) ? `"${cell.replaceAll("\"", "\"\"")}"` : cell;
+    const text = FORMULA_START.test(cell) ? `'${cell}` : cell;
+    return /[",\r\n]/.test(text) ? `"${text.replaceAll("\"", "\"\"")}"` : text;
+}
+
+// Undoes the quote escapeCell added, so an exported file imports unchanged.
+function unquoteFormula(cell: string): string {
+    return cell.startsWith("'") && FORMULA_START.test(cell.slice(1)) ? cell.slice(1) : cell;
 }

@@ -9,7 +9,7 @@ There is nothing to connect to, so Save stores the values as they are and they a
 
 | Field | Meaning | Default |
 |---|---|---|
-| Guest login | Off removes the Guest tab from the login screen, and the server refuses guest logins too | On |
+| Guest login | On shows the Guest tab on the login screen, and anyone can log in as a guest | Off |
 | Default login tab | The tab the login screen opens on (Guest / JIRA / Email & Password / SSO) | Guest |
 | URL scheme | The link the Open Scene button opens (`{scenePath}` is replaced with the video's scene path); empty hides the button | `videoreview://open?scene={scenePath}` (what the bundled launcher registers) |
 | Resolution presets | Widths in pixels of the downscaled variants made by video processing, comma-separated (e.g. `480,720,1080`); empty makes none | empty |

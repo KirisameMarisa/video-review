@@ -78,8 +78,8 @@ export default function EditUserProfileDialog({
                 passFields = { pass: newPass, currentPass };
             }
 
-            if (file && email) {
-                const res = await api.avatar.upload.$put({ form: { email, file } });
+            if (file) {
+                const res = await api.avatar.upload.$put({ form: { file } });
                 if (res.status !== 200) {
                     errorMsg.push((await res.json()).error);
                 }

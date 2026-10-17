@@ -12,7 +12,6 @@ import { errorResponse } from "@/server/lib/openapi/error-response";
 const IssueForm = z.object({
     baseURL: z.string().min(1),
     issueType: z.string().min(1),
-    reporterEmail: z.string().optional(),
     // Binary format must be spelled out: zod-openapi cannot map z.file() on its own.
     file: z.file().optional().openapi({ type: "string", format: "binary" }),
 });
@@ -48,8 +47,9 @@ export const issueRouter = createRouter()
             500: errorResponse("Issue tracker not configured or rejected the request"),
         },
     }), async (c) => {
+        let auth: Awaited<ReturnType<typeof authorize>>;
         try {
-            await authorize(c.req.raw, ["viewer", "admin"]);
+            auth = await authorize(c.req.raw, ["viewer", "admin"]);
         } catch (e) {
             if (e instanceof ServerError) {
                 return c.json({ error: e.message }, e.status as 401 | 403 | 500);
@@ -59,19 +59,24 @@ export const issueRouter = createRouter()
 
         try {
             const id = c.req.param("id");
-            const { baseURL, issueType, reporterEmail, file } = c.req.valid("form");
+            const { baseURL, issueType, file } = c.req.valid("form");
 
             const comment = await prisma.videoComment.findUnique({ where: { id } });
             if (!comment) {
                 return c.json({ error: "comment not found" }, 404);
             }
 
+            // The issue is filed as the caller; the API token files it as the integration itself.
+            const reporter = auth.type === "jwt"
+                ? await prisma.user.findUnique({ where: { id: auth.decoded.id }, select: { email: true } })
+                : null;
+
             const videoReviewURL = createVideoCommentLink(baseURL, comment.videoId, comment.id);
             const issueKey = await createJiraIssue({
                 summary: comment.comment,
                 description: `Video Review LINK\n${videoReviewURL}`,
                 issueType,
-                reporterEmail,
+                reporterEmail: reporter?.email ?? undefined,
                 attachment: file,
             });
 

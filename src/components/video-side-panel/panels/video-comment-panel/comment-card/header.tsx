@@ -88,7 +88,6 @@ function useJiraIssueTypes() {
 function DropdownMenu_CreateIssue(props: { disabled: boolean, comment: VideoComment, translateID: string }) {
     const t = useTranslations("video-comment-panel");
     const { issueLinkedComment } = useCommentStore();
-    const { email } = useAuthStore();
 
     // NOTE:
     // Issue type and icon are currently derived from translation IDs.
@@ -100,9 +99,9 @@ function DropdownMenu_CreateIssue(props: { disabled: boolean, comment: VideoComm
 
     return (
         <DropdownMenuItem disabled={props.disabled || issueType === undefined} onClick={async () => {
-            if (issueType === undefined || email === null) return;
+            if (issueType === undefined) return;
             const screenshot = await captureView();
-            await issueLinkedComment(props.comment.id, email, issueType, screenshot);
+            await issueLinkedComment(props.comment.id, issueType, screenshot);
         }}>
             <FontAwesomeIcon icon={icon} />
             {t(props.translateID)}

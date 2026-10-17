@@ -8,6 +8,7 @@ const prismaMock = vi.hoisted(() => ({
         findUnique: vi.fn(),
         update: vi.fn(),
     },
+    user: { findUnique: vi.fn() },
     // Nothing saved from the admin screen, so the Jira values come from env.
     systemSetting: { findUnique: vi.fn().mockResolvedValue(null) },
     systemSecret: { findUnique: vi.fn().mockResolvedValue(null) },
@@ -54,7 +55,6 @@ function issueRequest(fields: Record<string, string> = {}, file?: File) {
     const form = new FormData();
     form.set("baseURL", "https://review.example.com");
     form.set("issueType", "Bug");
-    form.set("reporterEmail", "reporter@example.com");
     for (const [k, v] of Object.entries(fields)) form.set(k, v);
     if (file) form.set("file", file);
     // Goes through the parent router because that is where the ":id" segment is mounted.
@@ -64,7 +64,8 @@ function issueRequest(fields: Record<string, string> = {}, file?: File) {
 describe("POST /comments/:id/issue", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        authorizeMock.mockResolvedValue({ type: "jwt" });
+        authorizeMock.mockResolvedValue({ type: "jwt", decoded: { id: "user-1" } });
+        prismaMock.user.findUnique.mockResolvedValue({ email: "reporter@example.com" });
         prismaMock.videoComment.findUnique.mockResolvedValue(COMMENT);
         prismaMock.videoComment.update.mockImplementation(async ({ data }) => ({ ...COMMENT, ...data }));
     });
@@ -73,7 +74,7 @@ describe("POST /comments/:id/issue", () => {
         vi.unstubAllGlobals();
     });
 
-    it("creates the issue from the comment and links its key to the comment", async () => {
+    it("creates the issue from the comment as the caller and links its key to the comment", async () => {
         const calls = stubJira("VR-42");
 
         const res = await commentsRouter.request(issueRequest());
@@ -88,6 +89,7 @@ describe("POST /comments/:id/issue", () => {
         expect(fields.project).toEqual({ key: "VR" });
         expect(fields.summary).toBe(COMMENT.comment);
         expect(fields.issuetype).toEqual({ name: "Bug" });
+        expect(prismaMock.user.findUnique.mock.calls[0][0].where).toEqual({ id: "user-1" });
         expect(fields.reporter).toEqual({ name: "reporter@example.com" });
         expect(fields.description).toContain("https://review.example.com");
         expect(fields.description).toContain(COMMENT.videoId);

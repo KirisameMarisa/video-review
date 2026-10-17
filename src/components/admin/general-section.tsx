@@ -30,10 +30,9 @@ export function GeneralSection() {
     return (
         <IntegrationForm title={t("title")} settings={settings} submitLabel={t("save")}>
             <FieldRow label={t("allowGuest")} htmlFor={allowGuest.id}>
-                {/* Unset means on. */}
                 <Switch
                     id={allowGuest.id}
-                    checked={allowGuest.value !== "false"}
+                    checked={allowGuest.value === "true"}
                     disabled={allowGuest.disabled}
                     onCheckedChange={(checked) => allowGuest.onChange(checked ? "true" : "false")}
                 />

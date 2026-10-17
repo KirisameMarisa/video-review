@@ -150,8 +150,8 @@ describe("POST /users/import", () => {
 
     it("changes nothing when the exported file is imported as it is", async () => {
         prismaMock.user.findMany.mockResolvedValue([
-            { id: "user-1", displayName: "User", email: "a@example.com", role: "admin", active: true },
-            { id: "user-2", displayName: "User", email: "b@example.com", role: "viewer", active: false },
+            { id: "user-1", displayName: "=cmd", email: "a@example.com", role: "admin", active: true },
+            { id: "user-2", displayName: "'-x", email: "b@example.com", role: "viewer", active: false },
         ]);
 
         const exported = await (await usersExportRouter.request("http://localhost/")).text();
