@@ -73,15 +73,14 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
 
                 // Nothing awaits this callback, so a rejected transfer would never resolve.
                 try {
-                    const initRes = await api.drawing.upload.init.$post({ form: { path: path ?? "" } });
+                    const initRes = await api.drawing.upload.init.$post();
                     if (initRes.status !== 200) return resolve(path);
                     const init = await initRes.json();
                     await uploadToSession({ url: init.url, session: init.session, file: blob });
                     const finishRes = await api.drawing.upload.finish.$post({ query: { session_id: init.session.id } });
                     if (finishRes.status !== 200) return resolve(path);
 
-                    // The upload overwrites the same storage key, so neither this cache nor the
-                    // browser's would notice a refetch: what was just saved is what to show.
+                    // Cached under the new key, so the panel shows what was just saved without a refetch.
                     const { filePath } = await finishRes.json();
                     set((state) => ({ drawings: new Map(state.drawings).set(filePath, snapshot) }));
                     resolve(filePath);
