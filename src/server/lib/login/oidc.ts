@@ -9,6 +9,7 @@ import { ServerError } from "@/server/lib/server-error";
 export interface OidcUser {
     sub: string;
     email: string;
+    emailVerified: boolean;
     displayName: string;
 }
 
@@ -28,8 +29,8 @@ export async function loginOidcUser(oidcUser: OidcUser): Promise<LoginResponse> 
         create: { userId: user.id, provider: "oidc", providerUid: oidcUser.sub },
     });
 
-    // Always viewer; admins are promoted in the user list.
-    const role: Role = "viewer";
+    // The provider vouched for the person, so the role is whatever the user list says.
+    const role = user.role as Role;
     const token = await signToken({ id: user.id, displayName: user.displayName, role, provider: "oidc" });
 
     return {
@@ -50,6 +51,9 @@ async function findLinkedUser(oidcUser: OidcUser) {
     });
     if (identity) {
         return identity.user;
+    }
+    if (!oidcUser.emailVerified) {
+        throw new ServerError("the identity provider has not verified the email", 401);
     }
     return prisma.user.findUnique({ where: { email: oidcUser.email } });
 }

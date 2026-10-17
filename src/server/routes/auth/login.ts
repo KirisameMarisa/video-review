@@ -4,7 +4,7 @@ import { loginUser, loginAsGuest, loginWithJira } from "@/server/lib/login";
 import { ServerError } from "@/server/lib/server-error";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { setAuthCookie } from "@/server/lib/set-auth-cookie";
-import { isGuestAllowed } from "@/server/lib/integrations/general";
+import { isGuestAllowed, LOGIN_TYPES } from "@/server/lib/integrations/general";
 
 const loginUserSchema = z.object({
     email: z.email(),
@@ -25,7 +25,7 @@ const LoginResponseSchema = z.object({
     email: z.string().nullable().optional(),
     displayName: z.string(),
     role: z.enum(["guest", "viewer", "admin"]),
-    provider: z.enum(["guest", "jira", "password", "oidc"]),
+    provider: z.enum(LOGIN_TYPES),
 });
 
 export const loginRouter = createRouter()

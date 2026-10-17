@@ -6,8 +6,8 @@ export type LoginType = "guest" | "jira" | "password" | "oidc";
 
 export const MIN_PASSWORD_LENGTH = 6;
 
-// Registered at the identity provider as the redirect URL; shown on the admin screen and used by the callback route.
-export const OIDC_CALLBACK_PATH = "/api/v1/auth/oauth/oidc/callback";
+// Mount point of the OAuth routes; shared so the browser and the server spell the callback URL the same way.
+export const OAUTH_PATH = "/api/v1/auth/oauth";
 
 export interface LoginRequest {
     displayName: string;

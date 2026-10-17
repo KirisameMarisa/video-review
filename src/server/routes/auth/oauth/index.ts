@@ -6,6 +6,7 @@ import { createRouter } from "@/server/lib/openapi/router";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { ServerError } from "@/server/lib/server-error";
 import { requestOrigin } from "@/server/lib/request-origin";
+import { OAUTH_PATH } from "@/lib/auth-types";
 import { isHttps, setAuthCookie } from "@/server/lib/set-auth-cookie";
 import { configuredOAuthProviders, finishOAuthLogin, oauthProviderNames, startOAuthLogin } from "@/server/lib/login/oauth";
 
@@ -16,7 +17,7 @@ const LOGIN_PAGE = "/login";
 const ProviderParams = z.object({ provider: z.enum(oauthProviderNames) });
 
 function callbackUrl(c: Context, provider: string) {
-    return `${requestOrigin(c.req.raw)}/api/v1/auth/oauth/${provider}/callback`;
+    return `${requestOrigin(c.req.raw)}${OAUTH_PATH}/${provider}/callback`;
 }
 
 function sameState(sent: string, received: string) {
@@ -51,19 +52,27 @@ export const oauthRouter = createRouter()
         path: "/{provider}/start",
         request: { params: ProviderParams },
         responses: {
-            302: { description: "Redirect to the provider" },
+            302: { description: "Redirect to the provider; to the login screen with ?error=failed when the provider is not set up or cannot be reached" },
             400: errorResponse("Unknown provider"),
-            401: errorResponse("The provider is not set up"),
         },
     }), async (c) => {
         const { provider } = c.req.valid("param");
         const state = randomBytes(32).toString("hex");
         const verifier = randomBytes(32).toString("base64url");
 
+        let location: string;
+        try {
+            location = await startOAuthLogin(provider, { redirectUri: callbackUrl(c, provider), state, codeChallenge: codeChallenge(verifier) });
+        } catch (e) {
+            // The browser is mid-navigation, so it gets the login screen's error instead of a JSON body.
+            console.error(`[auth/oauth] ${provider} start failed`, e);
+            return c.redirect(`${LOGIN_PAGE}?error=failed`, 302);
+        }
+
         const cookie = { httpOnly: true, sameSite: "Lax" as const, secure: isHttps(c), path: "/", maxAge: 60 * 10 };
         setCookie(c, STATE_COOKIE, state, cookie);
         setCookie(c, VERIFIER_COOKIE, verifier, cookie);
-        return c.redirect(await startOAuthLogin(provider, { redirectUri: callbackUrl(c, provider), state, codeChallenge: codeChallenge(verifier) }), 302);
+        return c.redirect(location, 302);
     })
     .openapi(createRoute({
         method: "get",

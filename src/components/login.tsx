@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api-client";
-import { LoginType } from "@/lib/auth-types";
+import { LoginType, OAUTH_PATH } from "@/lib/auth-types";
 import { useTranslations } from "next-intl";
 import { Tabs } from "@/ui/tabs";
 import { TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
@@ -158,7 +158,7 @@ export default function Login() {
                         <TabsContent value="oidc">
                             <AuthCard>
                                 <div className="h-8"></div>
-                                <ButtonLogin exec={() => window.location.assign("/api/v1/auth/oauth/oidc/start")} title={t("sso")} />
+                                <ButtonLogin exec={() => window.location.assign(`${OAUTH_PATH}/oidc/start`)} title={t("sso")} />
                             </AuthCard>
                         </TabsContent>
                     )}

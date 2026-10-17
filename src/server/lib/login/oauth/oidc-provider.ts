@@ -11,6 +11,7 @@ const TokenSchema = z.object({ access_token: z.string() });
 const UserInfoSchema = z.object({
     sub: z.string(),
     email: z.string().optional(),
+    email_verified: z.boolean().optional(),
     name: z.string().optional(),
     preferred_username: z.string().optional(),
 });
@@ -78,6 +79,12 @@ export const oidcProvider: OAuthProvider = {
             throw new ServerError("the identity provider sent no email", 401);
         }
 
-        return loginOidcUser({ sub: me.sub, email: me.email, displayName: me.name || me.preferred_username || me.email });
+        return loginOidcUser({
+            sub: me.sub,
+            email: me.email,
+            // An unverified email neither matches nor creates an account; an absent claim is trusted (OneLogin omits it).
+            emailVerified: me.email_verified !== false,
+            displayName: me.name || me.preferred_username || me.email,
+        });
     },
 };

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Input } from "@/ui/input";
-import { OIDC_CALLBACK_PATH } from "@/lib/auth-types";
+import { OAUTH_PATH } from "@/lib/auth-types";
 import { FieldRow, IntegrationForm } from "@/components/admin/integration-section/integration-form";
 import { useIntegrationSettings } from "@/components/admin/integration-section/use-integration-settings";
 
@@ -18,7 +18,7 @@ export function OidcSection() {
     // The URL the admin registers at the identity provider; the origin is only known in the browser.
     const [callbackUrl, setCallbackUrl] = useState("");
     useEffect(() => {
-        setCallbackUrl(`${window.location.origin}${OIDC_CALLBACK_PATH}`);
+        setCallbackUrl(`${window.location.origin}${OAUTH_PATH}/oidc/callback`);
     }, []);
 
     return (
