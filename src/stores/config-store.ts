@@ -26,12 +26,16 @@ export const useConfigStore = create<ConfigState>()((set) => ({
     loadLoginOptions: async () => {
         // The server enforces the guest flag itself, so when the answer can't be read the
         // screen falls back to the pre-configuration defaults rather than staying blank.
-        const [guest, type] = await Promise.all([
+        const [guest, type, oauth] = await Promise.all([
             api.auth["guest-enabled"].$get().then(res => res.status === 200 ? res.json() : null).catch(() => null),
             api.auth["login-default-type"].$get().then(res => res.status === 200 ? res.json() : null).catch(() => null),
+            api.auth.oauth.$get().then(res => res.status === 200 ? res.json() : null).catch(() => null),
         ]);
         const guestEnabled = guest?.enabled ?? true;
         const methods: LoginType[] = guestEnabled ? ["guest", "jira", "password"] : ["jira", "password"];
+        if (oauth?.providers.includes("oidc")) {
+            methods.push("oidc");
+        }
         set({ loginMethods: methods, loginDefaultType: type?.type ?? "guest" });
     },
 

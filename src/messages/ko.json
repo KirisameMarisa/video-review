@@ -225,6 +225,7 @@
         "displayName": "표시 이름",
         "email": "이메일",
         "password": "비밀번호",
+        "sso": "SSO로 로그인",
         "ok": "로그인",
         "accountDisabledMsg": "비활성화된 계정입니다"
     },
@@ -408,6 +409,13 @@
                 "assignee": "담당자",
                 "issueTypeTask": "작업 이슈 유형",
                 "issueTypeBug": "버그 이슈 유형"
+            },
+            "oidc": {
+                "title": "SSO (OIDC)",
+                "callbackUrl": "콜백 URL",
+                "issuer": "발급자 URL",
+                "clientId": "클라이언트 ID",
+                "clientSecret": "클라이언트 시크릿"
             },
             "slack": {
                 "title": "Slack",

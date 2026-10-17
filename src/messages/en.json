@@ -225,6 +225,7 @@
         "displayName": "Display name",
         "email": "Email",
         "password": "Password",
+        "sso": "Sign in with SSO",
         "ok": "Log in",
         "accountDisabledMsg": "This account is disabled"
     },
@@ -408,6 +409,13 @@
                 "assignee": "Assignee",
                 "issueTypeTask": "Task issue type",
                 "issueTypeBug": "Bug issue type"
+            },
+            "oidc": {
+                "title": "SSO (OIDC)",
+                "callbackUrl": "Callback URL",
+                "issuer": "Issuer URL",
+                "clientId": "Client ID",
+                "clientSecret": "Client Secret"
             },
             "slack": {
                 "title": "Slack",

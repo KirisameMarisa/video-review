@@ -1,0 +1,55 @@
+{
+  "realm": "videoreview",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "videoreview",
+      "name": "VideoReview",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "videoreview-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://127.0.0.1:3489/*",
+        "http://localhost:3489/*",
+        "http://127.0.0.1:3491/*"
+      ],
+      "webOrigins": [
+        "+"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "enabled": true,
+      "email": "alice@example.com",
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Example",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "alice",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "email": "bob@example.com",
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Example",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "bob",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}
