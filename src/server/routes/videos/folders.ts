@@ -3,6 +3,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { createRouter } from "@/server/lib/openapi/router";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { authorize, roleOf } from "@/server/lib/token";
+import { MAX_FOLDER_KEY_LENGTH, trimTrailingSlashes } from "@/lib/folder-path";
 
 export const foldersRouter = createRouter()
     .openapi(createRoute({
@@ -54,8 +55,8 @@ export const foldersRouter = createRouter()
                     "application/json": {
                         schema: z.object({
                             // Both drop trailing slashes: "new/" would otherwise leave "new//scene01" below it.
-                            from: z.string().trim().transform(s => s.replace(/\/+$/, "")).pipe(z.string().min(1)),
-                            to: z.string().trim().transform(s => s.replace(/\/+$/, "")).pipe(z.string().min(1)),
+                            from: z.string().trim().max(MAX_FOLDER_KEY_LENGTH).transform(trimTrailingSlashes).pipe(z.string().min(1)),
+                            to: z.string().trim().max(MAX_FOLDER_KEY_LENGTH).transform(trimTrailingSlashes).pipe(z.string().min(1)),
                         }),
                     },
                 },

@@ -3,9 +3,10 @@ import { prisma } from "@/server/lib/db";
 import { createRouter } from "@/server/lib/openapi/router";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { authorize } from "@/server/lib/token";
+import { MAX_FOLDER_KEY_LENGTH } from "@/lib/folder-path";
 
 // Drops empty segments and the spaces around them, so "/a//b/" and "a / b" both mean "a/b".
-const folderKey = z.string()
+const folderKey = z.string().max(MAX_FOLDER_KEY_LENGTH)
     .transform(s => s.split("/").map(part => part.trim()).filter(Boolean).join("/"))
     .pipe(z.string().min(1));
 
