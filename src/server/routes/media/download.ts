@@ -5,7 +5,7 @@ import { authorize } from "@/server/lib/token";
 import { ServerError } from "@/server/lib/server-error";
 import { VideoReviewStorage } from "@/server/lib/storage";
 import { prisma } from "@/server/lib/db";
-import { formatVideoRes } from "@/lib/format-video-res";
+import { downscaledVideoKey } from "@/lib/storage-key";
 import { getResolutionPresets } from "@/server/lib/integrations/general";
 
 export const downloadRouter = createRouter()
@@ -70,7 +70,7 @@ export const downloadRouter = createRouter()
         if (width) {
             const targetWidth = parseInt(width);
             if (!isNaN(targetWidth) && (await getResolutionPresets()).includes(targetWidth)) {
-                storageKey = formatVideoRes(storageKey, targetWidth);
+                storageKey = downscaledVideoKey(storageKey, targetWidth);
             }
         }
 

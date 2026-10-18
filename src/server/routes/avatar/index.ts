@@ -8,7 +8,7 @@ import { Readable } from "stream";
 import { authorize } from "@/server/lib/token";
 import { ServerError } from "@/server/lib/server-error";
 import { errorResponse } from "@/server/lib/openapi/error-response";
-import { v4 as uuidv4 } from 'uuid';
+import { newAvatarKey } from "@/lib/storage-key";
 
 const GetQuerySchema = z.object({
     email: z.string().optional(),
@@ -127,7 +127,7 @@ export const avatarRouter = createRouter()
             }
 
             const buffer = Buffer.from(await file.arrayBuffer());
-            const storageKey = `avatars/${uuidv4()}.png`;
+            const storageKey = newAvatarKey();
             await VideoReviewStorage.directUploadFromBuffer(storageKey, Readable.from(buffer), "image/png")
             await prisma.user.update({
                 where: { id: auth.decoded.id },

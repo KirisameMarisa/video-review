@@ -7,7 +7,7 @@ import { createSession } from "@/server/lib/upload-session";
 import { UploadStorageType } from "@/lib/db-types";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { UploadSessionSchema } from "@/schema/zod";
-import { newDrawingKey } from "@/server/lib/videos/drawing-key";
+import { newDrawingKey } from "@/lib/storage-key";
 
 export const initRouter = createRouter()
     .openapi(createRoute({

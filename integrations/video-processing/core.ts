@@ -6,6 +6,7 @@ import { spawn } from "child_process";
 import { pipeline } from "stream/promises";
 import { JobStatus, PrismaClient } from "@prisma/client";
 import { DriversFactory } from "@/server/lib/storage/drivers";
+import { thumbnailKey, downscaledVideoKey } from "@/lib/storage-key";
 
 const FileDriver = DriversFactory();
 
@@ -94,7 +95,7 @@ function getVideoWidth(filePath: string): Promise<number> {
 }
 
 export async function generateThumbnail(videoRevId: string, tempMoviePath: string): Promise<StorageKeyPath> {
-    const storageKey = path.join("thumbnails", videoRevId, "thumb.png").replace(/\\/g, "/");
+    const storageKey = thumbnailKey(videoRevId);
     const tmpPngPath = path.join(os.tmpdir(), "thumb_" + uuidv4() + ".png");
 
     try {
@@ -117,9 +118,8 @@ export async function generateThumbnail(videoRevId: string, tempMoviePath: strin
 }
 
 export async function generateDownScaled(storageKey: string, tempMoviePath: string, width: number): Promise<StorageKeyPath> {
-    const outputFileName = `${path.basename(storageKey, path.extname(storageKey))}_${width}p.mp4`;
-    const outputTemp = path.join(os.tmpdir(), outputFileName);
-    const scaledStorageKey = path.join(path.dirname(storageKey), outputFileName).replace(/\\/g, "/");
+    const scaledStorageKey = downscaledVideoKey(storageKey, width);
+    const outputTemp = path.join(os.tmpdir(), path.basename(scaledStorageKey));
 
     try {
         await execFFmpeg([

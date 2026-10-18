@@ -12,7 +12,7 @@ import { VideoComment } from "@/lib/db-types";
 import { DrawingLayer } from "@/components/drawing-layer";
 import { useTranslations } from "next-intl";
 import { resolveMediaUrl } from "@/lib/media-url";
-import { formatVideoRes } from "@/lib/format-video-res";
+import { downscaledVideoKey } from "@/lib/storage-key";
 import { usePlaybackWidth } from "@/lib/hooks/use-playback-width";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
@@ -217,7 +217,7 @@ export default function VideoReview() {
             // Plays the chosen variant, or the original when the preset has no file.
             let variant: string | undefined;
             if (playbackWidth !== null) {
-                variant = await resolveMediaUrl(formatVideoRes(selectedRevision.filePath, playbackWidth));
+                variant = await resolveMediaUrl(downscaledVideoKey(selectedRevision.filePath, playbackWidth));
             }
             if (canceled) {
                 return;

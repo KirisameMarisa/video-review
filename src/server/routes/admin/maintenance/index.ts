@@ -9,7 +9,7 @@ import { ContentfulStatusCode } from "hono/utils/http-status";
 import { z } from "zod";
 import { hash, randomBytes } from "crypto";
 import { getResolutionPresets } from "@/server/lib/integrations/general";
-import { formatVideoRes } from "@/lib/format-video-res";
+import { downscaledVideoKey } from "@/lib/storage-key";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 
 const DeleteQuerySchema = z.object({
@@ -160,7 +160,7 @@ export const maintenanceRouter = createRouter()
         try {
             const ret = await VideoReviewStorage.deleteObject(videoRevision.filePath);
             for (const res of await getResolutionPresets()) {
-                const derivedStorageKey = formatVideoRes(videoRevision.filePath, res);
+                const derivedStorageKey = downscaledVideoKey(videoRevision.filePath, res);
                 await VideoReviewStorage.deleteObject(derivedStorageKey);
             }
 
