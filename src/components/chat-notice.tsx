@@ -3,26 +3,17 @@
 import { useCommentStore } from "@/stores/comment-store";
 import { toast } from "sonner";
 import { api } from "@/lib/api-client";
-import { useAuthStore } from "@/stores/auth-store";
-import { useVideoStore } from "@/stores/video-store";
 
 async function postToChat(commentId: string, screenshot: Blob) {
     const comment = useCommentStore.getState().comments.find(c => c.id === commentId);
-    const video = useVideoStore.getState().selectedVideo;
-    if (!comment || !video) return null;
+    if (!comment) {
+        return null;
+    }
 
-    const { displayName, email } = useAuthStore.getState();
     const res = await api.chat.index.$post({
         form: {
             baseURL: window.location.origin,
             commentId: comment.id,
-            commentText: comment.comment,
-            videoId: comment.videoId,
-            videoTitle: video.title,
-            folderKey: video.folderKey,
-            scenePath: video.scenePath ?? undefined,
-            userName: displayName ?? undefined,
-            email: email ?? undefined,
             screenshot: new File([screenshot], "screenshot.png"),
         },
     });
