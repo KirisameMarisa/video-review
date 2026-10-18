@@ -5,7 +5,7 @@ import { ServerError } from "@/server/lib/server-error";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { VideoReviewStorage } from "@/server/lib/storage";
 import { Readable } from "stream";
-import path from "path";
+import { thumbnailKey } from "@/lib/storage-key";
 
 const TransferBodySchema = z.object({
     videoId: z.string(),
@@ -56,7 +56,7 @@ export const thumbnailRouter = createRouter()
             return c.json({ error: "missing file" }, { status: 400 });
         }
 
-        const storageKey = path.join("thumbnails", videoId, "thumb.png").replace(/\\/g, "/");
+        const storageKey = thumbnailKey(videoId);
         const buffer = Buffer.from(await file.arrayBuffer());
         await VideoReviewStorage.directUploadFromBuffer(storageKey, Readable.from(buffer), "image/png", "public, max-age=86400, immutable");
         return c.json({ ok: true });

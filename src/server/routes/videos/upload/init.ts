@@ -8,6 +8,7 @@ import { env } from "@/server/lib/env/storage-env";
 import { getUploadChunkMb } from "@/server/lib/integrations/general";
 import { createSession } from "@/server/lib/upload-session";
 import { UploadStorageType } from "@/lib/db-types";
+import { videoRevisionKey } from "@/lib/storage-key";
 import Busboy from "busboy";
 import { Readable } from "stream";
 import { ContentfulStatusCode } from "hono/utils/http-status";
@@ -136,8 +137,7 @@ export const initRouter = createRouter()
 
                     // Stored by video id, not by folder and title: those can be renamed later, and a new
                     // video taking an old name must not land on the renamed video's files.
-                    const filenameOut = `rev_${String(nextRev).padStart(3, "0")}.mp4`;
-                    const storageKey = `videos/${video.id}/${filenameOut}`;
+                    const storageKey = videoRevisionKey(video.id, nextRev);
 
                     const type = VideoReviewStorage.type();
                     const session = await createSession({
