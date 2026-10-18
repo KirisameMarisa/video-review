@@ -21,13 +21,13 @@ vi.mock("@/server/lib/upload-session", () => ({
 vi.mock("@/server/lib/storage", () => ({ VideoReviewStorage: { deleteObject: deleteObjectMock } }));
 vi.mock("@/server/lib/db", () => ({ prisma: prismaMock }));
 
-import { finishRouter } from "@/server/routes/drawing/upload/finish";
+import { commentsRouter } from "@/server/routes/comments";
 
 function finish() {
-    return finishRouter.request("http://localhost/?session_id=session-1&comment_id=comment-1", { method: "POST" });
+    return commentsRouter.request("http://localhost/comment-1/drawing/finish?session_id=session-1", { method: "POST" });
 }
 
-describe("drawing finishRouter", () => {
+describe("comment drawing finish", () => {
     beforeEach(() => {
         deleteObjectMock.mockClear();
         deleteSessionMock.mockClear();

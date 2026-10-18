@@ -75,7 +75,7 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
         // A wiped canvas means "no drawing": the server drops the file instead of keeping a blank one.
         const { base, marks } = get().history.present;
         if (base === null && marks.length === 0) {
-            const res = await api.drawing.index.$delete({ query: { comment_id: commentId } });
+            const res = await api.comments[":id"].drawing.$delete({ param: { id: commentId } });
             return res.status === 200 ? await res.json() : null;
         }
 
@@ -89,13 +89,13 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
 
                 // Nothing awaits this callback, so a rejected transfer would never resolve.
                 try {
-                    const initRes = await api.drawing.upload.init.$post({ query: { comment_id: commentId } });
+                    const initRes = await api.comments[":id"].drawing.init.$post({ param: { id: commentId } });
                     if (initRes.status !== 200) {
                         return resolve(null);
                     }
                     const init = await initRes.json();
                     await uploadToSession({ url: init.url, session: init.session, file: blob });
-                    const finishRes = await api.drawing.upload.finish.$post({ query: { session_id: init.session.id, comment_id: commentId } });
+                    const finishRes = await api.comments[":id"].drawing.finish.$post({ param: { id: commentId }, query: { session_id: init.session.id } });
                     if (finishRes.status !== 200) {
                         return resolve(null);
                     }

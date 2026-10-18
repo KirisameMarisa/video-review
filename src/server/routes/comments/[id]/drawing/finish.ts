@@ -1,7 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { createRouter } from "@/server/lib/openapi/router";
 import { authorize } from "@/server/lib/token";
-import { ServerError } from "@/server/lib/server-error";
 import { deleteSession, getSession } from "@/server/lib/upload-session";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { prisma } from "@/server/lib/db";
@@ -15,7 +14,7 @@ export const finishRouter = createRouter()
         summary: "Finish drawing upload",
         description: "Marks the uploaded drawing as the comment's drawing.",
         path: "/",
-        request: { query: z.object({ session_id: z.string().min(1), comment_id: z.string().min(1) }) },
+        request: { query: z.object({ session_id: z.string().min(1) }) },
         responses: {
             200: {
                 description: "Drawing upload finished successfully",
@@ -27,27 +26,19 @@ export const finishRouter = createRouter()
             },
             400: errorResponse("Invalid parameters"),
             401: errorResponse("Unauthorized"),
-            403: errorResponse("Forbidden"),
             404: errorResponse("Comment not found"),
-            500: errorResponse("Auth configuration is missing"),
         },
     }), async (c) => {
-        try {
-            await authorize(c.req.raw, ["viewer", "admin", "guest"]);
-        } catch (e) {
-            if (e instanceof ServerError) {
-                return c.json({ error: e.message }, e.status as 401 | 403 | 500);
-            }
-            return c.json({ error: "unauthorized" }, 401);
-        }
+        await authorize(c.req.raw, ["viewer", "admin", "guest"]);
 
-        const { session_id, comment_id } = c.req.valid("query");
+        const { session_id } = c.req.valid("query");
         const session = await getSession(session_id);
         if (!session) {
             return c.json({ error: "missing session" }, 400);
         }
 
-        const comment = await prisma.videoComment.findFirst({ where: { id: comment_id, deleted: false } });
+        const id = c.req.param("id");
+        const comment = await prisma.videoComment.findFirst({ where: { id, deleted: false } });
         if (!comment) {
             return c.json({ error: "comment not found" }, 404);
         }
@@ -63,7 +54,6 @@ export const finishRouter = createRouter()
             data: { drawingPath: storageKey, hasDrawing: true, updatedAt: new Date() },
         });
 
-        // Drop the file at any other key this comment pointed at.
         if (comment.drawingPath && comment.drawingPath !== storageKey) {
             await VideoReviewStorage.deleteObject(comment.drawingPath);
         }

@@ -6,7 +6,6 @@ import type { commentsRouter } from "@/server/routes/comments";
 import type { authRouter } from "@/server/routes/auth";
 import type { adminRouter } from "@/server/routes/admin";
 import type { videosRouter } from "@/server/routes/videos";
-import type { drawingRouter } from "@/server/routes/drawing";
 import type { uploadStatusRouter } from "@/server/routes/upload-status";
 import type { avatarRouter } from "@/server/routes/avatar";
 import type { userRouter } from "@/server/routes/user";
@@ -35,7 +34,6 @@ export const api = {
     auth: v1<typeof authRouter>("/auth"),
     admin: v1<typeof adminRouter>("/admin"),
     videos: v1<typeof videosRouter>("/videos"),
-    drawing: v1<typeof drawingRouter>("/drawing"),
     uploadStatus: v1<typeof uploadStatusRouter>("/upload-status"),
     avatar: v1<typeof avatarRouter>("/avatar"),
     user: v1<typeof userRouter>("/user"),
