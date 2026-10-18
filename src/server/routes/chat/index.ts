@@ -4,65 +4,24 @@ import { z } from "zod";
 import { ChatProviders, ChatType } from "@/server/lib/chat/chat-type";
 import { authorize } from "@/server/lib/token";
 import { getUrlSchema } from "@/server/lib/integrations/general";
-import { ServerError } from "@/server/lib/server-error";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { chatSlack, chatWebhook, chatEmail } from "@/server/lib/chat";
 import { createOpenSceneLink, createVideoCommentLink } from "@/lib/url";
+import { prisma } from "@/server/lib/db";
 
+// The public origin comes from the browser: the server may sit behind a proxy and not know it.
 const FormSchema = z.object({
-    baseURL: z.string().optional(),
-    commentId: z.string().optional(),
-    commentText: z.string().optional(),
-    videoId: z.string().optional(),
-    videoTitle: z.string().optional(),
-    folderKey: z.string().optional(),
-    scenePath: z.string().optional(),
-    email: z.string().optional(),
-    userName: z.string().optional(),
-    screenshot: z.any().openapi({
-        type: "string",
-        format: "binary",
-        description: "Upload file",
-    }),
+    baseURL: z.string().min(1),
+    commentId: z.string().min(1),
+    // Binary format must be spelled out: zod-openapi cannot map z.file() on its own.
+    screenshot: z.file().optional().openapi({ type: "string", format: "binary" }),
 });
-
-function getStr(form: FormData, key: string): string | undefined {
-    const v = form.get(key);
-    return typeof v === "string" && v.length > 0 ? v : undefined;
-}
-
-function getFile(form: FormData, key: string): File | undefined {
-    const v = form.get(key);
-    return v instanceof File ? v : undefined;
-}
-
-async function buildChatContext(form: FormData): Promise<ChatType> {
-    const baseURL = getStr(form, "baseURL");
-    const videoId = getStr(form, "videoId");
-    const commentId = getStr(form, "commentId");
-    const scenePath = getStr(form, "scenePath");
-    const sceneLink = createOpenSceneLink(await getUrlSchema(), scenePath!) ?? undefined;
-    const videoLink = createVideoCommentLink(baseURL!, videoId!, commentId!) ?? undefined;
-
-    return {
-        commentId,
-        commentText: getStr(form, "commentText"),
-        videoId,
-        videoTitle: getStr(form, "videoTitle"),
-        folderKey: getStr(form, "folderKey"),
-        scenePath,
-        email: getStr(form, "email"),
-        userName: getStr(form, "userName"),
-        screenshot: getFile(form, "screenshot"),
-        sceneLink,
-        videoLink,
-    };
-}
 
 export const chatRouter = createRouter()
     .openapi(createRoute({
         method: "post",
         summary: "send chat",
+        description: "Posts a comment to the configured chat providers; the message is built from the stored comment.",
         path: "/",
         request: {
             body: {
@@ -85,23 +44,44 @@ export const chatRouter = createRouter()
                     },
                 },
             },
+            400: errorResponse("Invalid parameters"),
             401: errorResponse("Unauthorized"),
             403: errorResponse("Forbidden"),
+            404: errorResponse("Comment not found"),
             500: errorResponse("Auth configuration is missing"),
         },
     }), async (c) => {
-        try {
-            await authorize(c.req.raw, ["viewer", "admin"]);
-        } catch (e) {
-            if (e instanceof ServerError) {
-                return c.json({ error: e.message }, e.status as 401 | 403 | 500);
-            }
-            return c.json({ error: "unauthorized" }, 401);
+        const auth = await authorize(c.req.raw, ["viewer", "admin"]);
+
+        const { baseURL, commentId, screenshot } = c.req.valid("form");
+        const comment = await prisma.videoComment.findFirst({
+            where: { id: commentId, deleted: false },
+            include: { video: { select: { title: true, folderKey: true, scenePath: true } } },
+        });
+        if (!comment) {
+            return c.json({ error: "comment not found" }, 404);
         }
 
-        const form = await c.req.formData();
-        const ctx = await buildChatContext(form);
-        const notifiedProviders: ChatProviders[] = []
+        // The post is signed and mailed as the caller; the API token has no user behind it.
+        const caller = auth.type === "jwt"
+            ? await prisma.user.findUnique({ where: { id: auth.decoded.id }, select: { email: true, displayName: true } })
+            : null;
+
+        const scenePath = comment.video.scenePath ?? undefined;
+        const ctx: ChatType = {
+            commentId: comment.id,
+            commentText: comment.comment,
+            videoId: comment.videoId,
+            videoTitle: comment.video.title,
+            folderKey: comment.video.folderKey,
+            scenePath,
+            email: caller?.email ?? undefined,
+            userName: caller?.displayName ?? comment.userName,
+            screenshot,
+            sceneLink: scenePath ? createOpenSceneLink(await getUrlSchema(), scenePath) ?? undefined : undefined,
+            videoLink: createVideoCommentLink(baseURL, comment.videoId, comment.id) ?? undefined,
+        };
+        const notifiedProviders: ChatProviders[] = [];
 
         if (await chatSlack(ctx)) {
             notifiedProviders.push("slack");
@@ -118,6 +98,6 @@ export const chatRouter = createRouter()
         const toastData = {
             title: "Posted to " + notifiedProviders.join(", "),
             comment: ctx.commentText,
-        }
+        };
         return c.json({ notifiedProviders, toastData }, 200);
     });

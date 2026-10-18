@@ -1,4 +1,5 @@
 import "server-only";
+import { trimTrailingSlashes } from "@/lib/folder-path";
 import { z } from "@hono/zod-openapi";
 import { env } from "@/server/lib/env";
 import { getSetting, saveSetting } from "@/server/lib/settings";
@@ -67,7 +68,7 @@ export const llmOllama = defineIntegration({
     testSchema: TestResultSchema,
     check: () => true,
     canTest: ({ baseUrl }) => !!baseUrl,
-    test: async ({ baseUrl }) => listModels("ollama", `${baseUrl!.replace(/\/+$/, "")}/api/tags`, {}),
+    test: async ({ baseUrl }) => listModels("ollama", `${trimTrailingSlashes(baseUrl!)}/api/tags`, {}),
 });
 
 const PROVIDER_KEY = "llm.provider";

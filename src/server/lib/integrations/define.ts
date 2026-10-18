@@ -1,4 +1,5 @@
 import "server-only";
+import { trimTrailingSlashes } from "@/lib/folder-path";
 import { z } from "@hono/zod-openapi";
 
 // plain: read and written freely.
@@ -42,4 +43,4 @@ export function defineIntegration<F extends Fields, R extends typeof TestResultS
 export const HttpUrlSchema = z.string().url()
     .refine(url => /^https?:\/\//.test(url), "must be an http or https URL")
     // Calls join the base URL with a path, so a trailing slash would double up.
-    .transform(url => url.replace(/\/+$/, ""));
+    .transform(trimTrailingSlashes);
