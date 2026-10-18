@@ -11,6 +11,9 @@ import { toDateRange } from "@/lib/utils/date-helper";
 import { VideoCommentSchema } from "@/schema/zod";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { authorize } from "@/server/lib/token";
+import { drawingKey } from "@/lib/storage-key";
+import { v4 as uuidv4 } from "uuid";
+import { VideoReviewStorage } from "@/server/lib/storage";
 
 const QuerySchema = z.object({
     videoId: z.string().optional(),
@@ -38,7 +41,6 @@ const UpdateCommentBody = z.object({
     id: z.string().min(1),
     comment: z.string().optional(),
     issueId: z.string().nullable().optional(),
-    drawingPath: z.string().nullable().optional(),
     thumbsUp: z.boolean().optional(),
     deleted: z.boolean().optional(),
     notifiedProviders: z.string().array().optional(),
@@ -109,7 +111,7 @@ export const commentsRouter = createRouter()
             }
 
             if (hasDrawing) {
-                where.drawingPath = { not: null };
+                where.hasDrawing = true;
             }
 
             if (filterText) {
@@ -166,8 +168,12 @@ export const commentsRouter = createRouter()
                 userEmail,
             } = c.req.valid("json");
 
+            // The drawing key is fixed at creation.
+            const id = uuidv4();
             const result = await prisma.videoComment.create({
                 data: {
+                    id,
+                    drawingPath: drawingKey(id),
                     videoId,
                     videoRevNum,
                     userName,
@@ -213,7 +219,7 @@ export const commentsRouter = createRouter()
         await authorize(c.req.raw, ["guest", "viewer", "admin"]);
 
         try {
-            const { id, comment, deleted, issueId, drawingPath, thumbsUp, notifiedProviders } = c.req.valid("json");
+            const { id, comment, deleted, issueId, thumbsUp, notifiedProviders } = c.req.valid("json");
 
             const updateData: PrismaTypes.VideoCommentUpdateInput = {
                 updatedAt: new Date(),
@@ -228,8 +234,9 @@ export const commentsRouter = createRouter()
             if (typeof deleted === "boolean") {
                 updateData.deleted = deleted;
             }
-            if (typeof drawingPath === "string") {
-                updateData.drawingPath = drawingPath;
+            // A deleted comment is never shown again, so its drawing goes with it.
+            if (deleted === true) {
+                updateData.hasDrawing = false;
             }
             if (thumbsUp === true) {
                 updateData.thumbsUp = { increment: 1 };
@@ -242,6 +249,10 @@ export const commentsRouter = createRouter()
                 where: { id },
                 data: updateData
             });
+
+            if (deleted === true && updated.drawingPath) {
+                await VideoReviewStorage.deleteObject(updated.drawingPath);
+            }
 
             return c.json(updated, 200);
         } catch {

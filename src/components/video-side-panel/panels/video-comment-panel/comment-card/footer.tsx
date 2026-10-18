@@ -39,7 +39,7 @@ export default function CommentCardFooter(props: { comment: VideoComment }) {
     const hasIssueId = props.comment.issueId !== "" && props.comment.issueId !== null;
     const notifiedProviders = props.comment.notifiedProviders;
     const hasSlackMessage = notifiedProviders.includes("slack");
-    const hasDrawing = props.comment.drawingPath !== "" && props.comment.drawingPath !== null;
+    const hasDrawing = props.comment.hasDrawing;
 
     return (
         <TimelineCardFooter>

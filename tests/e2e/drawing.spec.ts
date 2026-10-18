@@ -88,8 +88,7 @@ test.describe("frame drawing", () => {
         await page.keyboard.press("Control+y");
         await expect.poll(() => painted(page)).toBe(withStroke);
 
-        // A first drawing gives the comment a new path; the player must show it
-        // straight away, without a click on the comment.
+        // The player must show a first drawing straight away, without a click on the comment.
         await page.getByRole("button", { name: "Update comment" }).click();
         await expect(page.getByText("Video list")).toBeVisible();
         await expect.poll(() => painted(page)).toBeGreaterThan(0);

@@ -3,6 +3,7 @@ import { createRoute } from "@hono/zod-openapi";
 import { createRouter } from "@/server/lib/openapi/router";
 import { externalLinksRouter } from "@/server/routes/comments/[id]/external-links";
 import { issueRouter } from "@/server/routes/comments/[id]/issue";
+import { drawingRouter } from "@/server/routes/comments/[id]/drawing";
 import { VideoCommentSchema } from "@/schema/zod";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { authorize } from "@/server/lib/token";
@@ -47,4 +48,5 @@ export const byIdRouter = createRouter()
         }
     })
     .route("external-links", externalLinksRouter)
-    .route("issue", issueRouter);
+    .route("issue", issueRouter)
+    .route("drawing", drawingRouter);

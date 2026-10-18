@@ -13,7 +13,7 @@ import CommentCardFooter from "@/components/video-side-panel/panels/video-commen
 
 // Priority: user selection, then playback position, then what the comment carries.
 export function commentCardState(comment: VideoComment, selected: boolean, active: boolean): TimelineCardState {
-    const hasDrawing = comment.drawingPath !== "" && comment.drawingPath !== null;
+    const hasDrawing = comment.hasDrawing;
     const hasIssue = comment.issueId !== "" && comment.issueId !== null;
 
     if (selected) return "selected";

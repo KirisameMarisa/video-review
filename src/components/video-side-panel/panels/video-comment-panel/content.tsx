@@ -28,7 +28,7 @@ export default function VideoCommentContent() {
     const {
         editingComment,
         setEditing,
-        setEditDrawingPath,
+        setEditDrawing,
         setEditComment,
         setEditIssueId,
         editSave,
@@ -64,8 +64,10 @@ export default function VideoCommentContent() {
         } else {
             // Update flow for an existing comment.
             // Edited comments are not sent to Slack to avoid duplicate or noisy notifications.
-            const drawingPath = await canvasSave(editingComment.drawingPath ?? null);
-            setEditDrawingPath(drawingPath);
+            const saved = await canvasSave(editingComment.id);
+            if (saved) {
+                setEditDrawing(saved);
+            }
             setEditComment(comment);
             setEditIssueId(issueId);
             editSave();

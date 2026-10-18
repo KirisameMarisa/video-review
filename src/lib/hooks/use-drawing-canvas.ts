@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { useDrawingStore } from "@/stores/drawing-store";
+import { drawingCacheKey, useDrawingStore } from "@/stores/drawing-store";
 import { useDrawingSettingsStore } from "@/stores/drawing-settings-store";
 import { useCommentEditStore } from "@/stores/comment-edit-store";
 import { useVideoReviewStore } from "@/stores/video-review-store";
@@ -25,9 +25,10 @@ export const useDrawingCanvas = () => {
     const canvasSize = useDrawingStore((s) => s.canvasSize);
     const state = useDrawingStore((s) => s.history.present);
     const { commitMark, undoStroke, redoStroke, loadDrawing, setPicking } = useDrawingStore();
-    const drawingPath = useCommentEditStore((s) => s.editingComment?.drawingPath ?? null);
+    const editingComment = useCommentEditStore((s) => s.editingComment);
+    const cacheKey = editingComment?.hasDrawing ? drawingCacheKey(editingComment) : null;
     // The comment's saved drawing, from the shared cache so a just-saved one is current.
-    const saved = useDrawingStore((s) => (canvasEditing && drawingPath ? s.drawings.get(drawingPath) ?? null : null));
+    const saved = useDrawingStore((s) => (canvasEditing && cacheKey ? s.drawings.get(cacheKey) ?? null : null));
     const base = state.base === "saved" ? saved : state.base;
 
     const committedRef = useRef<HTMLCanvasElement | null>(null);
@@ -54,8 +55,10 @@ export const useDrawingCanvas = () => {
 
     useEffect(() => {
         committedRef.current = null;
-        if (canvasEditing && drawingPath) void loadDrawing(drawingPath);
-    }, [canvasEditing, drawingPath]);
+        if (canvasEditing && editingComment) {
+            void loadDrawing(editingComment);
+        }
+    }, [canvasEditing, cacheKey]);
 
     // Rebuild the committed layer when the state or the canvas size change, then repaint.
     // The base is drawn stretched to the current size, so a re-fitted canvas keeps its content.

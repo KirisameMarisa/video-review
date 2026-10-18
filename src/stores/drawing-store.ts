@@ -4,6 +4,7 @@ import { uploadToSession } from "@/lib/upload-transfer";
 import { resolveMediaUrl } from "@/lib/media-url";
 import { DrawingHistory, commitSnapshot, initialHistory, pushMark, redo, undo } from "@/lib/drawing/history";
 import type { Mark } from "@/lib/drawing/types";
+import { VideoComment } from "@/lib/db-types";
 
 interface DrawingState {
     canvasRefElement: HTMLCanvasElement | null,
@@ -13,7 +14,7 @@ interface DrawingState {
     needSave: boolean;
     /** Snapshots of the current editing session. Reset whenever editing starts or ends. */
     history: DrawingHistory;
-    /** Loaded comment drawings by storage path, ready to drawImage. */
+    /** Loaded comment drawings by `drawingCacheKey`, ready to drawImage. */
     drawings: Map<string, CanvasImageSource>;
     /** While the eyedropper is pressed: where it is (canvas fractions), what it sees, and the colour before. */
     picking: { x: number; y: number; color: string; previous: string } | null;
@@ -21,7 +22,7 @@ interface DrawingState {
     setCanvasRefElement: (canvas: HTMLCanvasElement | null) => void;
     setCanvasSize: (size: { width: number; height: number }) => void;
     setCanvasEditing: (r: boolean) => void;
-    canvasSave: (drawingPath: string | null) => Promise<string | null>;
+    canvasSave: (commentId: string) => Promise<VideoComment | null>;
     setNeedSave: (r: boolean) => void;
     commitMark: (mark: Mark) => void;
     undoStroke: () => void;
@@ -29,11 +30,14 @@ interface DrawingState {
     /** Wipe the canvas: marks and the saved drawing underneath. Undoable like any other step. */
     clearDrawing: () => void;
     /** Fetch a comment's drawing into `drawings` unless it is there or on its way. */
-    loadDrawing: (path: string) => Promise<void>;
+    loadDrawing: (comment: VideoComment) => Promise<void>;
     setPicking: (picking: DrawingState["picking"]) => void;
 }
 
 const loading = new Set<string>();
+
+// The path is fixed per comment, so a redraw is told apart by updatedAt.
+export const drawingCacheKey = (comment: Pick<VideoComment, "drawingPath" | "updatedAt">) => `${comment.drawingPath}@${comment.updatedAt}`;
 
 const copyCanvas = (source: HTMLCanvasElement) => {
     const copy = document.createElement("canvas");
@@ -56,36 +60,52 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
     setCanvasEditing: (r) => set({ canvasEditing: r, history: initialHistory, needSave: false }),
     setCanvasRefElement: (canvas) => set({ canvasRefElement: canvas }),
     setCanvasSize: (size) => set({ canvasSize: size }),
-    // Resolves to the path the comment should keep: the upload's when something was
-    // drawn, otherwise the one it already had. A text-only edit or a failed upload
-    // must not drop it, since the server keeps the old drawing either way.
-    canvasSave: async (path) => {
-        if (!get().needSave) return path;
-        
+    // Saves the canvas as the comment's drawing and returns the comment as the server now has it,
+    // or null when nothing was saved.
+    canvasSave: async (commentId) => {
+        if (!get().needSave) {
+            return null;
+        }
+
         const c = get().canvasRefElement;
-        if (!c) return path;
+        if (!c) {
+            return null;
+        }
+
+        // A wiped canvas means "no drawing": the server drops the file instead of keeping a blank one.
+        const { base, marks } = get().history.present;
+        if (base === null && marks.length === 0) {
+            const res = await api.comments[":id"].drawing.$delete({ param: { id: commentId } });
+            return res.status === 200 ? await res.json() : null;
+        }
 
         // Taken before toBlob so the cache holds exactly what gets uploaded.
         const snapshot = copyCanvas(c);
-        return new Promise<string | null>((resolve) => {
+        return new Promise<VideoComment | null>((resolve) => {
             c.toBlob(async (blob) => {
-                if (!blob) return resolve(path);
+                if (!blob) {
+                    return resolve(null);
+                }
 
                 // Nothing awaits this callback, so a rejected transfer would never resolve.
                 try {
-                    const initRes = await api.drawing.upload.init.$post();
-                    if (initRes.status !== 200) return resolve(path);
+                    const initRes = await api.comments[":id"].drawing.init.$post({ param: { id: commentId } });
+                    if (initRes.status !== 200) {
+                        return resolve(null);
+                    }
                     const init = await initRes.json();
                     await uploadToSession({ url: init.url, session: init.session, file: blob });
-                    const finishRes = await api.drawing.upload.finish.$post({ query: { session_id: init.session.id } });
-                    if (finishRes.status !== 200) return resolve(path);
+                    const finishRes = await api.comments[":id"].drawing.finish.$post({ param: { id: commentId }, query: { session_id: init.session.id } });
+                    if (finishRes.status !== 200) {
+                        return resolve(null);
+                    }
 
                     // Cached under the new key, so the panel shows what was just saved without a refetch.
-                    const { filePath } = await finishRes.json();
-                    set((state) => ({ drawings: new Map(state.drawings).set(filePath, snapshot) }));
-                    resolve(filePath);
+                    const saved = await finishRes.json();
+                    set((state) => ({ drawings: new Map(state.drawings).set(drawingCacheKey(saved), snapshot) }));
+                    resolve(saved);
                 } catch {
-                    resolve(path);
+                    resolve(null);
                 }
             }, "image/png");
         });
@@ -102,25 +122,34 @@ export const useDrawingStore = create<DrawingState>((set, get) => ({
             return { history: commitSnapshot(state.history, { base: null, marks: [] }), needSave: true };
         }),
     setPicking: (picking) => set({ picking }),
-    loadDrawing: async (path) => {
-        if (get().drawings.has(path) || loading.has(path)) return;
+    loadDrawing: async (comment) => {
+        if (!comment.hasDrawing || !comment.drawingPath) {
+            return;
+        }
 
-        loading.add(path);
+        const key = drawingCacheKey(comment);
+        if (get().drawings.has(key) || loading.has(key)) {
+            return;
+        }
+
+        loading.add(key);
         try {
-            const url = await resolveMediaUrl(path);
-            if (!url) return;
+            const url = await resolveMediaUrl(comment.drawingPath);
+            if (!url) {
+                return;
+            }
 
             const img = new Image();
             await new Promise<void>((done, fail) => {
                 img.onload = () => done();
-                img.onerror = () => fail(new Error(`failed to load drawing ${path}`));
+                img.onerror = () => fail(new Error(`failed to load drawing ${comment.drawingPath}`));
                 img.src = url;
             });
-            set((state) => ({ drawings: new Map(state.drawings).set(path, img) }));
+            set((state) => ({ drawings: new Map(state.drawings).set(key, img) }));
         } catch (e) {
             console.error(e);
         } finally {
-            loading.delete(path);
+            loading.delete(key);
         }
     },
 }));
