@@ -215,6 +215,7 @@ async function seedComments(videoId: string, users: User[]) {
         const tpl = COMMENT_TEMPLATES[i];
         const user = users[tpl.user];
 
+        const hasDrawing = Math.random() < 0.7 && i === 2;
         comments.push(await prisma.videoComment.create({
             data: {
                 id: randomUUID(),
@@ -224,7 +225,8 @@ async function seedComments(videoId: string, users: User[]) {
                 userEmail: user.email ?? "",
                 comment: tpl.text,
                 time: t,
-                drawingPath: (Math.random() < 0.7 && i === 2) ? "/drawings/sample.png" : null,
+                drawingPath: hasDrawing ? "/drawings/sample.png" : null,
+                hasDrawing,
                 issueId: (Math.random() < 0.7 && i === 1) ? "ISSUE-123" : null,
                 thumbsUp: (Math.random() < 0.7 && i === 4) ? 2 : 0,
                 notifiedProviders: (Math.random() < 0.7 && i === 1) ? ["slack"] : [],

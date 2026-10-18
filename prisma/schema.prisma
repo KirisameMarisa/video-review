@@ -145,6 +145,8 @@ model VideoComment {
   issueId           String?
   notifiedProviders String[]        @default([])
   drawingPath       String?
+  // Whether the file at drawingPath exists; the path itself is fixed when the comment is created.
+  hasDrawing        Boolean  @default(false)
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   deleted           Boolean         @default(false)

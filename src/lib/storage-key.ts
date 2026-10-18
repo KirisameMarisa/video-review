@@ -3,7 +3,8 @@ import { v4 as uuidv4 } from "uuid";
 // Every storage key is composed here.
 // A new* function allocates a fresh key on each call; the others rebuild the same key from the same input.
 
-export const newDrawingKey = () => `drawing/${uuidv4()}.png`;
+// A comment owns one drawing, so its place is fixed by the comment id.
+export const drawingKey = (commentId: string) => `drawing/${commentId}.png`;
 
 export const newAvatarKey = () => `avatars/${uuidv4()}.png`;
 

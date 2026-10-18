@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useDrawingStore } from "@/stores/drawing-store";
+import { drawingCacheKey, useDrawingStore } from "@/stores/drawing-store";
 import { useDrawingSettingsStore } from "@/stores/drawing-settings-store";
 import { useCommentEditStore } from "@/stores/comment-edit-store";
 import { useCommentStore } from "@/stores/comment-store";
@@ -45,7 +45,7 @@ export function DrawingLayer() {
 
     useEffect(() => {
         for (const c of comments) {
-            if (c.drawingPath) void loadDrawing(c.drawingPath);
+            void loadDrawing(c);
         }
     }, [comments]);
 
@@ -59,7 +59,7 @@ export function DrawingLayer() {
         const toDraw = isPlaying ? activeComments : (current ? [current] : []);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         for (const comment of toDraw) {
-            const img = comment.drawingPath ? drawings.get(comment.drawingPath) : undefined;
+            const img = comment.hasDrawing ? drawings.get(drawingCacheKey(comment)) : undefined;
             if (img) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         }
     }, [canvas, activeComments, selectedComment, comments, isPlaying, canvasEditing, canvasSize, drawings]);

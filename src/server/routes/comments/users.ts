@@ -57,7 +57,7 @@ export const usersRouter = createRouter()
         }
 
         if (hasDrawing) {
-            whereVideoComment.drawingPath = { not: null };
+            whereVideoComment.hasDrawing = true;
         }
 
         const users = await prisma.videoComment.findMany({

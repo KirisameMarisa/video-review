@@ -10,7 +10,8 @@ interface CommentEditState {
     editCancel(): void;
 
     setEditing(comment: VideoComment | null): void;
-    setEditDrawingPath(path: string | null): void;
+    /** Takes the drawing fields from the comment as the server returned it after a drawing save. */
+    setEditDrawing(saved: VideoComment): void;
     setEditComment(path: string): void;
     setEditIssueId(path: string | null): void;
 }
@@ -28,7 +29,6 @@ export const useCommentEditStore = create<CommentEditState>((set, get) => ({
                     id: editing.id,
                     comment: editing.comment,
                     issueId: editing.issueId,
-                    drawingPath: editing.drawingPath,
                 },
             });
             if (res.status !== 200) throw new Error("Failed to update comment");
@@ -42,11 +42,11 @@ export const useCommentEditStore = create<CommentEditState>((set, get) => ({
     editCancel: () => set({ editingComment: null }),
 
     setEditing: (comment) => set({ editingComment: comment }),
-    setEditDrawingPath: (path) =>
+    setEditDrawing: (saved) =>
         set((state) => {
             if (!state.editingComment) return state;
             return {
-                editingComment: { ...state.editingComment, drawingPath: path },
+                editingComment: { ...state.editingComment, drawingPath: saved.drawingPath, hasDrawing: saved.hasDrawing, updatedAt: saved.updatedAt },
             };
         }),
 

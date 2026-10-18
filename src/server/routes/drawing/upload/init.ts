@@ -7,14 +7,16 @@ import { createSession } from "@/server/lib/upload-session";
 import { UploadStorageType } from "@/lib/db-types";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { UploadSessionSchema } from "@/schema/zod";
-import { newDrawingKey } from "@/lib/storage-key";
+import { drawingKey } from "@/lib/storage-key";
+import { prisma } from "@/server/lib/db";
 
 export const initRouter = createRouter()
     .openapi(createRoute({
         method: "post",
         summary: "Initialize drawing upload",
-        description: "Initializes the drawing upload process.",
+        description: "Initializes the drawing upload for a comment.",
         path: "/",
+        request: { query: z.object({ comment_id: z.string().min(1) }) },
         responses: {
             200: {
                 description: "Drawing upload initialized successfully",
@@ -26,6 +28,7 @@ export const initRouter = createRouter()
             },
             401: errorResponse("Unauthorized"),
             403: errorResponse("Forbidden"),
+            404: errorResponse("Comment not found"),
             500: errorResponse("Auth configuration is missing"),
         },
     }), async (c) => {
@@ -38,8 +41,13 @@ export const initRouter = createRouter()
             return c.json({ error: "unauthorized" }, 401);
         }
 
-        const storageKey = newDrawingKey();
+        const { comment_id } = c.req.valid("query");
+        const comment = await prisma.videoComment.findFirst({ where: { id: comment_id, deleted: false }, select: { id: true } });
+        if (!comment) {
+            return c.json({ error: "comment not found" }, 404);
+        }
 
+        const storageKey = drawingKey(comment.id);
         const type = VideoReviewStorage.type();
         const session = await createSession({
             nextRev: 0,

@@ -121,7 +121,7 @@ export const listRouter = createRouter()
         }
 
         if (hasDrawing) {
-            whereVideoComment.drawingPath = { not: null };
+            whereVideoComment.hasDrawing = true;
         }
 
         if (hasIssue) {

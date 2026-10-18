@@ -207,6 +207,7 @@ async function seedVideo(video: EvalVideo, users: Map<string, User>, kindIds: Ma
                     time: comment.time,
                     issueId: comment.issueId ?? null,
                     drawingPath: comment.drawing ? `/drawings/eval/${video.key}.png` : null,
+                    hasDrawing: Boolean(comment.drawing),
                     createdAt: uploadedAt,
                 },
             });
