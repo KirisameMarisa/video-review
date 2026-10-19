@@ -223,6 +223,7 @@ async function seedComments(videoId: string, users: User[]) {
                 videoRevNum: 1,
                 userName: user.displayName,
                 userEmail: user.email ?? "",
+                userId: user.id,
                 comment: tpl.text,
                 time: t,
                 drawingPath: hasDrawing ? "/drawings/sample.png" : null,

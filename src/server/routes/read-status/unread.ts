@@ -2,15 +2,14 @@ import { prisma } from "@/server/lib/db";
 import { createRoute, z } from "@hono/zod-openapi";
 import { createRouter } from "@/server/lib/openapi/router";
 import { errorResponse } from "@/server/lib/openapi/error-response";
-import { authorize } from "@/server/lib/token";
+import { authorize, userIdOf } from "@/server/lib/token";
 
 export const unreadRouter = createRouter()
     .openapi(createRoute({
         method: "get",
         summary: "Get unread videos",
-        description: "Returns the list of unread video IDs for a user.",
+        description: "Returns the ids of the videos with comments the caller has not read.",
         path: "/",
-        request: { query: z.object({ userId: z.string().min(1) }) },
         responses: {
             200: {
                 description: "Get unread videos",
@@ -21,15 +20,13 @@ export const unreadRouter = createRouter()
                 },
             },
             401: errorResponse("Unauthorized"),
-            400: errorResponse("Missing userId"),
+            403: errorResponse("Forbidden"),
             500: errorResponse("Failed to fetch unread video ids"),
         },
     }), async (c) => {
-        await authorize(c.req.raw, ["guest", "viewer", "admin"]);
+        const userId = userIdOf(await authorize(c.req.raw, ["viewer", "admin"]));
 
         try {
-            const { userId } = c.req.valid("query");
-
             const unreadVideoIds = await prisma.$queryRaw<{ videoId: string }[]>`
             WITH latest AS (
                 SELECT v.id AS "videoId",
@@ -38,10 +35,11 @@ export const unreadRouter = createRouter()
                 LEFT JOIN LATERAL (
                     SELECT id
                     FROM "VideoComment"
-                    WHERE "videoId" = v.id
+                    WHERE "videoId" = v.id AND deleted = false
                     ORDER BY "createdAt" DESC
                     LIMIT 1
                 ) c ON true
+                WHERE v.deleted = false
             )
             SELECT l."videoId"
             FROM latest l

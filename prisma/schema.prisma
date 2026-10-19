@@ -40,7 +40,6 @@ model User {
   active        Boolean                 @default(true)
   readStatuses  UserVideoReadStatus[]
   identities    Identity[]
-  comments      VideoComment[]
   videoFilters  VideoFilter[]
 }
 
@@ -138,8 +137,10 @@ model VideoComment {
   videoRevNum       Int
   userName          String
   userEmail         String          @default("")
+  /// The author's login id: a User id, or a guest's per-login id that has no User row. No foreign key for that reason.
   userId            String?
-  user              User?           @relation(fields: [userId], references: [id])
+  /// Written by a guest login.
+  isGuest           Boolean         @default(false)
   comment           String
   time              Float
   issueId           String?

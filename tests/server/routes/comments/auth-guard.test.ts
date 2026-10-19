@@ -15,7 +15,10 @@ const prismaMock = vi.hoisted(() => ({
 const authorizeMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/server/lib/db", () => ({ prisma: prismaMock }));
-vi.mock("@/server/lib/token", () => ({ authorize: authorizeMock }));
+vi.mock("@/server/lib/token", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@/server/lib/token")>()),
+    authorize: authorizeMock,
+}));
 
 import { commentsRouter } from "@/server/routes/comments";
 

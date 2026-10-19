@@ -4,8 +4,7 @@ import { prisma } from "@/server/lib/db";
 import { VideoEventKindSchema } from "@/schema/zod";
 import { VideoEventSchema } from "@/server/lib/openapi/models";
 import { errorResponse } from "@/server/lib/openapi/error-response";
-import { authorize, roleOf } from "@/server/lib/token";
-import { assertRoleCanSeeVideo } from "@/server/lib/videos/guest-access";
+import { authorizeVideo } from "@/server/lib/videos/guest-access";
 
 const QuerySchema = z.object({
     selectRevision: z.string().transform(v => parseInt(v)).optional(),
@@ -34,10 +33,8 @@ export const eventsRouter = createRouter()
             500: errorResponse("Failed to fetch events"),
         },
     }), async (c) => {
-        const auth = await authorize(c.req.raw, ["guest", "viewer", "admin"]);
-
         const videoId = c.req.param("id") as string;
-        await assertRoleCanSeeVideo(videoId, roleOf(auth));
+        await authorizeVideo(c.req.raw, ["guest", "viewer", "admin"], videoId);
 
         try {
             const { selectRevision, filterText, kind, hasLink } = c.req.valid("query");

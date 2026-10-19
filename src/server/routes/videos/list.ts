@@ -76,6 +76,7 @@ export const listRouter = createRouter()
             }
         },
     }), async (c) => {
+        // eslint-disable-next-line no-restricted-syntax -- lists across videos; guests are filtered by guestVisible below
         const auth = await authorize(c.req.raw, ["guest", "viewer", "admin"]);
         const role = roleOf(auth);
 
@@ -215,6 +216,7 @@ export const listRouter = createRouter()
             },
         },
     }), async (c) => {
+        // eslint-disable-next-line no-restricted-syntax -- lists across videos; guests are filtered by guestVisible below
         const auth = await authorize(c.req.raw, ["guest", "viewer", "admin"]);
         const role = roleOf(auth);
 
@@ -266,6 +268,7 @@ export const listRouter = createRouter()
             401: errorResponse("Unauthorized"),
         },
     }), async (c) => {
+        // eslint-disable-next-line no-restricted-syntax -- lists across videos; guests are filtered by guestVisible below
         const auth = await authorize(c.req.raw, ["guest", "viewer", "admin"]);
         const role = roleOf(auth);
 
@@ -289,6 +292,7 @@ export const listRouter = createRouter()
             500: { description: "Internal Server Error" },
         },
     }), async (c) => {
+        // eslint-disable-next-line no-restricted-syntax -- lists across videos; guests are filtered by guestVisible below
         const auth = await authorize(c.req.raw, ["guest", "viewer", "admin"]);
         const role = roleOf(auth);
 

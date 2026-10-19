@@ -17,6 +17,7 @@ export default function CommentConfirmed(props: {
     onCancel: () => void;
     issueId: string | null;
     comment: string;
+    canEditText: boolean;
 }) {
     const t = useTranslations("comment-confirmed");
     const [comment, setComment] = useState(props.comment);
@@ -46,6 +47,7 @@ export default function CommentConfirmed(props: {
     return (
         <div className="p-4 border-t bg-background">
             <Textarea
+                disabled={!props.canEditText}
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 onFocus={() => setIsPlaying(false)}
@@ -53,7 +55,7 @@ export default function CommentConfirmed(props: {
                 className="h-20 mb-2 resize-none"
             />
             <Input
-                disabled={isGuest(role)}
+                disabled={isGuest(role) || !props.canEditText}
                 className="mb-2"
                 value={issueId ?? ""}
                 onChange={(e) => setIssueId(e.target.value)}

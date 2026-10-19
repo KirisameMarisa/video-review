@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { createRouter } from "@/server/lib/openapi/router";
-import { authorize } from "@/server/lib/token";
+import { authorizeComment } from "@/server/lib/videos/guest-access";
 import { deleteSession, getSession } from "@/server/lib/upload-session";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { prisma } from "@/server/lib/db";
@@ -26,21 +26,20 @@ export const finishRouter = createRouter()
             },
             400: errorResponse("Invalid parameters"),
             401: errorResponse("Unauthorized"),
+            403: errorResponse("Forbidden"),
             404: errorResponse("Comment not found"),
         },
     }), async (c) => {
-        await authorize(c.req.raw, ["viewer", "admin", "guest"]);
+        const id = c.req.param("id") as string;
+        const { comment } = await authorizeComment(c.req.raw, ["viewer", "admin", "guest"], id);
+        if (comment.deleted) {
+            return c.json({ error: "comment not found" }, 404);
+        }
 
         const { session_id } = c.req.valid("query");
         const session = await getSession(session_id);
         if (!session) {
             return c.json({ error: "missing session" }, 400);
-        }
-
-        const id = c.req.param("id");
-        const comment = await prisma.videoComment.findFirst({ where: { id, deleted: false } });
-        if (!comment) {
-            return c.json({ error: "comment not found" }, 404);
         }
 
         // The session must be the one opened for this comment; no other key can become its drawing.

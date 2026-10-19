@@ -5,22 +5,23 @@ import { prisma } from "@/server/lib/db";
 import { handleServerError } from "@/server/lib/server-error";
 import { seenRouter } from "@/server/routes/read-status/seen";
 
+const userId = vi.hoisted(() => "00000000-0000-4000-8000-0000000000aa");
+
 vi.mock("@/server/lib/token", async (importOriginal) => {
     const actual = await importOriginal<typeof import("@/server/lib/token")>();
-    return { ...actual, authorize: vi.fn(async () => ({ type: "api-token" as const, role: "viewer" })) };
+    return { ...actual, authorize: vi.fn(async () => ({ type: "jwt" as const, decoded: { id: userId, role: "viewer" as const } })) };
 });
 
 const app = new OpenAPIHono().route("/seen", seenRouter);
 app.onError(handleServerError);
 
-const userId = randomUUID();
 const videoId = randomUUID();
 
 function open(revision: number) {
     return app.request("http://localhost/seen", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ userId, videoId, revision }),
+        body: JSON.stringify({ videoId, revision }),
     });
 }
 
@@ -39,7 +40,7 @@ describe("read-status seenRouter (DB)", () => {
         expect((await open(3)).status).toBe(200);
         expect((await open(2)).status).toBe(200);
 
-        const res = await app.request(`http://localhost/seen?userId=${userId}`);
+        const res = await app.request("http://localhost/seen");
         expect(await res.json()).toEqual({ seen: { [videoId]: 3 } });
     });
 });

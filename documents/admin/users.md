@@ -69,15 +69,17 @@ Written by what the server's API lets through.
 | Video list, folders, metadata, revisions | guest-visible videos only | ○ | ○ |
 | Play a video | guest-visible videos only | ○ | ○ |
 | Download a video file (at a chosen resolution) | × | ○ | ○ |
-| Read comments, keep read marks | ○ | ○ | ○ |
+| Read comments | guest-visible videos only | ○ | ○ |
+| Keep read marks | × | ○ | ○ |
 | Events, VCS Changes and the AI summary | guest-visible videos only | ○ | ○ |
 
 ### Writing
 
 | Action | guest | viewer | admin |
 |---|---|---|---|
-| Create and update comments | ○ | ○ | ○ |
-| Draw on a video | ○ | ○ | ○ |
+| Create comments, thumbs up | guest-visible videos only | ○ | ○ |
+| Draw on a video | guest-visible videos only | ○ | ○ |
+| Edit a comment's text or issue, delete it | own comments (while logged in) | own comments | ○ |
 | Create a Jira issue from a comment | × | ○ | ○ |
 | Send a comment notification (Slack / Webhook / Email) | × | ○ | ○ |
 | Chat search and MCP | × | ○ | ○ |
@@ -87,6 +89,6 @@ Written by what the server's API lets through.
 | Register thumbnails, read the upload status | × | × | ○ |
 | Everything in Administration (users, deleting videos, integrations, API Token) | × | × | ○ |
 
-Note: the API Token acts as an admin.  
+Note: the API Token acts as an admin, except for read marks, which need a person.  
 Note: guest-visible is a flag an admin sets per video.  
-Note: comments can be read and written whatever the video's flag.
+Note: a guest is a new person at every login, so after logging out a guest cannot edit or delete their own comments.

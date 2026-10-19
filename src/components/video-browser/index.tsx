@@ -16,6 +16,7 @@ import { useMarkContext } from "@/components/video-browser/marks/use-mark-contex
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useVideoStore } from "@/stores/video-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { isGuest } from "@/lib/role";
 import { useCommentStore } from "@/stores/comment-store";
 import { useVideoListStore } from "@/stores/video-list-store";
 import { useVideoSearchStore } from "@/stores/video-search-store";
@@ -25,7 +26,7 @@ import DrawingToolPanel from "@/components/drawing-tool-panel";
 
 export default function VideoListPanel() {
     const router = useRouter();
-    const { userId } = useAuthStore();
+    const { userId, role } = useAuthStore();
     const loadUnread = useCommentStore((s) => s.loadUnread);
     const recordVisit = useVideoListStore((s) => s.recordVisit);
     const loadSeen = useVideoListStore((s) => s.loadSeen);
@@ -58,19 +59,23 @@ export default function VideoListPanel() {
     }, [])
 
     // Once per page load and signed-in user; reading a video afterwards updates it in place (markRead / markSeen).
+    // A guest has no read marks on the server, so nothing is asked for.
     useEffect(() => {
-        loadUnread(userId).catch((reason) => console.error(reason));
-        loadSeen(userId).catch((reason) => console.error(reason));
-    }, [userId, loadUnread, loadSeen]);
+        if (!userId || isGuest(role)) {
+            return;
+        }
+        loadUnread().catch((reason) => console.error(reason));
+        loadSeen().catch((reason) => console.error(reason));
+    }, [userId, role, loadUnread, loadSeen]);
 
     const selectedVideoId = selectedVideo?.id;
     const selectedRevisionNumber = selectedRevision?.revision;
 
     useEffect(() => {
-        if (userId && selectedVideoId && selectedRevisionNumber) {
-            markSeen(userId, selectedVideoId, selectedRevisionNumber).catch((reason) => console.error(reason));
+        if (userId && !isGuest(role) && selectedVideoId && selectedRevisionNumber) {
+            markSeen(selectedVideoId, selectedRevisionNumber).catch((reason) => console.error(reason));
         }
-    }, [userId, selectedVideoId, selectedRevisionNumber, markSeen]);
+    }, [userId, role, selectedVideoId, selectedRevisionNumber, markSeen]);
 
     return (
         <>

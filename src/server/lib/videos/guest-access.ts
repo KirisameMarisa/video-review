@@ -1,6 +1,8 @@
 import "server-only";
 import { prisma } from "@/server/lib/db";
 import { ServerError } from "@/server/lib/server-error";
+import { authorize, roleOf, type AuthIdentity } from "@/server/lib/token";
+import type { VideoComment } from "@prisma/client";
 import type { Role } from "@/lib/role";
 
 // Media is served by opaque storage key, so guest checks first map a key back to its video.
@@ -38,4 +40,22 @@ export async function assertRoleCanSeeVideo(videoId: string, role: Role): Promis
     if (!video?.guestVisible) {
         throw new ServerError("forbidden", 403);
     }
+}
+
+// The role gate and the guest flag in one call; lint keeps guest-admitting routes about one video on it.
+export async function authorizeVideo(req: Request, roles: Role[], videoId: string): Promise<AuthIdentity> {
+    const auth = await authorize(req, roles);
+    await assertRoleCanSeeVideo(videoId, roleOf(auth));
+    return auth;
+}
+
+// Same for a route about one comment; a missing comment is a 404.
+export async function authorizeComment(req: Request, roles: Role[], commentId: string): Promise<{ auth: AuthIdentity; comment: VideoComment }> {
+    const auth = await authorize(req, roles);
+    const comment = await prisma.videoComment.findUnique({ where: { id: commentId } });
+    if (!comment) {
+        throw new ServerError("comment not found", 404);
+    }
+    await assertRoleCanSeeVideo(comment.videoId, roleOf(auth));
+    return { auth, comment };
 }

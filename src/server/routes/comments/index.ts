@@ -10,8 +10,11 @@ import { z } from "zod";
 import { toDateRange } from "@/lib/utils/date-helper";
 import { VideoCommentSchema } from "@/schema/zod";
 import { errorResponse } from "@/server/lib/openapi/error-response";
-import { authorize } from "@/server/lib/token";
+import { authorize, roleOf, userIdOrNull } from "@/server/lib/token";
+import { ServerError } from "@/server/lib/server-error";
+import { authorizeComment, authorizeVideo } from "@/server/lib/videos/guest-access";
 import { drawingKey } from "@/lib/storage-key";
+import { canEditComment } from "@/lib/role";
 import { v4 as uuidv4 } from "uuid";
 import { VideoReviewStorage } from "@/server/lib/storage";
 
@@ -66,7 +69,8 @@ export const commentsRouter = createRouter()
             500: errorResponse("Failed to fetch comments"),
         },
     }), async (c) => {
-        await authorize(c.req.raw, ["guest", "viewer", "admin"]);
+        // eslint-disable-next-line no-restricted-syntax -- lists across videos; guests are filtered by guestVisible below
+        const auth = await authorize(c.req.raw, ["guest", "viewer", "admin"]);
 
         try {
             const query = c.req.valid("query");
@@ -87,6 +91,10 @@ export const commentsRouter = createRouter()
             const where: PrismaTypes.VideoCommentWhereInput = {
                 deleted: false,
             };
+
+            if (roleOf(auth) === "guest") {
+                where.video = { guestVisible: true };
+            }
 
             if (videoId) {
                 where.videoId = videoId;
@@ -151,29 +159,33 @@ export const commentsRouter = createRouter()
                 },
             },
             401: errorResponse("Unauthorized"),
+            403: errorResponse("Forbidden"),
             400: errorResponse("Invalid parameters"),
             500: errorResponse("Failed to create comment"),
         },
     }), async (c) => {
-        await authorize(c.req.raw, ["guest", "viewer", "admin"]);
+        const {
+            videoId,
+            videoRevNum,
+            userName,
+            comment,
+            time,
+            issueId,
+            userEmail,
+        } = c.req.valid("json");
+        const auth = await authorizeVideo(c.req.raw, ["guest", "viewer", "admin"], videoId);
+
+        const userId = userIdOrNull(auth);
 
         try {
-            const {
-                videoId,
-                videoRevNum,
-                userName,
-                comment,
-                time,
-                issueId,
-                userEmail,
-            } = c.req.valid("json");
-
             // The drawing key is fixed at creation.
             const id = uuidv4();
             const result = await prisma.videoComment.create({
                 data: {
                     id,
                     drawingPath: drawingKey(id),
+                    userId,
+                    isGuest: roleOf(auth) === "guest",
                     videoId,
                     videoRevNum,
                     userName,
@@ -212,15 +224,22 @@ export const commentsRouter = createRouter()
                 },
             },
             401: errorResponse("Unauthorized"),
+            403: errorResponse("Forbidden"),
+            404: errorResponse("Comment not found"),
             400: errorResponse("Invalid parameters"),
             500: errorResponse("Failed to update comment"),
         },
     }), async (c) => {
-        await authorize(c.req.raw, ["guest", "viewer", "admin"]);
+        const { id, comment, deleted, issueId, thumbsUp, notifiedProviders } = c.req.valid("json");
+        const { auth, comment: target } = await authorizeComment(c.req.raw, ["guest", "viewer", "admin"], id);
+
+        // Thumbs up and the notification record stay open to everyone.
+        const editsAuthorFields = comment !== undefined || issueId !== undefined || deleted !== undefined;
+        if (editsAuthorFields && !canEditComment(target, roleOf(auth), userIdOrNull(auth))) {
+            throw new ServerError("forbidden", 403);
+        }
 
         try {
-            const { id, comment, deleted, issueId, thumbsUp, notifiedProviders } = c.req.valid("json");
-
             const updateData: PrismaTypes.VideoCommentUpdateInput = {
                 updatedAt: new Date(),
             };

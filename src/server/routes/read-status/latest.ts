@@ -2,7 +2,7 @@ import { prisma } from "@/server/lib/db";
 import { createRoute, z } from "@hono/zod-openapi";
 import { createRouter } from "@/server/lib/openapi/router";
 import { errorResponse } from "@/server/lib/openapi/error-response";
-import { authorize } from "@/server/lib/token";
+import { authorizeVideo } from "@/server/lib/videos/guest-access";
 
 export const latestRouter = createRouter()
     .openapi(createRoute({
@@ -21,21 +21,21 @@ export const latestRouter = createRouter()
                 },
             },
             401: errorResponse("Unauthorized"),
+            403: errorResponse("Forbidden"),
             400: errorResponse("Missing videoId"),
             500: errorResponse("Failed to fetch latest comment"),
         },
     }), async (c) => {
-        await authorize(c.req.raw, ["guest", "viewer", "admin"]);
+        const { videoId } = c.req.valid("query");
+        await authorizeVideo(c.req.raw, ["viewer", "admin"], videoId);
 
         try {
-            const { videoId } = c.req.valid("query");
-
             const latest = await prisma.$queryRaw<
                 { latestCommentId: string | null }[]
             >`
             SELECT c.id AS "latestCommentId"
             FROM "VideoComment" c
-            WHERE c."videoId" = ${videoId}
+            WHERE c."videoId" = ${videoId} AND c.deleted = false
             ORDER BY c."createdAt" DESC
             LIMIT 1
         `;

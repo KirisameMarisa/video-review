@@ -26,6 +26,7 @@ export const foldersRouter = createRouter()
             },
         },
     }), async (c) => {
+        // eslint-disable-next-line no-restricted-syntax -- lists across videos; guests are filtered by guestVisible below
         const auth = await authorize(c.req.raw, ["guest", "viewer", "admin"]);
         const role = roleOf(auth);
 
