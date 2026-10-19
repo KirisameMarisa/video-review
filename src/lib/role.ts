@@ -18,3 +18,8 @@ export function isViewer(role: Role): boolean {
 export function isAdmin(role: Role): boolean {
     return role === "admin";
 }   
+
+// The author or an admin may change the text, the issue and delete.
+export function canEditComment(comment: { userId: string | null }, role: Role, userId: string | null): boolean {
+    return isAdmin(role) || (comment.userId !== null && comment.userId === userId);
+}

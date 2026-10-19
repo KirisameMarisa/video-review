@@ -4,8 +4,7 @@ import { createRouter } from "@/server/lib/openapi/router";
 import { VideoRevisionSchema } from "@/schema/zod";
 import { VideoSchema } from "@/server/lib/openapi/models";
 import { errorResponse } from "@/server/lib/openapi/error-response";
-import { authorize, roleOf } from "@/server/lib/token";
-import { assertRoleCanSeeVideo } from "@/server/lib/videos/guest-access";
+import { authorizeVideo } from "@/server/lib/videos/guest-access";
 
 export const getVideoRouter = createRouter()
     .openapi(createRoute({
@@ -37,10 +36,8 @@ export const getVideoRouter = createRouter()
             },
         },
     }), async (c) => {
-        const auth = await authorize(c.req.raw, ["guest", "viewer", "admin"]);
-
         const id = c.req.param("id") as string;
-        await assertRoleCanSeeVideo(id, roleOf(auth));
+        await authorizeVideo(c.req.raw, ["guest", "viewer", "admin"], id);
         try {
             const video = await prisma.video.findUnique({
                 where: { id },

@@ -34,8 +34,8 @@ interface VideoListState {
     fillNewFolder: (path: string) => void;
     clearClosedWhileFiltering: () => void;
     recordVisit: (now?: Date) => void;
-    loadSeen: (userId: string | null) => Promise<void>;
-    markSeen: (userId: string, videoId: string, revision: number) => Promise<void>;
+    loadSeen: () => Promise<void>;
+    markSeen: (videoId: string, revision: number) => Promise<void>;
     setOrganizing: (organizing: boolean) => void;
 }
 
@@ -82,13 +82,8 @@ export const useVideoListStore = create<VideoListState>()(
                 }
                 set((state) => ({ visitDay: today, firstVisitAt: now.getTime(), previousVisitAt: state.firstVisitAt }));
             },
-            loadSeen: async (userId) => {
-                if (!userId) {
-                    set({ seenRevisions: {} });
-                    return;
-                }
-
-                const res = await api.readStatus.seen.$get({ query: { userId } });
+            loadSeen: async () => {
+                const res = await api.readStatus.seen.$get();
                 if (res.status !== 200) {
                     throw new Error("failed to get seen revisions");
                 }
@@ -103,13 +98,13 @@ export const useVideoListStore = create<VideoListState>()(
                 });
             },
             // Shown here at once, so NEW goes without a reload.
-            markSeen: async (userId, videoId, revision) => {
+            markSeen: async (videoId, revision) => {
                 if ((get().seenRevisions[videoId] ?? 0) >= revision) {
                     return;
                 }
 
                 set((state) => ({ seenRevisions: { ...state.seenRevisions, [videoId]: revision } }));
-                const res = await api.readStatus.seen.$post({ json: { userId, videoId, revision } });
+                const res = await api.readStatus.seen.$post({ json: { videoId, revision } });
                 if (!res.ok) {
                     throw new Error("failed to record the seen revision");
                 }

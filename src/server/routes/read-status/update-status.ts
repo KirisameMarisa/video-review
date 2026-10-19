@@ -2,7 +2,8 @@ import { prisma } from "@/server/lib/db";
 import { createRoute, z } from "@hono/zod-openapi";
 import { createRouter } from "@/server/lib/openapi/router";
 import { errorResponse } from "@/server/lib/openapi/error-response";
-import { authorize } from "@/server/lib/token";
+import { userIdOf } from "@/server/lib/token";
+import { authorizeVideo } from "@/server/lib/videos/guest-access";
 
 export const updateStatusRouter = createRouter()
     .openapi(createRoute({
@@ -15,7 +16,6 @@ export const updateStatusRouter = createRouter()
                 content: {
                     "application/json": {
                         schema: z.object({
-                            userId: z.string().min(1),
                             videoId: z.string().min(1),
                             lastReadCommentId: z.string().min(1),
                         }),
@@ -33,15 +33,15 @@ export const updateStatusRouter = createRouter()
                 },
             },
             401: errorResponse("Unauthorized"),
+            403: errorResponse("Forbidden"),
             400: errorResponse("Invalid request body"),
             500: errorResponse("Failed to update read status"),
         },
     }), async (c) => {
-        await authorize(c.req.raw, ["guest", "viewer", "admin"]);
+        const { videoId, lastReadCommentId } = c.req.valid("json");
+        const userId = userIdOf(await authorizeVideo(c.req.raw, ["viewer", "admin"], videoId));
 
         try {
-            const { userId, videoId, lastReadCommentId } = c.req.valid("json");
-
             const user = await prisma.user.findUnique({
                 where: { id: userId },
                 select: { id: true },

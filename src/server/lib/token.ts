@@ -133,6 +133,20 @@ export function roleOf(auth: AuthIdentity): Role {
     return auth.type === "api-token" ? auth.role : auth.decoded.role;
 }
 
+// The API token has no person behind it.
+export function userIdOrNull(auth: AuthIdentity): string | null {
+    return auth.type === "jwt" ? auth.decoded.id : null;
+}
+
+// For per-person data, which the API token cannot own.
+export function userIdOf(auth: AuthIdentity): string {
+    const userId = userIdOrNull(auth);
+    if (userId === null) {
+        throw new ServerError("forbidden", 403);
+    }
+    return userId;
+}
+
 // Browser <video>/<img> can't send a bearer header, so media also accepts the JWT
 // from an httpOnly cookie; every other route stays bearer-only.
 export async function authorizeMedia(c: Context, roles: Role[]): Promise<AuthIdentity> {

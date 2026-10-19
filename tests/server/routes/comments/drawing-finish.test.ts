@@ -8,12 +8,15 @@ const deleteObjectMock = vi.hoisted(() => vi.fn(async () => true));
 const deleteSessionMock = vi.hoisted(() => vi.fn(async () => {}));
 const prismaMock = vi.hoisted(() => ({
     videoComment: {
-        findFirst: vi.fn(),
+        findUnique: vi.fn(),
         update: vi.fn(),
     },
 }));
 
-vi.mock("@/server/lib/token", () => ({ authorize: vi.fn(async () => ({ type: "api-token" as const })) }));
+vi.mock("@/server/lib/token", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@/server/lib/token")>()),
+    authorize: vi.fn(async () => ({ type: "api-token" as const, role: "admin" as const })),
+}));
 vi.mock("@/server/lib/upload-session", () => ({
     getSession: vi.fn(async () => ({ id: "session-1", storageKey: sessionKey.value })),
     deleteSession: deleteSessionMock,
@@ -32,7 +35,7 @@ describe("comment drawing finish", () => {
         deleteObjectMock.mockClear();
         deleteSessionMock.mockClear();
         prismaMock.videoComment.update.mockReset();
-        prismaMock.videoComment.findFirst.mockResolvedValue({ id: "comment-1", drawingPath: OLD_PATH, hasDrawing: true });
+        prismaMock.videoComment.findUnique.mockResolvedValue({ id: "comment-1", drawingPath: OLD_PATH, hasDrawing: true, deleted: false });
     });
 
     it("refuses a session that was opened for another comment", async () => {
@@ -61,7 +64,7 @@ describe("comment drawing finish", () => {
 
     it("keeps the file when the comment already draws from its own place", async () => {
         sessionKey.value = COMMENT_PATH;
-        prismaMock.videoComment.findFirst.mockResolvedValue({ id: "comment-1", drawingPath: COMMENT_PATH, hasDrawing: true });
+        prismaMock.videoComment.findUnique.mockResolvedValue({ id: "comment-1", drawingPath: COMMENT_PATH, hasDrawing: true, deleted: false });
         prismaMock.videoComment.update.mockImplementation(async ({ data }: { data: object }) => ({ id: "comment-1", ...data }));
 
         const res = await finish();

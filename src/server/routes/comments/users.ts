@@ -3,7 +3,7 @@ import { createRouter } from "@/server/lib/openapi/router";
 import { prisma } from "@/server/lib/db";
 import { PrismaTypes } from "@/lib/db-types";
 import { errorResponse } from "@/server/lib/openapi/error-response";
-import { authorize } from "@/server/lib/token";
+import { authorize, roleOf } from "@/server/lib/token";
 
 const QuerySchema = z.object({
     videoId: z.string().optional(),
@@ -34,7 +34,8 @@ export const usersRouter = createRouter()
             401: errorResponse("Unauthorized"),
         },
     }), async (c) => {
-        await authorize(c.req.raw, ["guest", "viewer", "admin"]);
+        // eslint-disable-next-line no-restricted-syntax -- lists across videos; guests are filtered by guestVisible below
+        const auth = await authorize(c.req.raw, ["guest", "viewer", "admin"]);
 
         const query = c.req.valid("query");
         const {
@@ -45,6 +46,10 @@ export const usersRouter = createRouter()
         } = query;
 
         const whereVideoComment: PrismaTypes.VideoCommentWhereInput = { deleted: false };
+
+        if (roleOf(auth) === "guest") {
+            whereVideoComment.video = { guestVisible: true };
+        }
 
         if (videoId) {
             whereVideoComment.videoId = videoId;

@@ -16,13 +16,13 @@ interface CommentState {
 
     setDisplayComments: (comments: VideoComment[]) => void;
     fetchComments: (videoRevision: VideoRevision) => Promise<void>;
-    addComment: (c: Omit<VideoComment, "notifiedProviders" | "id" | "createdAt" | "updatedAt" | "deleted" | "drawingPath" | "hasDrawing" | "thumbsUp" | "userId">) => Promise<string>;
+    addComment: (c: Omit<VideoComment, "notifiedProviders" | "id" | "createdAt" | "updatedAt" | "deleted" | "drawingPath" | "hasDrawing" | "thumbsUp" | "userId" | "isGuest">) => Promise<string>;
     updateComment: (comment: VideoComment) => void;
     deleteComment: (id: string) => Promise<void>;
     incrementThumbsUpCount: (id: string) => Promise<void>;
     issueLinkedComment: (id: string, issueType: string, screenshot: Blob | null) => Promise<void>;
-    loadUnread: (userId: string | null) => Promise<void>;
-    markRead: (userId: string, videoId: string) => Promise<void>;
+    loadUnread: () => Promise<void>;
+    markRead: (videoId: string) => Promise<void>;
 }
 
 export const useCommentStore = create<CommentState>((set, get) => ({
@@ -109,13 +109,8 @@ export const useCommentStore = create<CommentState>((set, get) => ({
         });
     },
 
-    loadUnread: async (userId) => {
-        if (!userId) {
-            set({ unreadVideoIds: new Set() });
-            return;
-        }
-
-        const res = await api.readStatus.unread.$get({ query: { userId } });
+    loadUnread: async () => {
+        const res = await api.readStatus.unread.$get();
         if (res.status !== 200) {
             throw new Error("failed to get unread comment info");
         }
@@ -123,12 +118,12 @@ export const useCommentStore = create<CommentState>((set, get) => ({
         set({ unreadVideoIds: new Set(unreadVideoIds) });
     },
 
-    markRead: async (userId, videoId) => {
+    markRead: async (videoId) => {
         const latest = await api.readStatus.latest.$get({ query: { videoId } });
         if (latest.status !== 200) return;
         const { latestCommentId } = await latest.json();
         if (!latestCommentId) return;
-        const res = await api.readStatus.index.$post({ json: { userId, videoId, lastReadCommentId: latestCommentId } });
+        const res = await api.readStatus.index.$post({ json: { videoId, lastReadCommentId: latestCommentId } });
 
         // The sidebar's unread mark goes away without a reload.
         if (res.ok && get().unreadVideoIds.has(videoId)) {

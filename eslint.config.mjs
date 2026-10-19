@@ -38,6 +38,16 @@ export default defineConfig([
         },
     },
     {
+        // Guest-admitting routes about one video or comment go through authorizeVideo / authorizeComment; list routes opt out per call.
+        files: ["src/server/routes/{comments,read-status,videos}/**/*.ts"],
+        rules: {
+            "no-restricted-syntax": ["error", {
+                selector: "CallExpression[callee.name='authorize'] > ArrayExpression > Literal[value='guest']",
+                message: "A guest-admitting route goes through authorizeVideo / authorizeComment; a list route filters by guestVisible and declares it with eslint-disable.",
+            }],
+        },
+    },
+    {
         // The wrappers are the one place that may restyle primitives, and the stock shadcn
         // classes use arbitrary values (ring-[3px], p-[3px]) that the theme has no token for.
         files: ["src/components/ui/**/*.tsx"],

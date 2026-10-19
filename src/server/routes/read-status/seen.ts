@@ -2,7 +2,8 @@ import { prisma } from "@/server/lib/db";
 import { createRoute, z } from "@hono/zod-openapi";
 import { createRouter } from "@/server/lib/openapi/router";
 import { errorResponse } from "@/server/lib/openapi/error-response";
-import { authorize } from "@/server/lib/token";
+import { authorize, userIdOf } from "@/server/lib/token";
+import { authorizeVideo } from "@/server/lib/videos/guest-access";
 
 export const seenRouter = createRouter()
     .openapi(createRoute({
@@ -10,7 +11,6 @@ export const seenRouter = createRouter()
         summary: "Get seen revisions",
         description: "Returns the newest revision a user has opened of each video.",
         path: "/",
-        request: { query: z.object({ userId: z.string().min(1) }) },
         responses: {
             200: {
                 description: "The newest opened revision by video ID",
@@ -21,11 +21,10 @@ export const seenRouter = createRouter()
                 },
             },
             401: errorResponse("Unauthorized"),
-            400: errorResponse("Missing userId"),
+            403: errorResponse("Forbidden"),
         },
     }), async (c) => {
-        await authorize(c.req.raw, ["guest", "viewer", "admin"]);
-        const { userId } = c.req.valid("query");
+        const userId = userIdOf(await authorize(c.req.raw, ["viewer", "admin"]));
 
         const rows = await prisma.userVideoReadStatus.findMany({
             where: { userId, lastSeenRevision: { not: null } },
@@ -44,7 +43,6 @@ export const seenRouter = createRouter()
                 content: {
                     "application/json": {
                         schema: z.object({
-                            userId: z.string().min(1),
                             videoId: z.string().min(1),
                             revision: z.number().int().min(1),
                         }),
@@ -62,11 +60,12 @@ export const seenRouter = createRouter()
                 },
             },
             401: errorResponse("Unauthorized"),
+            403: errorResponse("Forbidden"),
             400: errorResponse("Invalid request body"),
         },
     }), async (c) => {
-        await authorize(c.req.raw, ["guest", "viewer", "admin"]);
-        const { userId, videoId, revision } = c.req.valid("json");
+        const { videoId, revision } = c.req.valid("json");
+        const userId = userIdOf(await authorizeVideo(c.req.raw, ["viewer", "admin"], videoId));
 
         const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
         if (!user) {

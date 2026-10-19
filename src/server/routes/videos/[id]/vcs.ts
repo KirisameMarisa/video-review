@@ -7,8 +7,7 @@ import { scoreRelevance } from "@/server/lib/vcs/relevance";
 import { startOfUTCDay, ensureDaysCached, queryByDateRange } from "@/server/lib/vcs/cache";
 import { createLLMClient } from "@/server/lib/integration-clients/llm-client";
 import { errorResponse } from "@/server/lib/openapi/error-response";
-import { authorize, roleOf } from "@/server/lib/token";
-import { assertRoleCanSeeVideo } from "@/server/lib/videos/guest-access";
+import { authorizeVideo } from "@/server/lib/videos/guest-access";
 
 const DEFAULT_LOOKBACK_DAYS = 30;
 
@@ -44,10 +43,8 @@ export const vcsRouter = createRouter()
             503: { description: "VCS provider not configured" },
         },
     }), async (c) => {
-        const auth = await authorize(c.req.raw, ["guest", "viewer", "admin"]);
-
         const videoId = c.req.param("id") as string;
-        await assertRoleCanSeeVideo(videoId, roleOf(auth));
+        await authorizeVideo(c.req.raw, ["guest", "viewer", "admin"], videoId);
         const { from: fromRevisionId, to: toRevisionId, refresh } = c.req.valid("query");
 
         const video = await prisma.video.findUnique({
@@ -183,10 +180,8 @@ export const vcsRouter = createRouter()
             503: { description: "LLM not configured" },
         },
     }), async (c) => {
-        const auth = await authorize(c.req.raw, ["guest", "viewer", "admin"]);
-
         const videoId = c.req.param("id") as string;
-        await assertRoleCanSeeVideo(videoId, roleOf(auth));
+        await authorizeVideo(c.req.raw, ["guest", "viewer", "admin"], videoId);
         const { to: toRevisionId } = c.req.valid("query");
 
         const llmClient = await createLLMClient();

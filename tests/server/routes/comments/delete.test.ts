@@ -5,12 +5,16 @@ const DRAWING_PATH = "drawing/comment-1.png";
 const deleteObjectMock = vi.hoisted(() => vi.fn(async () => true));
 const prismaMock = vi.hoisted(() => ({
     videoComment: {
+        findUnique: vi.fn(async () => ({ userId: "u", videoId: "video-1" })),
         update: vi.fn(),
     },
 }));
 
 vi.mock("@/server/lib/db", () => ({ prisma: prismaMock }));
-vi.mock("@/server/lib/token", () => ({ authorize: vi.fn(async () => ({ type: "jwt", decoded: { id: "u", role: "viewer" } })) }));
+vi.mock("@/server/lib/token", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@/server/lib/token")>()),
+    authorize: vi.fn(async () => ({ type: "jwt", decoded: { id: "u", role: "viewer" } })),
+}));
 vi.mock("@/server/lib/storage", () => ({ VideoReviewStorage: { deleteObject: deleteObjectMock } }));
 
 import { commentsRouter } from "@/server/routes/comments";

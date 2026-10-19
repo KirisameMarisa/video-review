@@ -5,7 +5,7 @@ import { prisma } from "@/server/lib/db";
 import { createRoute, z } from "@hono/zod-openapi";
 import { createRouter } from "@/server/lib/openapi/router";
 import { errorResponse } from "@/server/lib/openapi/error-response";
-import { authorize } from "@/server/lib/token";
+import { authorizeComment } from "@/server/lib/videos/guest-access";
 
 export const externalLinksRouter = createRouter()
     .openapi(createRoute({
@@ -22,25 +22,16 @@ export const externalLinksRouter = createRouter()
                 },
             },
             401: errorResponse("Unauthorized"),
+            403: errorResponse("Forbidden"),
             404: errorResponse("Comment not found"),
             500: errorResponse("Failed to fetch external links"),
         },
     }), async (c) => {
-        await authorize(c.req.raw, ["guest", "viewer", "admin"]);
+        const id = c.req.param("id") as string;
+        const { comment } = await authorizeComment(c.req.raw, ["guest", "viewer", "admin"], id);
+        console.debug("[external-links] request", { id });
 
         try {
-            const id = c.req.param("id");
-            console.debug("[external-links] request", { id });
-
-            const comment = await prisma.videoComment.findUnique({
-                where: { id },
-            });
-
-            if (!comment) {
-                console.warn("[external-links] comment not found", { id });
-                return c.json({ error: "comment not found" }, 404);
-            }
-
             console.debug("[external-links] comment loaded", {
                 id: comment.id,
                 notifiedProviders: comment.notifiedProviders,

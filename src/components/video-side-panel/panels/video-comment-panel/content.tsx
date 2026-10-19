@@ -14,13 +14,14 @@ import CommentCard from "@/components/video-side-panel/panels/video-comment-pane
 import { useCommentSearchStore } from "@/stores/comment-search-store";
 import { useCommentSearchDateFilterStore } from "@/stores/date-filter-store";
 import { chatToast } from "@/components/chat-notice";
+import { canEditComment, isGuest } from "@/lib/role";
 
 export default function VideoCommentContent() {
     const containerRef = useRef<HTMLDivElement>(null);
     const commentCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
-    const { displayName, email, userId } = useAuthStore();
+    const { displayName, email, userId, role } = useAuthStore();
     const { selectedVideo, selectedRevision } = useVideoStore();
-    const { setDisplayComments, comments, addComment, fetchComments, markRead } = useCommentStore();
+    const { setDisplayComments, comments, addComment, updateComment, fetchComments, markRead } = useCommentStore();
     const { filterText } = useCommentSearchStore();
     const dateFilter = useCommentSearchDateFilterStore();
     const { canvasSave } = useDrawingStore();
@@ -35,9 +36,13 @@ export default function VideoCommentContent() {
     } = useCommentEditStore();
 
     useEffect(() => {
-        if (!userId || !selectedVideo) return;
-        markRead(userId, selectedVideo.id);
+        if (!userId || isGuest(role) || !selectedVideo) {
+            return;
+        }
+        markRead(selectedVideo.id);
     }, [comments]);
+
+    const canEditText = !editingComment || canEditComment(editingComment, role, userId);
 
     const handleCommentConfirmed = async (comment: string, issueId: string | null) => {
         // This handler is responsible for both creating new comments
@@ -68,6 +73,16 @@ export default function VideoCommentContent() {
             if (saved) {
                 setEditDrawing(saved);
             }
+
+            // Someone else's comment: only the drawing is saved.
+            if (!canEditText) {
+                if (saved) {
+                    updateComment(saved);
+                }
+                setEditing(null);
+                return;
+            }
+
             setEditComment(comment);
             setEditIssueId(issueId);
             editSave();
@@ -125,6 +140,7 @@ export default function VideoCommentContent() {
             <CommentConfirmed
                 confirmedLabel={editingComment ? "commentUpdate" : "commentAdd"}
                 comment={editingComment ? editingComment.comment : ""}
+                canEditText={canEditText}
                 issueId={editingComment ? editingComment.issueId ?? null : null}
                 onCancel={() => setEditing(null)}
                 onConfirmed={async (comment, issueId) => { await handleCommentConfirmed(comment, issueId) }}
