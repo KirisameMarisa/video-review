@@ -13,10 +13,14 @@ import {
 import { Slider } from "@/ui/slider";
 import { ButtonGroup } from "@/ui/button-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
-import { ArrowRightToLine, ListVideo, Repeat1, type LucideIcon } from "lucide-react";
+import { ArrowRightToLine, ListVideo, Repeat1, Users, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { formatTime } from "@/lib/utils";
 import { usePlayback } from "@/stores/playback-store";
+import { joinSync, leaveSync, useSyncing } from "@/lib/sync-session";
+import { createVideoSyncLink } from "@/lib/url";
+import { useRouter } from "next/navigation";
+import { ShareLinkDialog } from "@/components/dialog/share-link";
 import { EPlayMode, useVideoPlayerStore } from "@/stores/video-player-store";
 import { useConfigStore } from "@/stores/config-store";
 import { usePlaybackWidth } from "@/lib/hooks/use-playback-width";
@@ -167,5 +171,58 @@ export function PlayModeButtons() {
                 </Tooltip>
             ))}
         </ButtonGroup>
+    );
+}
+
+export function SyncButton({ videoId }: { videoId: string | null }) {
+    const t = useTranslations("video-control-panel");
+    const syncing = useSyncing(videoId);
+    const participants = usePlayback((s) => s.participants);
+    const router = useRouter();
+    const syncLink = usePlayback((s) => s.syncLink);
+    const setSyncLink = usePlayback((s) => s.setSyncLink);
+
+    if (!videoId) {
+        return null;
+    }
+
+    const toggle = () => {
+        if (syncing) {
+            leaveSync();
+            return;
+        }
+
+        joinSync(videoId, router);
+        // The first one in hands out the link; later ones are joining a session that already has it.
+        if (participants === 0) {
+            setSyncLink(createVideoSyncLink(window.location.origin, videoId));
+        }
+    };
+
+    const closeLink = (open: boolean) => {
+        if (!open) {
+            setSyncLink(null);
+        }
+    };
+
+    return (
+        <>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                        variant={syncing ? "accent" : "ghost"}
+                        size="sm"
+                        aria-label={t("syncPlayback")}
+                        aria-pressed={syncing}
+                        onClick={toggle}
+                    >
+                        <Users />
+                        {participants > 0 && participants}
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t("syncPlayback")}</TooltipContent>
+            </Tooltip>
+            <ShareLinkDialog url={syncLink ?? ""} open={syncLink !== null} onOpenChange={closeLink} />
+        </>
     );
 }

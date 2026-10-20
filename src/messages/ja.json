@@ -132,7 +132,8 @@
         "fullscreen": "全画面",
         "exitFullscreen": "全画面を終了",
         "playbackResolution": "再生解像度",
-        "originalResolution": "Original"
+        "originalResolution": "Original",
+        "syncPlayback": "同期再生"
     },
     "video-comment-panel": {
         "title": "Comments",

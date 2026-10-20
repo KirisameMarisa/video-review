@@ -38,12 +38,12 @@ export default defineConfig([
         },
     },
     {
-        // Guest-admitting routes about one video or comment go through authorizeVideo / authorizeComment; list routes opt out per call.
+        // Guest-admitting routes about one video or comment go through authorizeVideo / authorizeVideoMedia / authorizeComment; list routes opt out per call.
         files: ["src/server/routes/{comments,read-status,videos}/**/*.ts"],
         rules: {
             "no-restricted-syntax": ["error", {
-                selector: "CallExpression[callee.name='authorize'] > ArrayExpression > Literal[value='guest']",
-                message: "A guest-admitting route goes through authorizeVideo / authorizeComment; a list route filters by guestVisible and declares it with eslint-disable.",
+                selector: "CallExpression[callee.name=/^authorize(Media)?$/] > ArrayExpression > Literal[value='guest']",
+                message: "A guest-admitting route goes through authorizeVideo / authorizeVideoMedia / authorizeComment; a list route filters by guestVisible and declares it with eslint-disable.",
             }],
         },
     },

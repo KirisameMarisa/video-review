@@ -20,6 +20,7 @@ import { LoadingBadge } from "@/components/controls/loading-badge";
 import { useFullscreenSync } from "@/lib/hooks/use-fullscreen-sync";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useIdle } from "@/lib/hooks/use-idle";
+import { useVideoStream } from "@/lib/hooks/use-video-stream";
 import { cn } from "@/lib/utils";
 import { PortalContainerContext } from "@/lib/portal-container";
 import { Toaster } from "@/components/ui/sonner";
@@ -49,6 +50,8 @@ export default function VideoReview() {
         selectedRevision,
         loading,
     } = useVideoStore();
+
+    useVideoStream(selectedVideo?.id ?? null);
 
     const { comments, fetchComments } = useCommentStore();
     const {

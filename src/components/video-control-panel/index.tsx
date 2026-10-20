@@ -6,7 +6,7 @@ import { useVideoStore } from "@/stores/video-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { isGuest } from "@/lib/role";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
-import { PlayButton, VolumeControl, TimeDisplay, PlaybackRateSelect, PlaybackResolutionSelect, PlayModeButtons } from "./playback";
+import { PlayButton, VolumeControl, TimeDisplay, PlaybackRateSelect, PlaybackResolutionSelect, PlayModeButtons, SyncButton } from "./playback";
 import { ScreenshotButton, ShareLinkButton, DownloadButton, OpenSceneButton, FullscreenButton } from "./actions";
 
 export default function VideoControlPanel() {
@@ -35,6 +35,7 @@ export default function VideoControlPanel() {
             <PlaybackRateSelect />
             <PlaybackResolutionSelect />
             {!isMobile && <PlayModeButtons />}
+            <SyncButton videoId={selectedVideo?.id ?? null} />
 
             <div className="ml-auto flex gap-1">
                 {/* Guests watch only; saving frames or files would take the footage out. */}

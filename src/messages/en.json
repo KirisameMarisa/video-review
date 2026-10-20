@@ -132,7 +132,8 @@
         "fullscreen": "Fullscreen",
         "exitFullscreen": "Exit fullscreen",
         "playbackResolution": "Playback resolution",
-        "originalResolution": "Original"
+        "originalResolution": "Original",
+        "syncPlayback": "Sync playback"
     },
     "video-comment-panel": {
         "title": "Comments",

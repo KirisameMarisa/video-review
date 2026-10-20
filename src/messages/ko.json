@@ -132,7 +132,8 @@
         "fullscreen": "전체 화면",
         "exitFullscreen": "전체 화면 종료",
         "playbackResolution": "재생 해상도",
-        "originalResolution": "원본"
+        "originalResolution": "원본",
+        "syncPlayback": "동기 재생"
     },
     "video-comment-panel": {
         "title": "댓글",
