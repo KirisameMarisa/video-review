@@ -5,7 +5,7 @@ import path from "node:path";
 // Seeded admin user (see prisma/seed.ts).
 const ADMIN = { email: "Bocchi@example.com", password: "pass123" };
 
-const VIDEO = path.join(process.cwd(), "tests/e2e/fixtures/preview.mp4");
+const VIDEO = path.join(process.cwd(), "tests/fixtures/preview.mp4");
 
 async function loginAsAdmin(page: Page) {
     await page.goto("/login");

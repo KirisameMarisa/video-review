@@ -146,9 +146,9 @@ test.describe("thumbnails float panel", () => {
 
         test.beforeAll(() => {
             fs.mkdirSync(path.dirname(VARIANT_PATH!), { recursive: true });
-            // 3 s fade to orange, 64x36, VP9 (Playwright's Chromium has no H.264):
-            // ffmpeg -f lavfi -i "color=c=#ff8800:s=64x36:r=10:d=3,fade=t=in:st=0:d=3" -pix_fmt yuv420p -c:v libvpx-vp9 -b:v 50k -movflags frag_keyframe+empty_moov -f mp4 preview.mp4
-            fs.copyFileSync(path.join(import.meta.dirname, "fixtures", "preview.mp4"), VARIANT_PATH!);
+            // 30 s fade to orange, 64x36, VP9 (Playwright's Chromium has no H.264):
+            // ffmpeg -f lavfi -i "color=c=#ff8800:s=64x36:r=10:d=30,fade=t=in:st=0:d=30" -pix_fmt yuv420p -c:v libvpx-vp9 -b:v 50k -movflags frag_keyframe+empty_moov -f mp4 preview.mp4
+            fs.copyFileSync(path.join(import.meta.dirname, "..", "fixtures", "preview.mp4"), VARIANT_PATH!);
         });
         test.afterAll(() => fs.rmSync(VARIANT_PATH!, { force: true }));
 
