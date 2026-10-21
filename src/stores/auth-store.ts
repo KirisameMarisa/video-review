@@ -44,7 +44,10 @@ export const useAuthStore = create<AuthState>()(
                 try {
                     const res = await api.auth.verify.$post({ json: { token } });
                     if (res.status === 200) return (await res.json()).decoded.id;
-                } catch {}
+                } catch {
+                    // No answer is not a rejected session, so the token stays.
+                    return null;
+                }
 
                 get().logout();
                 return null;
