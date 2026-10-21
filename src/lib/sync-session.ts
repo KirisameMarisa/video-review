@@ -1,8 +1,25 @@
 "use client";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { api } from "@/lib/api-client";
 import { createVideoSyncLink, SYNC_PARAM } from "@/lib/url";
 
 type Router = ReturnType<typeof useRouter>;
+
+export interface PlayerState {
+    revisionId: string;
+    playing: boolean;
+    time: number;
+    rate: number;
+}
+
+// screenId tags the sender, so its own echo is not followed.
+export async function postSyncState(videoId: string, state: PlayerState, screenId: string) {
+    try {
+        await api.videos[":id"].sync.state.$post({ param: { id: videoId }, json: { ...state, by: screenId } });
+    } catch (e) {
+        console.error("Failed to send the sync state", e);
+    }
+}
 
 // Only the video the URL names; the player can move on to the next video without changing the URL.
 export function useSyncing(videoId: string | null): boolean {

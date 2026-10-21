@@ -1,7 +1,15 @@
 "use client";
 import { useEffect } from "react";
-import { usePlaybackStoreApi } from "@/stores/playback-store";
+import { api } from "@/lib/api-client";
+import { usePlaybackStoreApi, type ReceivedSyncState } from "@/stores/playback-store";
 import { useSyncing } from "@/lib/sync-session";
+
+const PING_MS = 20_000;
+
+interface SyncEvent {
+    participants: number;
+    state: (Omit<ReceivedSyncState, "anchor"> & { ageMs: number }) | null;
+}
 
 // One stream per review screen, open whether or not this screen syncs.
 export function useVideoStream(videoId: string | null) {
@@ -17,14 +25,28 @@ export function useVideoStream(videoId: string | null) {
         const query = syncing ? "?sync=1" : "";
         const source = new EventSource(`/api/v1/videos/${encodeURIComponent(videoId)}/stream${query}`);
 
+        // The server drops a connection that stops pinging, which is how it notices a closed tab behind a proxy.
+        let pingTimer: ReturnType<typeof setInterval> | undefined;
+        source.addEventListener("hello", (e) => {
+            const { connectionId } = JSON.parse(e.data) as { connectionId: string };
+            clearInterval(pingTimer);
+            pingTimer = setInterval(() => {
+                void api.videos[":id"].stream.ping.$post({ param: { id: videoId }, json: { connectionId } }).catch(() => {});
+            }, PING_MS);
+        });
+
         source.addEventListener("sync", (e) => {
-            const { participants } = JSON.parse(e.data) as { participants: number };
-            store.getState().setParticipants(participants);
+            const { participants, state } = JSON.parse(e.data) as SyncEvent;
+            const { setParticipants, setSyncState } = store.getState();
+            setParticipants(participants);
+            setSyncState(state && { ...state, anchor: performance.now() - state.ageMs });
         });
 
         return () => {
+            clearInterval(pingTimer);
             source.close();
             store.getState().setParticipants(0);
+            store.getState().setSyncState(null);
         };
     }, [videoId, syncing, store]);
 }

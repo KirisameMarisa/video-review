@@ -1,25 +1,31 @@
 import { describe, expect, it } from "vitest";
 import { subscribeVideoStream } from "@/server/lib/video-stream";
 
+let screens = 0;
+
 // Records the participant count each subscriber was last told.
 function screen(videoId: string, syncing: boolean) {
     const seen: number[] = [];
-    const unsubscribe = subscribeVideoStream(videoId, syncing, (event, data) => {
-        if (event === "sync") {
-            seen.push((data as { participants: number }).participants);
-        }
+    const unsubscribe = subscribeVideoStream(videoId, `screen-${++screens}`, syncing, {
+        send: (event, data) => {
+            if (event === "sync") {
+                seen.push((data as { participants: number }).participants);
+            }
+        },
+        keepAlive: () => {},
+        close: () => {},
     });
 
     return { unsubscribe, last: () => seen.at(-1) };
 }
 
 describe("video stream channels", () => {
-    it("keeps a later session intact when an old screen unsubscribes twice", () => {
+    it("keeps a later session intact when a gone screen is removed again", () => {
         const first = screen("video-twice", true);
         first.unsubscribe();
 
         const second = screen("video-twice", true);
-        // The stream's abort and its finally both unsubscribe; the late one must not drop the new channel.
+        // A late unsubscribe for a screen already gone must not drop the new channel.
         first.unsubscribe();
         const third = screen("video-twice", true);
 

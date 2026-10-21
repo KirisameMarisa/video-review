@@ -21,6 +21,7 @@ import { useFullscreenSync } from "@/lib/hooks/use-fullscreen-sync";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useIdle } from "@/lib/hooks/use-idle";
 import { useVideoStream } from "@/lib/hooks/use-video-stream";
+import { useSyncedPlayback } from "@/lib/hooks/use-synced-playback";
 import { cn } from "@/lib/utils";
 import { PortalContainerContext } from "@/lib/portal-container";
 import { Toaster } from "@/components/ui/sonner";
@@ -52,6 +53,7 @@ export default function VideoReview() {
     } = useVideoStore();
 
     useVideoStream(selectedVideo?.id ?? null);
+    useSyncedPlayback(selectedVideo?.id ?? null);
 
     const { comments, fetchComments } = useCommentStore();
     const {
@@ -238,7 +240,8 @@ export default function VideoReview() {
         const onMeta = () => {
             setDuration(v.duration);
             setVideoAspect(`${v.videoWidth} / ${v.videoHeight}`);
-            v.playbackRate = playbackRate;
+            // Read now, not from this effect's render: the speed may have changed since the source was picked.
+            v.playbackRate = useVideoPlayerStore.getState().playbackRate;
             v.volume = volumeEnabled ? volume : 0.0;
             if (resume) {
                 v.currentTime = resume.time;
@@ -306,7 +309,8 @@ export default function VideoReview() {
         }
 
         if (isPlaying) {
-            v.play();
+            // The browser can refuse to start without a click (a sync link opened in a fresh tab); show it as paused then.
+            v.play().catch(() => setIsPlaying(false));
         } else {
             v.pause();
         }

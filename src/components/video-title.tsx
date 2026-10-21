@@ -1,6 +1,9 @@
 "use client";
 import { useRef, useState } from "react";
 import { useVideoStore } from "@/stores/video-store";
+import { usePlaybackStoreApi } from "@/stores/playback-store";
+import { useVideoPlayerStore } from "@/stores/video-player-store";
+import { postSyncState, useSyncing } from "@/lib/sync-session";
 import { useAuthStore } from "@/stores/auth-store";
 import { useLocale } from "@/app/locale-provider";
 import { isAdmin } from "@/lib/role";
@@ -33,6 +36,23 @@ export default function VideoTitle() {
 
     const role = useAuthStore((s) => s.role);
     const canEditTags = isAdmin(role);
+
+    const playbackStore = usePlaybackStoreApi();
+    const syncing = useSyncing(selectedVideo?.id ?? null);
+
+    // A revision picked here starts the sync session on it from the top, paused.
+    const pickRevision = (id: string) => {
+        const rev = revisions.find((r) => r.id === id);
+        if (!rev) {
+            return;
+        }
+
+        selectVideoRevision(rev);
+        if (syncing) {
+            const rate = useVideoPlayerStore.getState().playbackRate;
+            void postSyncState(rev.videoId, { revisionId: rev.id, playing: false, time: 0, rate }, playbackStore.getState().screenId);
+        }
+    };
 
     const [inputVisible, setInputVisible] = useState(false);
     const [inputValue, setInputValue] = useState("");
@@ -78,10 +98,7 @@ export default function VideoTitle() {
                         {revisions.length > 1 && (
                             <Select
                                 value={selectedRevision?.id ?? ""}
-                                onValueChange={(id) => {
-                                    const rev = revisions.find((r) => r.id === id);
-                                    if (rev) selectVideoRevision(rev);
-                                }}
+                                onValueChange={pickRevision}
                             >
                                 <SelectTrigger size="sm">
                                     <SelectValue />

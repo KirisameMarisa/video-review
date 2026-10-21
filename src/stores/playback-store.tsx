@@ -2,6 +2,17 @@
 import { createContext, ReactNode, useContext, useState } from "react";
 import { createStore, StoreApi, useStore } from "zustand";
 
+// The sync session's playback state as this screen received it.
+export interface ReceivedSyncState {
+    revisionId: string;
+    playing: boolean;
+    time: number;
+    rate: number;
+    by: string;
+    // performance.now() at the moment the sender was at `time`; local clock only.
+    anchor: number;
+}
+
 interface PlaybackState {
     isPlaying: boolean;
     currentTime: number;
@@ -12,6 +23,9 @@ interface PlaybackState {
     participants: number;
     // The sync link the dialog shows, null while closed; kept here so it survives joining from another video's URL.
     syncLink: string | null;
+    syncState: ReceivedSyncState | null;
+    // Tags what this screen sends, so the echo of its own action is not followed.
+    screenId: string;
 
     setIsPlaying: (playing: boolean) => void;
     togglePlay: () => void;
@@ -20,6 +34,7 @@ interface PlaybackState {
     setDuration: (duration: number) => void;
     setParticipants: (participants: number) => void;
     setSyncLink: (link: string | null) => void;
+    setSyncState: (state: ReceivedSyncState | null) => void;
 }
 
 const createPlaybackStore = () => createStore<PlaybackState>()((set) => ({
@@ -29,6 +44,9 @@ const createPlaybackStore = () => createStore<PlaybackState>()((set) => ({
     duration: 0,
     participants: 0,
     syncLink: null,
+    syncState: null,
+    // Not crypto.randomUUID: on-premise http is not a secure context.
+    screenId: Math.random().toString(36).slice(2),
 
     setIsPlaying: (playing) => set({ isPlaying: playing }),
     togglePlay: () => set((s) => ({ isPlaying: !s.isPlaying })),
@@ -37,6 +55,7 @@ const createPlaybackStore = () => createStore<PlaybackState>()((set) => ({
     setDuration: (duration) => set({ duration }),
     setParticipants: (participants) => set({ participants }),
     setSyncLink: (syncLink) => set({ syncLink }),
+    setSyncState: (syncState) => set({ syncState }),
 }));
 
 const PlaybackStoreContext = createContext<StoreApi<PlaybackState> | null>(null);

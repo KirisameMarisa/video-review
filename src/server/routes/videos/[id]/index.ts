@@ -7,6 +7,7 @@ import { eventsRouter } from "@/server/routes/videos/[id]/events";
 import { vcsRouter } from "@/server/routes/videos/[id]/vcs";
 import { patchVideoRouter } from "@/server/routes/videos/[id]/patch";
 import { streamRouter } from "@/server/routes/videos/[id]/stream";
+import { syncRouter } from "@/server/routes/videos/[id]/sync";
 
 export const videoByIdRouter = createRouter()
     .route("/", getVideoRouter)
@@ -16,4 +17,5 @@ export const videoByIdRouter = createRouter()
     .route("/revisions", revisionsRouter)
     .route("/events", eventsRouter)
     .route("/metadata", metaDataRouter)
-    .route("/stream", streamRouter);
+    .route("/stream", streamRouter)
+    .route("/sync", syncRouter);
