@@ -133,7 +133,8 @@
         "exitFullscreen": "전체 화면 종료",
         "playbackResolution": "재생 해상도",
         "originalResolution": "원본",
-        "syncPlayback": "동기 재생"
+        "syncPlayback": "동기 재생",
+        "moreParticipants": "외 {count}명"
     },
     "video-comment-panel": {
         "title": "댓글",

@@ -133,7 +133,8 @@
         "exitFullscreen": "全画面を終了",
         "playbackResolution": "再生解像度",
         "originalResolution": "Original",
-        "syncPlayback": "同期再生"
+        "syncPlayback": "同期再生",
+        "moreParticipants": "他 {count} 人"
     },
     "video-comment-panel": {
         "title": "Comments",

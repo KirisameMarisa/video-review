@@ -5,13 +5,31 @@ import { z } from "zod";
 import { createRouter } from "@/server/lib/openapi/router";
 import { errorResponse } from "@/server/lib/openapi/error-response";
 import { authorizeVideo, authorizeVideoMedia } from "@/server/lib/videos/guest-access";
-import { subscribeVideoStream, touchVideoStream } from "@/server/lib/video-stream";
+import type { AuthIdentity } from "@/server/lib/token";
+import { prisma } from "@/server/lib/db";
+import { subscribeVideoStream, touchVideoStream, type Participant } from "@/server/lib/video-stream";
+
+async function participantOf(auth: AuthIdentity): Promise<Participant> {
+    if (auth.type !== "jwt") {
+        return { name: "API token", email: null };
+    }
+
+    // A guest has no user row; its name lives only in the token.
+    const { id, displayName, provider } = auth.decoded;
+    if (provider === "guest") {
+        return { name: String(displayName), email: null };
+    }
+
+    // The row rather than the token, so a renamed user shows the new name.
+    const user = await prisma.user.findUnique({ where: { id }, select: { displayName: true, email: true } });
+    return { name: user?.displayName ?? String(displayName), email: user?.email ?? null };
+}
 
 export const streamRouter = createRouter()
     .openapi(createRoute({
         method: "get",
         summary: "Stream updates for one video",
-        description: "Server-sent events while a review screen has the video open. `sync` carries the number of connections in the video's sync session and its playback state. `sync=1` puts this connection in the session. `hello` comes first with the connection id the browser pings with.",
+        description: "Server-sent events while a review screen has the video open. `sync` carries the names and emails of the connections in the video's sync session and its playback state. `sync=1` puts this connection in the session. `hello` comes first with the connection id the browser pings with.",
         path: "/",
         request: {
             query: z.object({
@@ -32,8 +50,8 @@ export const streamRouter = createRouter()
         },
     }), async (c) => {
         const id = c.req.param("id") as string;
-        await authorizeVideoMedia(c, ["guest", "viewer", "admin"], id);
-        const syncing = c.req.valid("query").sync === "1";
+        const auth = await authorizeVideoMedia(c, ["guest", "viewer", "admin"], id);
+        const participant = c.req.valid("query").sync === "1" ? await participantOf(auth) : null;
 
         return streamSSE(c, async (stream) => {
             const connectionId = randomUUID();
@@ -44,7 +62,7 @@ export const streamRouter = createRouter()
 
             // Open until the browser closes it or the patrol in video-stream finds it stopped pinging.
             await new Promise<void>((closed) => {
-                const unsubscribe = subscribeVideoStream(id, connectionId, syncing, {
+                const unsubscribe = subscribeVideoStream(id, connectionId, participant, {
                     send: (event, data) => {
                         void stream.writeSSE({ event, data: JSON.stringify(data) });
                     },

@@ -1,13 +1,13 @@
 "use client";
 import { useEffect } from "react";
 import { api } from "@/lib/api-client";
-import { usePlaybackStoreApi, type ReceivedSyncState } from "@/stores/playback-store";
+import { usePlaybackStoreApi, type Participant, type ReceivedSyncState } from "@/stores/playback-store";
 import { useSyncing } from "@/lib/sync-session";
 
 const PING_MS = 20_000;
 
 interface SyncEvent {
-    participants: number;
+    participants: Participant[];
     state: (Omit<ReceivedSyncState, "anchor"> & { ageMs: number }) | null;
 }
 
@@ -45,7 +45,7 @@ export function useVideoStream(videoId: string | null) {
         return () => {
             clearInterval(pingTimer);
             source.close();
-            store.getState().setParticipants(0);
+            store.getState().setParticipants([]);
             store.getState().setSyncState(null);
         };
     }, [videoId, syncing, store]);

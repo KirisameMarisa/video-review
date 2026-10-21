@@ -13,14 +13,19 @@ export interface ReceivedSyncState {
     anchor: number;
 }
 
+export interface Participant {
+    name: string;
+    email: string | null;
+}
+
 interface PlaybackState {
     isPlaying: boolean;
     currentTime: number;
     // Set while the seek bar is dragged or a jump is requested; the player seeks to it.
     timelineTime: number | null;
     duration: number;
-    // How many connections are in this video's sync session, counted whether or not this screen is in it.
-    participants: number;
+    // The connections in this video's sync session, in join order, known whether or not this screen is in it.
+    participants: Participant[];
     // The sync link the dialog shows, null while closed; kept here so it survives joining from another video's URL.
     syncLink: string | null;
     syncState: ReceivedSyncState | null;
@@ -32,7 +37,7 @@ interface PlaybackState {
     setCurrentTime: (time: number) => void;
     setTimelineTime: (time: number | null) => void;
     setDuration: (duration: number) => void;
-    setParticipants: (participants: number) => void;
+    setParticipants: (participants: Participant[]) => void;
     setSyncLink: (link: string | null) => void;
     setSyncState: (state: ReceivedSyncState | null) => void;
 }
@@ -42,7 +47,7 @@ const createPlaybackStore = () => createStore<PlaybackState>()((set) => ({
     currentTime: 0,
     timelineTime: null,
     duration: 0,
-    participants: 0,
+    participants: [],
     syncLink: null,
     syncState: null,
     // Not crypto.randomUUID: on-premise http is not a secure context.

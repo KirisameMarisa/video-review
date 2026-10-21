@@ -10,6 +10,13 @@ export interface SyncState {
     by: string;
 }
 
+// Who a syncing screen shows up as to the others.
+export interface Participant {
+    name: string;
+    // Looks up the avatar; null for guests and the API token.
+    email: string | null;
+}
+
 // The one open stream behind a subscriber, as the route hands it over.
 export interface StreamConnection {
     send: (event: string, data: unknown) => void;
@@ -19,7 +26,8 @@ export interface StreamConnection {
 
 interface Subscriber {
     connectionId: string;
-    syncing: boolean;
+    // Null while the screen only watches the count.
+    participant: Participant | null;
     connection: StreamConnection;
     // Server clock of the last ping; a successful write proves nothing behind a proxy that keeps the socket open.
     lastSeen: number;
@@ -47,7 +55,7 @@ const channels = globalForStream.videoStreamChannels ?? new Map<string, Channel>
 globalForStream.videoStreamChannels = channels;
 
 function broadcastSync(channel: Channel) {
-    const participants = [...channel.subscribers].filter((s) => s.syncing).length;
+    const participants = [...channel.subscribers].flatMap((s) => s.participant === null ? [] : [s.participant]);
     const state = channel.state && { ...channel.state, ageMs: Date.now() - channel.stateAt };
 
     for (const s of channel.subscribers) {
@@ -118,9 +126,9 @@ function createChannel(videoId: string): Channel {
 }
 
 // Returns the unsubscribe for the browser closing the stream.
-export function subscribeVideoStream(videoId: string, connectionId: string, syncing: boolean, connection: StreamConnection): () => void {
+export function subscribeVideoStream(videoId: string, connectionId: string, participant: Participant | null, connection: StreamConnection): () => void {
     const channel = channels.get(videoId) ?? createChannel(videoId);
-    const self: Subscriber = { connectionId, syncing, connection, lastSeen: Date.now() };
+    const self: Subscriber = { connectionId, participant, connection, lastSeen: Date.now() };
     channel.subscribers.add(self);
     broadcastSync(channel);
     startPatrol();

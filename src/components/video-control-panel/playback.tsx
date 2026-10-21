@@ -24,6 +24,7 @@ import { ShareLinkDialog } from "@/components/dialog/share-link";
 import { EPlayMode, useVideoPlayerStore } from "@/stores/video-player-store";
 import { useConfigStore } from "@/stores/config-store";
 import { usePlaybackWidth } from "@/lib/hooks/use-playback-width";
+import { AccountAvatar } from "@/components/controls/account-avatar";
 
 export function PlayButton() {
     const t = useTranslations("video-control-panel");
@@ -174,6 +175,25 @@ export function PlayModeButtons() {
     );
 }
 
+function SyncParticipants() {
+    const SHOWN_PARTICIPANTS = 5;
+    const t = useTranslations("video-control-panel");
+    const participants = usePlayback((s) => s.participants);
+    const hidden = participants.length - SHOWN_PARTICIPANTS;
+
+    return (
+        <div className="flex flex-col gap-1">
+            {participants.slice(0, SHOWN_PARTICIPANTS).map((p, i) => (
+                <div key={i} className="flex items-center gap-2">
+                    <AccountAvatar email={p.email} className="size-5" />
+                    {p.name}
+                </div>
+            ))}
+            {hidden > 0 && <span>{t("moreParticipants", { count: hidden })}</span>}
+        </div>
+    );
+}
+
 export function SyncButton({ videoId }: { videoId: string | null }) {
     const t = useTranslations("video-control-panel");
     const syncing = useSyncing(videoId);
@@ -194,7 +214,7 @@ export function SyncButton({ videoId }: { videoId: string | null }) {
 
         joinSync(videoId, router);
         // The first one in hands out the link; later ones are joining a session that already has it.
-        if (participants === 0) {
+        if (participants.length === 0) {
             setSyncLink(createVideoSyncLink(window.location.origin, videoId));
         }
     };
@@ -217,10 +237,12 @@ export function SyncButton({ videoId }: { videoId: string | null }) {
                         onClick={toggle}
                     >
                         <Users />
-                        {participants > 0 && participants}
+                        {participants.length > 0 && participants.length}
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t("syncPlayback")}</TooltipContent>
+                <TooltipContent>
+                    {participants.length === 0 ? t("syncPlayback") : <SyncParticipants />}
+                </TooltipContent>
             </Tooltip>
             <ShareLinkDialog url={syncLink ?? ""} open={syncLink !== null} onOpenChange={closeLink} />
         </>
