@@ -6,8 +6,16 @@ import { useVideoPlayerStore } from "@/stores/video-player-store";
 import { useVideoReviewStore } from "@/stores/video-review-store";
 import { useVideoStore } from "@/stores/video-store";
 
-// While playing, closer than this is left alone so followers do not stutter on every update.
+// While playing, closer than this counts as the same position when deciding whether to send.
 const PLAYING_DRIFT_S = 0.5;
+// Beyond this a speed nudge would take too long, so the player seeks.
+const SEEK_DRIFT_S = 1.5;
+// A playing screen starts nudging past this gap and stops once back within NUDGE_STOP_S.
+const NUDGE_START_S = 0.2;
+const NUDGE_STOP_S = 0.05;
+// Small enough that the browser's pitch-preserved audio does not give it away.
+const NUDGE_RATE = 0.05;
+const DRIFT_CHECK_MS = 1000;
 // Paused review needs the exact frame.
 const PAUSED_DRIFT_S = 0.001;
 // Events the player fires while applying someone else's action are not this viewer's own.
@@ -63,8 +71,26 @@ export function useSyncedPlayback(videoId: string | null) {
         // One request at a time; a seek drag sends only its latest position.
         let inFlight = false;
         let queued: PlayerState | null = null;
+        // -1 slows down, 1 speeds up; kept between checks so the gap closes before it stops.
+        let nudge = 0;
+        // Rate changes this hook made on the element; their ratechange events are not the viewer's.
+        let ownRateChanges = 0;
 
         const isOwn = (state: ReceivedSyncState) => state.by === store.getState().screenId;
+
+        const setElementRate = (rate: number) => {
+            if (video.playbackRate === rate) {
+                return;
+            }
+            ownRateChanges++;
+            video.playbackRate = rate;
+        };
+
+        // Only the element: the store and the speed menu keep showing the chosen rate.
+        const setNudge = (direction: number) => {
+            nudge = direction;
+            setElementRate(useVideoPlayerStore.getState().playbackRate * (1 + nudge * NUDGE_RATE));
+        };
 
         const follow = () => {
             const state = store.getState().syncState;
@@ -88,10 +114,11 @@ export function useSyncedPlayback(videoId: string | null) {
 
             const playback = store.getState();
             const expected = expectedPosition(state, video.duration);
-            const seekPlaying = expected.playing && Math.abs(video.currentTime - expected.time) > PLAYING_DRIFT_S;
+            // Smaller gaps while playing are left to the drift check's speed nudge.
+            const seekPlaying = expected.playing && Math.abs(video.currentTime - expected.time) > SEEK_DRIFT_S;
             const seekPaused = !expected.playing && Math.abs(video.currentTime - expected.time) > PAUSED_DRIFT_S;
             const togglePlaying = playback.isPlaying !== expected.playing;
-            const changeRate = video.playbackRate !== state.rate;
+            const changeRate = useVideoPlayerStore.getState().playbackRate !== state.rate;
             // A resend that changes nothing must not swallow what the viewer does next.
             if (!seekPlaying && !seekPaused && !togglePlaying && !changeRate) {
                 return;
@@ -116,7 +143,45 @@ export function useSyncedPlayback(videoId: string | null) {
             // The element too: a source load can reset it while the store already holds the speed.
             if (changeRate) {
                 useVideoPlayerStore.getState().setPlaybackRate(state.rate);
-                video.playbackRate = state.rate;
+                nudge = 0;
+                setElementRate(state.rate);
+            }
+        };
+
+        // Every screen in the session, the last sender included, keeps itself at the expected position.
+        const correctDrift = () => {
+            const state = store.getState().syncState;
+            const settled = state !== null
+                && !video.paused
+                && !video.seeking
+                && video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA
+                && useVideoStore.getState().selectedRevision?.id === state.revisionId;
+            if (!settled) {
+                setNudge(0);
+                return;
+            }
+
+            // Past the session's end each screen has stopped at its own end.
+            const expected = expectedPosition(state, video.duration);
+            if (!expected.playing) {
+                setNudge(0);
+                return;
+            }
+
+            const drift = expected.time - video.currentTime;
+            if (Math.abs(drift) > SEEK_DRIFT_S) {
+                setNudge(0);
+                followingSeek = true;
+                video.currentTime = expected.time;
+                return;
+            }
+            if (Math.abs(drift) > NUDGE_START_S) {
+                setNudge(Math.sign(drift));
+            } else if (Math.abs(drift) < NUDGE_STOP_S) {
+                setNudge(0);
+            } else {
+                // Re-applied in case the chosen speed changed under the nudge.
+                setNudge(nudge);
             }
         };
 
@@ -142,10 +207,16 @@ export function useSyncedPlayback(videoId: string | null) {
             if (!selected) {
                 return null;
             }
-            return { revisionId: selected.id, playing: !video.paused, time: video.currentTime, rate: video.playbackRate };
+            // The store's rate: the element may be running nudged.
+            const rate = useVideoPlayerStore.getState().playbackRate;
+            return { revisionId: selected.id, playing: !video.paused, time: video.currentTime, rate };
         };
 
         const onViewerAction = (e: Event) => {
+            if (e.type === "ratechange" && ownRateChanges > 0) {
+                ownRateChanges--;
+                return;
+            }
             if (e.type === "seeked" && followingSeek) {
                 followingSeek = false;
                 return;
@@ -190,6 +261,7 @@ export function useSyncedPlayback(videoId: string | null) {
         }
         video.addEventListener("loadedmetadata", follow);
         video.addEventListener("playing", onPlaying);
+        const driftTimer = setInterval(correctDrift, DRIFT_CHECK_MS);
 
         // Re-run on every received state; the listeners above read the store when they fire.
         const unsubscribe = store.subscribe((s, prev) => {
@@ -202,6 +274,8 @@ export function useSyncedPlayback(videoId: string | null) {
             closed = true;
             queued = null;
             unsubscribe();
+            clearInterval(driftTimer);
+            video.playbackRate = useVideoPlayerStore.getState().playbackRate;
             for (const name of events) {
                 video.removeEventListener(name, onViewerAction);
             }
