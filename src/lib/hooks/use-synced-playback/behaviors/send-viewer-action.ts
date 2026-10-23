@@ -43,6 +43,7 @@ export class SendViewerAction implements SyncBehavior {
         if (!isViewerAction(ctx)) {
             return;
         }
+
         const player = this.readPlayerState();
         if (!player) {
             return;
