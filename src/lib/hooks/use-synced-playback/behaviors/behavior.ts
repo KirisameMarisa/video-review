@@ -18,8 +18,6 @@ export interface SyncContext {
     applyingUntil: number;
     // A seek this hook started; its seeked event is not the viewer's, however long the seek takes.
     followingSeek: boolean;
-    // Rate changes this hook made on the element; their ratechange events are not the viewer's.
-    ownRateChanges: number;
 }
 
 export interface SyncBehavior {

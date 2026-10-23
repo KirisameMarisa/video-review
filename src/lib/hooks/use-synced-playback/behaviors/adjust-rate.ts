@@ -42,7 +42,7 @@ export class AdjustRate implements SyncBehavior {
         useVideoPlayerStore.getState().setPlaybackRate(state.rate);
         // The element too: a source load can reset it while the store already holds the speed.
         this.nudge = 0;
-        this.setElementRate(state.rate);
+        this.ctx.video.playbackRate = state.rate;
     };
 
     // Every screen, the last sender included, nudges itself back to the expected position.
@@ -73,15 +73,6 @@ export class AdjustRate implements SyncBehavior {
     // Only the element: the store and the speed menu keep showing the chosen rate.
     private setNudge(direction: number) {
         this.nudge = direction;
-        this.setElementRate(useVideoPlayerStore.getState().playbackRate * (1 + this.nudge * AdjustRate.NUDGE_RATE));
-    }
-
-    private setElementRate(rate: number) {
-        if (this.ctx.video.playbackRate === rate) {
-            return;
-        }
-
-        this.ctx.ownRateChanges++;
-        this.ctx.video.playbackRate = rate;
+        this.ctx.video.playbackRate = useVideoPlayerStore.getState().playbackRate * (1 + this.nudge * AdjustRate.NUDGE_RATE);
     }
 }

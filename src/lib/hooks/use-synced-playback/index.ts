@@ -28,7 +28,6 @@ export function useSyncedPlayback(videoId: string | null) {
             store,
             applyingUntil: 0,
             followingSeek: false,
-            ownRateChanges: 0,
         };
         // SwitchRevision last: right after the switch the old source would pass as the new revision to the others.
         const behaviors: SyncBehavior[] = [

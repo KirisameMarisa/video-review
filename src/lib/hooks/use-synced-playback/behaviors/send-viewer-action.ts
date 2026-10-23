@@ -8,8 +8,9 @@ import {
 
 /** Sends this viewer's play, pause, seek and speed changes to the session. */
 export class SendViewerAction implements SyncBehavior {
-    private static readonly EVENTS = ["play", "pause", "seeked", "ratechange"];
+    private static readonly EVENTS = ["play", "pause", "seeked"];
 
+    private stopWatchingRate: (() => void) | null = null;
     // One request at a time; a seek drag sends only its latest position.
     private inFlight = false;
     private queued: PlayerState | null = null;
@@ -18,25 +19,34 @@ export class SendViewerAction implements SyncBehavior {
 
     attach() {
         for (const name of SendViewerAction.EVENTS) {
-            this.ctx.video.addEventListener(name, this.onViewerAction);
+            this.ctx.video.addEventListener(name, this.onPlayerEvent);
         }
+
+        // The speed menu writes the store; the element's ratechange also fires for nudges.
+        this.stopWatchingRate = useVideoPlayerStore.subscribe((s, prev) => {
+            if (s.playbackRate !== prev.playbackRate) {
+                this.sendIfViewerAction("ratechange");
+            }
+        });
     }
 
     detach() {
         this.queued = null;
+        this.stopWatchingRate?.();
+
         for (const name of SendViewerAction.EVENTS) {
-            this.ctx.video.removeEventListener(name, this.onViewerAction);
+            this.ctx.video.removeEventListener(name, this.onPlayerEvent);
         }
     }
 
-    private onViewerAction = (e: Event) => {
+    private onPlayerEvent = (e: Event) => {
+        this.sendIfViewerAction(e.type);
+    };
+
+    private sendIfViewerAction(type: string) {
         const ctx = this.ctx;
         const { video, store } = ctx;
-        if (e.type === "ratechange" && ctx.ownRateChanges > 0) {
-            ctx.ownRateChanges--;
-            return;
-        }
-        if (e.type === "seeked" && ctx.followingSeek) {
+        if (type === "seeked" && ctx.followingSeek) {
             ctx.followingSeek = false;
             return;
         }
@@ -50,7 +60,7 @@ export class SendViewerAction implements SyncBehavior {
         }
 
         // Play while the session plays catches this screen up instead of being sent.
-        if (e.type === "play" && othersPlaying(ctx)) {
+        if (type === "play" && othersPlaying(ctx)) {
             return;
         }
 
@@ -59,7 +69,7 @@ export class SendViewerAction implements SyncBehavior {
             return;
         }
         void this.postPlayerState(player);
-    };
+    }
 
     private readPlayerState(): PlayerState | null {
         const selected = useVideoStore.getState().selectedRevision;
