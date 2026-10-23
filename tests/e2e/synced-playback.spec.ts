@@ -1,12 +1,9 @@
-import { test, expect, type APIRequestContext, type Browser, type Page } from "@playwright/test";
-import fs from "node:fs";
-import path from "node:path";
+import { test, expect, type Browser, type Page } from "@playwright/test";
+import { uploadVideo } from "./upload-video";
 
 // Seeded admin users (see prisma/seed.ts); two people, so each has its own browser.
 const HOST = { email: "Bocchi@example.com", password: "pass123" };
 const GUEST = { email: "Kita@example.com", password: "pass123" };
-
-const VIDEO = path.join(process.cwd(), "tests/fixtures/preview.mp4");
 
 // A tab opened from the sync link has had no click, and Chromium refuses its play() at random.
 test.use({ launchOptions: { args: ["--autoplay-policy=no-user-gesture-required"] } });
@@ -29,32 +26,6 @@ async function login(browser: Browser, user: { email: string; password: string }
     await page.locator('input[type="password"]').press("Enter");
     await page.waitForURL(/\/video-review\/review\b/);
     return page;
-}
-
-// The seed ships no media bytes, so the test brings its own video; the upload screen has its own test.
-async function uploadVideo(request: APIRequestContext, title: string): Promise<string> {
-    const signedIn = await request.post("/api/v1/auth/login/password", { data: HOST });
-    const auth = { Authorization: `Bearer ${(await signedIn.json()).token}` };
-
-    const init = await request.post("/api/v1/videos/upload/init", { headers: auth, multipart: { title, folderKey: "e2e-sync" } });
-    const { url, session } = await init.json() as { url: string; session: { id: string } };
-
-    const bytes = fs.readFileSync(VIDEO);
-    const transfer = await request.post(url, {
-        headers: {
-            ...auth,
-            "Tus-Resumable": "1.0.0",
-            "Upload-Length": String(bytes.length),
-            "Upload-Metadata": `sessionId ${Buffer.from(session.id).toString("base64")}`,
-            "Content-Type": "application/offset+octet-stream",
-        },
-        data: bytes,
-    });
-    expect(transfer.ok()).toBe(true);
-
-    const finish = await request.post(`/api/v1/videos/upload/finish?session_id=${session.id}`, { headers: auth });
-    expect(finish.ok()).toBe(true);
-    return (await finish.json()).videoId as string;
 }
 
 function player(page: Page) {
@@ -190,7 +161,7 @@ test.describe("synced playback", () => {
         expect(pair.guestPosts()).toBe(postsBefore);
     });
 
-    test("switching revision moves every screen to its start, paused, without an old position coming back", async ({ browser, request }) => {
+    test("switching revision pauses every screen at the same position, without an old position coming back", async ({ browser, request }) => {
         const title = `e2e-sync-revision-${Date.now()}`;
         const videoId = await uploadVideo(request, title);
         await uploadVideo(request, title);
@@ -208,8 +179,12 @@ test.describe("synced playback", () => {
         await expect(pair.guest.getByRole("combobox").filter({ hasText: /^rev_/ })).not.toHaveText(current ?? "");
 
         for (const page of [pair.host, pair.guest]) {
-            await expect.poll(() => player(page).evaluate((v: HTMLVideoElement) => ({ paused: v.paused, time: v.currentTime }))).toEqual({ paused: true, time: 0 });
+            await expect.poll(() => player(page).evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
         }
+        await pair.host.waitForTimeout(1000);
+        const { host, guest } = await positions(pair);
+        expect(host).toBeGreaterThan(2);
+        expect(guest).toBeCloseTo(host, 1);
         expect(pair.guestPosts()).toBe(postsBefore);
     });
 });

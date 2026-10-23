@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { uploadVideo } from "./upload-video";
 
 // Seeded admin user (see prisma/seed.ts).
 const USER = { email: "Bocchi@example.com", password: "pass123" };
@@ -59,5 +60,26 @@ test.describe("player", () => {
 
         await page.mouse.click(bar.x, bar.y);
         await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+    });
+
+    test("switching revision while playing pauses at the same position", async ({ page, request }) => {
+        const title = `e2e-revision-${Date.now()}`;
+        const videoId = await uploadVideo(request, title);
+        await uploadVideo(request, title);
+        await page.goto(`/video-review/review/${videoId}`);
+        const video = page.locator(`${STAGE} video`);
+
+        await page.getByRole("button", { name: "Play", exact: true }).click();
+        await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.currentTime)).toBeGreaterThan(1);
+        const before = await video.evaluate((v: HTMLVideoElement) => v.currentSrc);
+
+        const picker = page.getByRole("combobox").filter({ hasText: /^rev_/ });
+        const current = await picker.textContent();
+        await picker.click();
+        await page.getByRole("option").filter({ hasNotText: current ?? "" }).click();
+
+        await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.currentSrc)).not.toBe(before);
+        await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+        await expect.poll(() => video.evaluate((v: HTMLVideoElement) => ({ paused: v.paused, kept: v.currentTime > 1 }))).toEqual({ paused: true, kept: true });
     });
 });

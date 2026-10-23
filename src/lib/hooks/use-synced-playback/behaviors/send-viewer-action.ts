@@ -87,13 +87,18 @@ export class SendViewerAction implements SyncBehavior {
         this.send({ rate });
     }
 
-    // A new revision opens paused at its start.
+    // A new revision opens paused where this screen was.
     private onRevisionChange(revisionId: string) {
         if (this.ctx.store.getState().syncState?.revisionId === revisionId) {
             return;
         }
 
-        this.send({ revisionId, playing: false, time: 0 });
+        // A playing screen is paused by the page right after the pick; onPlayingChange sends then, with where it stopped.
+        if (!this.ctx.video.paused) {
+            return;
+        }
+
+        this.send({ revisionId, playing: false });
     }
 
     private send(change: Partial<PlayerState>) {

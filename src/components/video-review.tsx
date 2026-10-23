@@ -8,7 +8,7 @@ import VideoControlPanel from "@/components/video-control-panel";
 import { useCommentStore } from "@/stores/comment-store";
 import { useVideoStore } from "@/stores/video-store";
 import VideoTitle from "@/components/video-title";
-import { VideoComment } from "@/lib/db-types";
+import { VideoComment, VideoRevision } from "@/lib/db-types";
 import { DrawingLayer } from "@/components/drawing-layer";
 import { useTranslations } from "next-intl";
 import { resolveMediaUrl } from "@/lib/media-url";
@@ -39,8 +39,8 @@ export default function VideoReview() {
     // Feeds video-fit; 16/9 until loadedmetadata.
     const [videoAspect, setVideoAspect] = useState("16 / 9");
     const playbackWidth = usePlaybackWidth();
-    // Which revision the element currently holds, to tell a resolution switch from a new video.
-    const loadedRevisionRef = useRef<string | null>(null);
+    // Which revision the element currently holds, to tell a resolution switch, a revision switch and a new video apart.
+    const loadedRevisionRef = useRef<VideoRevision | null>(null);
 
     const { token } = useAuthStore();
 
@@ -199,13 +199,26 @@ export default function VideoReview() {
         let canceled = false;
         let variantLoaded = false;
 
+        const isRevisionSwitch = (loaded: VideoRevision | null) =>
+            loaded !== null && loaded.videoId === selectedRevision.videoId && loaded.id !== selectedRevision.id;
+
+        // Paused before the store hears of it, so the sync sends where the old revision stopped.
+        if (isRevisionSwitch(loadedRevisionRef.current)) {
+            v.pause();
+            setIsPlaying(false);
+        }
+
         const swapSource = (url: string) => {
-            // Keeps the position and playing state so a resolution switch carries on where it was.
-            // A new revision starts over.
-            const holdsRevision = loadedRevisionRef.current === selectedRevision.id;
-            loadedRevisionRef.current = selectedRevision.id;
-            if (!holdsRevision) {
+            // A resolution switch carries on where it was; a revision switch keeps the position, paused,
+            // so both revisions can be compared at the same moment. A new video starts over.
+            const loaded = loadedRevisionRef.current;
+            loadedRevisionRef.current = selectedRevision;
+            if (loaded?.videoId !== selectedRevision.videoId) {
                 resume = null;
+            } else if (isRevisionSwitch(loaded)) {
+                resume = { time: v.currentTime, playing: false };
+                // Swapping the source stops the element without a pause event.
+                setIsPlaying(false);
             } else if (v.readyState !== HTMLMediaElement.HAVE_NOTHING) {
                 // After a failed variant the element is empty; the resume taken before it is kept.
                 resume = { time: v.currentTime, playing: !v.paused };
@@ -244,7 +257,8 @@ export default function VideoReview() {
             v.playbackRate = useVideoPlayerStore.getState().playbackRate;
             v.volume = volumeEnabled ? volume : 0.0;
             if (resume) {
-                v.currentTime = resume.time;
+                // A jump requested while a paused source loaded, such as the sync session's, wins over the kept position.
+                v.currentTime = resume.playing ? resume.time : timelineTimeRef.current ?? resume.time;
                 if (resume.playing) {
                     void v.play();
                 }
