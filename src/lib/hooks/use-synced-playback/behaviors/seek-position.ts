@@ -1,6 +1,5 @@
-import { useVideoStore } from "@/stores/video-store";
 import {
-    driftTarget, DRIFT_CHECK_MS, expectedPosition, isViewerAction, markApplying, othersPlaying, othersState,
+    driftTarget, DRIFT_CHECK_MS, expectedPosition, othersState,
     PAUSED_DRIFT_S, SEEK_DRIFT_S, watchSession,
     type SyncBehavior, type SyncContext,
 } from "@/lib/hooks/use-synced-playback/behaviors/behavior";
@@ -48,8 +47,6 @@ export class SeekPosition implements SyncBehavior {
         const drift = Math.abs(video.currentTime - expected.time);
         // Smaller drifts while playing are left to the drift check's speed nudge.
         if (expected.playing && drift > SEEK_DRIFT_S) {
-            markApplying(ctx);
-            ctx.followingSeek = true;
             // Only one catch-up per received state, so a slow connection cannot seek forever.
             this.catchUpPending = this.catchUpLeadS === 0;
             this.seekStartedAt = performance.now();
@@ -57,19 +54,13 @@ export class SeekPosition implements SyncBehavior {
         }
 
         if (!expected.playing && drift > PAUSED_DRIFT_S) {
-            markApplying(ctx);
             // The timeline path keeps the shown time and the seek bar in step while paused.
-            ctx.followingSeek = true;
             store.getState().setTimelineTime(expected.time);
         }
     };
 
-    // Pressing play while the session plays means catching up, not pulling everyone back to here.
+    // Pressing play re-applies the session, so a follower catches up instead of pulling everyone back to here.
     private onPlay = () => {
-        if (!isViewerAction(this.ctx) || !useVideoStore.getState().selectedRevision || !othersPlaying(this.ctx)) {
-            return;
-        }
-
         this.onSessionState();
     };
 
@@ -91,7 +82,6 @@ export class SeekPosition implements SyncBehavior {
             return;
         }
 
-        this.ctx.followingSeek = true;
         this.ctx.video.currentTime = target;
     };
 }

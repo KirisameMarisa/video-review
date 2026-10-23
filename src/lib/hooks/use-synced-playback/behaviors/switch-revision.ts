@@ -1,6 +1,6 @@
 import { useVideoStore } from "@/stores/video-store";
 import {
-    isOwn, markApplying, watchSession,
+    isOwn, watchSession,
     type SyncBehavior, type SyncContext,
 } from "@/lib/hooks/use-synced-playback/behaviors/behavior";
 
@@ -31,7 +31,6 @@ export class SwitchRevision implements SyncBehavior {
 
         const target = revisions.find((r) => r.id === state.revisionId);
         if (target) {
-            markApplying(this.ctx);
             selectVideoRevision(target);
         }
     };

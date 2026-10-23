@@ -1,5 +1,5 @@
 import {
-    expectedPosition, othersState, markApplying, watchSession,
+    expectedPosition, othersState, watchSession,
     type SyncBehavior, type SyncContext,
 } from "@/lib/hooks/use-synced-playback/behaviors/behavior";
 
@@ -26,7 +26,6 @@ export class TogglePlaying implements SyncBehavior {
         const playback = this.ctx.store.getState();
         const expected = expectedPosition(state, this.ctx.video.duration);
         if (playback.isPlaying !== expected.playing) {
-            markApplying(this.ctx);
             playback.setIsPlaying(expected.playing);
         }
     };

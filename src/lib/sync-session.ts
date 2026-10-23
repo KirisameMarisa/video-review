@@ -13,11 +13,13 @@ export interface PlayerState {
 }
 
 // screenId tags the sender, so its own echo is not followed.
-export async function postSyncState(videoId: string, state: PlayerState, screenId: string) {
+export async function postSyncState(videoId: string, state: PlayerState, screenId: string): Promise<boolean> {
     try {
-        await api.videos[":id"].sync.state.$post({ param: { id: videoId }, json: { ...state, by: screenId } });
+        const res = await api.videos[":id"].sync.state.$post({ param: { id: videoId }, json: { ...state, by: screenId } });
+        return res.ok;
     } catch (e) {
         console.error("Failed to send the sync state", e);
+        return false;
     }
 }
 

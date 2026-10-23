@@ -11,7 +11,7 @@ import { SendViewerAction } from "@/lib/hooks/use-synced-playback/behaviors/send
 import { SwitchRevision } from "@/lib/hooks/use-synced-playback/behaviors/switch-revision";
 import { TogglePlaying } from "@/lib/hooks/use-synced-playback/behaviors/toggle-playing";
 
-// Follows the sync session's state, and sends this viewer's play, pause, seek and speed changes.
+// Follows the sync session's state, and sends this viewer's play, pause, seek, speed and revision changes.
 export function useSyncedPlayback(videoId: string | null) {
     const store = usePlaybackStoreApi();
     const syncing = useSyncing(videoId);
@@ -26,8 +26,6 @@ export function useSyncedPlayback(videoId: string | null) {
             video,
             videoId,
             store,
-            applyingUntil: 0,
-            followingSeek: false,
         };
         // SwitchRevision last: right after the switch the old source would pass as the new revision to the others.
         const behaviors: SyncBehavior[] = [

@@ -1,6 +1,6 @@
 import { useVideoPlayerStore } from "@/stores/video-player-store";
 import {
-    driftTarget, DRIFT_CHECK_MS, othersState, markApplying, SEEK_DRIFT_S, watchSession,
+    driftTarget, DRIFT_CHECK_MS, othersState, SEEK_DRIFT_S, watchSession,
     type SyncBehavior, type SyncContext,
 } from "@/lib/hooks/use-synced-playback/behaviors/behavior";
 
@@ -38,7 +38,6 @@ export class AdjustRate implements SyncBehavior {
             return;
         }
 
-        markApplying(this.ctx);
         useVideoPlayerStore.getState().setPlaybackRate(state.rate);
         // The element too: a source load can reset it while the store already holds the speed.
         this.nudge = 0;

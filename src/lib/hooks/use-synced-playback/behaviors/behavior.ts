@@ -1,4 +1,3 @@
-import type { PlayerState } from "@/lib/sync-session";
 import type { ReceivedSyncState, usePlaybackStoreApi } from "@/stores/playback-store";
 import { useVideoStore } from "@/stores/video-store";
 
@@ -14,10 +13,6 @@ export interface SyncContext {
     video: HTMLVideoElement;
     videoId: string;
     store: ReturnType<typeof usePlaybackStoreApi>;
-    // Events the player fires while applying someone else's action are not this viewer's own.
-    applyingUntil: number;
-    // A seek this hook started; its seeked event is not the viewer's, however long the seek takes.
-    followingSeek: boolean;
 }
 
 export interface SyncBehavior {
@@ -38,39 +33,8 @@ export function expectedPosition(state: ReceivedSyncState, duration: number): { 
     return { time, playing: true };
 }
 
-export function matchesSession(player: PlayerState, state: ReceivedSyncState, duration: number): boolean {
-    // While playing, closer than this counts as the same position when deciding whether to send.
-    const PLAYING_DRIFT_S = 0.5;
-    const expected = expectedPosition(state, duration);
-    const drift = expected.playing ? PLAYING_DRIFT_S : PAUSED_DRIFT_S;
-    return player.revisionId === state.revisionId
-        && player.playing === expected.playing
-        && player.rate === state.rate
-        && Math.abs(player.time - expected.time) <= drift;
-}
-
 export function isOwn(ctx: SyncContext, state: ReceivedSyncState): boolean {
     return state.by === ctx.store.getState().screenId;
-}
-
-export function othersPlaying(ctx: SyncContext): boolean {
-    const state = ctx.store.getState().syncState;
-    return state !== null && !isOwn(ctx, state) && expectedPosition(state, ctx.video.duration).playing;
-}
-
-export function isViewerAction(ctx: SyncContext): boolean {
-    // Without the API every event counts as the viewer's; the other checks still stop loops.
-    const viewerActed = navigator.userActivation?.isActive ?? true;
-    return performance.now() >= ctx.applyingUntil
-        && viewerActed
-        // Reaching the end pauses every screen on its own.
-        && !ctx.video.ended;
-}
-
-// Called only when something changes: a resend that changes nothing must not swallow what the viewer does next.
-export function markApplying(ctx: SyncContext) {
-    const APPLY_SETTLE_MS = 500;
-    ctx.applyingUntil = performance.now() + APPLY_SETTLE_MS;
 }
 
 // loadedmetadata too: a state received before the new source loaded is applied once it has.
