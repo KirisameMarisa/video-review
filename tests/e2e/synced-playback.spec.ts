@@ -78,6 +78,14 @@ async function openSyncedPair(browser: Browser, videoId: string): Promise<Synced
     };
 }
 
+// Seeks with a real click so the change goes through the store.
+async function seekBar(page: Page, time: number) {
+    const duration = await player(page).evaluate((v: HTMLVideoElement) => v.duration);
+    const track = page.locator('[data-slot="slider-track"]').first();
+    const box = (await track.boundingBox())!;
+    await page.mouse.click(box.x + box.width * (time / duration), box.y + box.height / 2);
+}
+
 async function positions(pair: SyncedPair) {
     const [host, guest] = await Promise.all([
         player(pair.host).evaluate((v: HTMLVideoElement) => v.currentTime),
@@ -94,7 +102,7 @@ test.describe("synced playback", () => {
         consoleLines.length = 0;
     });
 
-    test("one screen's play, pause and speed reach a screen that opened the sync link", async ({ browser, request }) => {
+    test("one screen's play, pause, seek and speed reach a screen that opened the sync link", async ({ browser, request }) => {
         const videoId = await uploadVideo(request, `e2e-sync-${Date.now()}`);
         const host = await login(browser, HOST);
         await host.goto(`/video-review/review/${videoId}`);
@@ -123,6 +131,12 @@ test.describe("synced playback", () => {
         // Well inside one frame; a follower can rarely settle a few milliseconds off.
         await expect.poll(() => player(guest).evaluate((v: HTMLVideoElement, t) => Math.abs(v.currentTime - t), stoppedAt)).toBeLessThanOrEqual(0.01);
 
+        const sought = host.waitForRequest((req) => req.url().includes("/sync/state") && req.postDataJSON().time !== stoppedAt);
+        await seekBar(host, 20);
+        const soughtTo = (await sought).postDataJSON().time as number;
+        await expect.poll(() => player(guest).evaluate((v: HTMLVideoElement, t) => Math.abs(v.currentTime - t), soughtTo)).toBeLessThanOrEqual(0.01);
+
+        await host.getByRole("button", { name: "Playback settings" }).click();
         await host.getByRole("combobox", { name: "Playback rate" }).click();
         await host.getByRole("option", { name: "2x", exact: true }).click();
         await expect.poll(() => player(guest).evaluate((v: HTMLVideoElement) => v.playbackRate)).toBe(2);
