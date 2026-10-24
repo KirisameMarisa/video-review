@@ -342,7 +342,12 @@ export default function VideoReview() {
 
         if (isPlaying) {
             // The browser can refuse to start without a click (a sync link opened in a fresh tab); show it as paused then.
-            v.play().catch(() => setIsPlaying(false));
+            // A play cut short by a new source is not a refusal; the swap resumes it.
+            v.play().catch((e: unknown) => {
+                if (e instanceof DOMException && e.name === "NotAllowedError") {
+                    setIsPlaying(false);
+                }
+            });
         } else {
             v.pause();
         }
