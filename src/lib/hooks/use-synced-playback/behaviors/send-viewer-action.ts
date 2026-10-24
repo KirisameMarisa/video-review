@@ -20,8 +20,11 @@ export class SendViewerAction implements SyncBehavior {
                 if (s.isPlaying !== prev.isPlaying) {
                     this.onPlayingChange(s.isPlaying);
                 }
-                if (s.timelineTime !== prev.timelineTime && s.timelineTime !== null) {
+                if (s.timelineTime !== prev.timelineTime && s.timelineTime !== null && !s.scrubbing) {
                     this.onTimeChange(s.timelineTime);
+                }
+                if (prev.scrubbing && !s.scrubbing) {
+                    this.onTimeChange(s.currentTime);
                 }
                 // Gives a locked screen somewhere to go back to before the presenter's first action.
                 if (s.presenting && !prev.presenting) {

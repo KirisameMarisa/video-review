@@ -18,6 +18,7 @@ export function SeekBar({ markers, onMarkerClick }: {
     const duration = usePlayback((s) => s.duration);
     const setCurrentTime = usePlayback((s) => s.setCurrentTime);
     const setTimelineTime = usePlayback((s) => s.setTimelineTime);
+    const setScrubbing = usePlayback((s) => s.setScrubbing);
     const locked = usePresenterLock();
 
     // Slider API expects an array even for a single thumb.
@@ -32,11 +33,13 @@ export function SeekBar({ markers, onMarkerClick }: {
                 value={value}
                 disabled={locked}
                 onValueChange={(v) => {
+                    setScrubbing(true);
                     setTimelineTime(v[0]);
                 }}
                 onValueCommit={(v) => {
                     setCurrentTime(v[0]);
                     setTimelineTime(null);
+                    setScrubbing(false);
                 }}
                 className="w-full"
             />

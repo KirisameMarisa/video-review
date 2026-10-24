@@ -23,6 +23,8 @@ interface PlaybackState {
     currentTime: number;
     // Set while the seek bar is dragged or a jump is requested; the player seeks to it.
     timelineTime: number | null;
+    // While the seek bar is held, so the sync session gets only where it is let go.
+    scrubbing: boolean;
     duration: number;
     // The connections in this video's sync session, in join order, known whether or not this screen is in it.
     participants: Participant[];
@@ -44,6 +46,7 @@ interface PlaybackState {
     togglePlay: () => void;
     setCurrentTime: (time: number) => void;
     setTimelineTime: (time: number | null) => void;
+    setScrubbing: (scrubbing: boolean) => void;
     setDuration: (duration: number) => void;
     setParticipants: (participants: Participant[]) => void;
     setSyncLink: (link: string | null) => void;
@@ -57,6 +60,7 @@ const createPlaybackStore = () => createStore<PlaybackState>()((set) => ({
     isPlaying: false,
     currentTime: 0,
     timelineTime: null,
+    scrubbing: false,
     duration: 0,
     participants: [],
     syncLink: null,
@@ -73,6 +77,7 @@ const createPlaybackStore = () => createStore<PlaybackState>()((set) => ({
     togglePlay: () => set((s) => ({ isPlaying: !s.isPlaying })),
     setCurrentTime: (time) => set({ currentTime: time }),
     setTimelineTime: (time) => set({ timelineTime: time }),
+    setScrubbing: (scrubbing) => set({ scrubbing }),
     setDuration: (duration) => set({ duration }),
     setParticipants: (participants) => set({ participants }),
     setSyncLink: (syncLink) => set({ syncLink }),
