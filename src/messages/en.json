@@ -135,6 +135,9 @@
         "originalResolution": "Original",
         "syncPlayback": "Sync playback",
         "moreParticipants": "+{count} more",
+        "present": "Present",
+        "stopPresenting": "Stop presenting",
+        "presenting": "{name} is presenting",
         "playbackSettings": "Playback settings",
         "showInBar": "Show in bar"
     },

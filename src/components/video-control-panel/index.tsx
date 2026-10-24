@@ -6,9 +6,10 @@ import { useVideoStore } from "@/stores/video-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { isGuest } from "@/lib/role";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
-import { PlayButton, VolumeControl, TimeDisplay, PlaybackSettingsMenu, SyncButton, usePlaybackSettings } from "./playback";
+import { PlayButton, VolumeControl, TimeDisplay, PlaybackSettingsMenu, PresentButton, SyncButton, usePlaybackSettings } from "./playback";
 import { useVideoPlayerStore } from "@/stores/video-player-store";
 import { Popover, PopoverAnchor } from "@/ui/popover";
+import { ButtonGroup } from "@/ui/button-group";
 import { ScreenshotButton, ShareLinkButton, DownloadButton, OpenSceneButton, FullscreenButton } from "./actions";
 
 export default function VideoControlPanel() {
@@ -40,7 +41,10 @@ export default function VideoControlPanel() {
                     {!isMobile && <VolumeControl />}
                     <TimeDisplay />
                     {settings.filter((s) => barSettings.includes(s.id)).map((s) => <React.Fragment key={s.id}>{s.control}</React.Fragment>)}
-                    <SyncButton videoId={selectedVideo?.id ?? null} />
+                    <ButtonGroup>
+                        <SyncButton videoId={selectedVideo?.id ?? null} />
+                        <PresentButton videoId={selectedVideo?.id ?? null} />
+                    </ButtonGroup>
 
                     <div className="ml-auto flex gap-1">
                         <PlaybackSettingsMenu settings={settings} />

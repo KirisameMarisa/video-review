@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, type ReactNode } from "react";
 import { Button } from "@/ui/button";
+import { Toggle } from "@/ui/toggle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPause, faPlay, faVolumeHigh, faVolumeXmark } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -16,11 +17,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
 import { PopoverContent, PopoverTrigger } from "@/ui/popover";
 import { ControlRow } from "@/components/controls/control-row";
 import { Separator } from "@/ui/separator";
-import { ArrowRightToLine, ListVideo, Pin, Repeat1, Settings, Users, type LucideIcon } from "lucide-react";
+import { ArrowRightToLine, ListVideo, Pin, Presentation, Repeat1, Settings, Users, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { formatTime } from "@/lib/utils";
 import { usePlayback } from "@/stores/playback-store";
-import { joinSync, leaveSync, useSyncing } from "@/lib/sync-session";
+import { joinSync, leaveSync, putPresenter, usePresenterLock, useSyncing } from "@/lib/sync-session";
 import { createVideoSyncLink } from "@/lib/url";
 import { useRouter } from "next/navigation";
 import { ShareLinkDialog } from "@/components/dialog/share-link";
@@ -33,9 +34,10 @@ export function PlayButton() {
     const t = useTranslations("video-control-panel");
     const isPlaying = usePlayback((s) => s.isPlaying);
     const togglePlay = usePlayback((s) => s.togglePlay);
+    const locked = usePresenterLock();
 
     return (
-        <Button variant="ghost" size="icon-round" aria-label={isPlaying ? t("pause") : t("play")} onClick={togglePlay}>
+        <Button variant="ghost" size="icon-round" aria-label={isPlaying ? t("pause") : t("play")} disabled={locked} onClick={togglePlay}>
             <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} />
         </Button>
     );
@@ -91,10 +93,12 @@ export function PlaybackRateSelect() {
     const t = useTranslations("video-control-panel");
     const playbackRate = useVideoPlayerStore((s) => s.playbackRate);
     const setPlaybackRate = useVideoPlayerStore((s) => s.setPlaybackRate);
+    const locked = usePresenterLock();
 
     return (
         <Select
             value={playbackRate.toString()}
+            disabled={locked}
             onValueChange={(val) => {
                 const rate = parseFloat(val);
                 setPlaybackRate(rate);
@@ -298,16 +302,16 @@ export function SyncButton({ videoId }: { videoId: string | null }) {
         <>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button
-                        variant={syncing ? "accent" : "ghost"}
+                    <Toggle
+                        variant="outline"
                         size="sm"
                         aria-label={t("syncPlayback")}
-                        aria-pressed={syncing}
-                        onClick={toggle}
+                        pressed={syncing}
+                        onPressedChange={toggle}
                     >
                         <Users />
                         {participants.length > 0 && participants.length}
-                    </Button>
+                    </Toggle>
                 </TooltipTrigger>
                 <TooltipContent>
                     {participants.length === 0 ? t("syncPlayback") : <SyncParticipants />}
@@ -315,5 +319,46 @@ export function SyncButton({ videoId }: { videoId: string | null }) {
             </Tooltip>
             <ShareLinkDialog url={syncLink ?? ""} open={syncLink !== null} onOpenChange={closeLink} />
         </>
+    );
+}
+
+export function PresentButton({ videoId }: { videoId: string | null }) {
+    const t = useTranslations("video-control-panel");
+    const syncing = useSyncing(videoId);
+    const presenter = usePlayback((s) => s.presenter);
+    const presenting = usePlayback((s) => s.presenting);
+    const connectionId = usePlayback((s) => s.connectionId);
+    const locked = usePresenterLock();
+
+    if (!videoId || !syncing) {
+        return null;
+    }
+
+    let label = t("present");
+    if (locked) {
+        label = t("presenting", { name: presenter?.name ?? "" });
+    } else if (presenting) {
+        label = t("stopPresenting");
+    }
+
+    const toggle = (pressed: boolean) => {
+        if (connectionId !== null) {
+            void putPresenter(videoId, connectionId, pressed);
+        }
+    };
+
+    return (
+        <Toggle
+            variant="outline"
+            size="sm"
+            aria-label={label}
+            title={label}
+            pressed={presenting}
+            disabled={connectionId === null || locked}
+            onPressedChange={toggle}
+        >
+            <Presentation />
+            {locked && <AccountAvatar email={presenter?.email ?? null} className="size-5" />}
+        </Toggle>
     );
 }

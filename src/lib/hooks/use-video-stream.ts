@@ -9,6 +9,8 @@ const PING_MS = 20_000;
 interface SyncEvent {
     participants: Participant[];
     state: (Omit<ReceivedSyncState, "anchor"> & { ageMs: number }) | null;
+    presenter: Participant | null;
+    presenting: boolean;
 }
 
 // One stream per review screen, open whether or not this screen syncs.
@@ -29,6 +31,7 @@ export function useVideoStream(videoId: string | null) {
         let pingTimer: ReturnType<typeof setInterval> | undefined;
         source.addEventListener("hello", (e) => {
             const { connectionId } = JSON.parse(e.data) as { connectionId: string };
+            store.getState().setConnectionId(connectionId);
             clearInterval(pingTimer);
             pingTimer = setInterval(() => {
                 void api.videos[":id"].stream.ping.$post({ param: { id: videoId }, json: { connectionId } }).catch(() => {});
@@ -36,16 +39,18 @@ export function useVideoStream(videoId: string | null) {
         });
 
         source.addEventListener("sync", (e) => {
-            const { participants, state } = JSON.parse(e.data) as SyncEvent;
-            const { setParticipants, setSyncState, syncState: current, screenId } = store.getState();
+            const { participants, state, presenter, presenting } = JSON.parse(e.data) as SyncEvent;
+            const { setParticipants, setPresenter, setSyncState, syncState: current, screenId } = store.getState();
             setParticipants(participants);
 
             // This screen already holds its own state, anchored when the change happened here.
-            if (state?.by === screenId && current?.by === screenId) {
-                return;
+            if (state?.by !== screenId || current?.by !== screenId) {
+                setSyncState(state && { ...state, anchor: performance.now() - state.ageMs });
             }
 
-            setSyncState(state && { ...state, anchor: performance.now() - state.ageMs });
+            // After the state: starting to present sends the current state at once.
+            // A screen outside the session plays on its own, whoever presents.
+            setPresenter(syncing ? presenter : null, presenting);
         });
 
         return () => {
@@ -53,6 +58,8 @@ export function useVideoStream(videoId: string | null) {
             source.close();
             store.getState().setParticipants([]);
             store.getState().setSyncState(null);
+            store.getState().setConnectionId(null);
+            store.getState().setPresenter(null, false);
         };
     }, [videoId, syncing, store]);
 }

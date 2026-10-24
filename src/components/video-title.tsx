@@ -16,6 +16,7 @@ import { faXmark, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { formatDateTime } from "@/lib/utils";
 import { CompareButton } from "@/components/revision-diff-view/compare-button";
 import { SidePanelTrigger } from "@/components/controls/side-panel-trigger";
+import { usePresenterLock } from "@/lib/sync-session";
 
 export default function VideoTitle() {
     const t = useTranslations("video-title");
@@ -33,6 +34,7 @@ export default function VideoTitle() {
 
     const role = useAuthStore((s) => s.role);
     const canEditTags = isAdmin(role);
+    const locked = usePresenterLock();
 
     const [inputVisible, setInputVisible] = useState(false);
     const [inputValue, setInputValue] = useState("");
@@ -78,6 +80,7 @@ export default function VideoTitle() {
                         {revisions.length > 1 && (
                             <Select
                                 value={selectedRevision?.id ?? ""}
+                                disabled={locked}
                                 onValueChange={(id) => {
                                     const rev = revisions.find((r) => r.id === id);
                                     if (rev) selectVideoRevision(rev);

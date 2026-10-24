@@ -4,6 +4,7 @@ import { usePlayback } from "@/stores/playback-store";
 import { useMemo } from "react";
 import { Slider } from "@/ui/slider";
 import { cn } from "@/lib/utils";
+import { usePresenterLock } from "@/lib/sync-session";
 
 export type SeekBarMarker = { time: number; className: string };
 
@@ -17,6 +18,7 @@ export function SeekBar({ markers, onMarkerClick }: {
     const duration = usePlayback((s) => s.duration);
     const setCurrentTime = usePlayback((s) => s.setCurrentTime);
     const setTimelineTime = usePlayback((s) => s.setTimelineTime);
+    const locked = usePresenterLock();
 
     // Slider API expects an array even for a single thumb.
     const value = [timelineTime ?? currentTime];
@@ -28,6 +30,7 @@ export function SeekBar({ markers, onMarkerClick }: {
                 max={duration}
                 step={0.01}
                 value={value}
+                disabled={locked}
                 onValueChange={(v) => {
                     setTimelineTime(v[0]);
                 }}

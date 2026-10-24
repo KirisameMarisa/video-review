@@ -38,6 +38,8 @@ interface Channel {
     state: SyncState | null;
     // Server clock when state arrived; receivers get its age, so their clocks never need to agree.
     stateAt: number;
+    // While set, only this connection may change the state.
+    presenter: Subscriber | null;
 }
 
 // The browser pings every 20s; a hidden tab's timers can be held back to once a minute.
@@ -57,9 +59,10 @@ globalForStream.videoStreamChannels = channels;
 function broadcastSync(channel: Channel) {
     const participants = [...channel.subscribers].flatMap((s) => s.participant === null ? [] : [s.participant]);
     const state = channel.state && { ...channel.state, ageMs: Date.now() - channel.stateAt };
+    const presenter = channel.presenter?.participant ?? null;
 
     for (const s of channel.subscribers) {
-        s.connection.send("sync", { participants, state });
+        s.connection.send("sync", { participants, state, presenter, presenting: s === channel.presenter });
     }
 }
 
@@ -67,6 +70,11 @@ function broadcastSync(channel: Channel) {
 function removeSubscriber(videoId: string, channel: Channel, subscriber: Subscriber): boolean {
     if (!channel.subscribers.delete(subscriber)) {
         return false;
+    }
+
+    // A presenter who left hands control back to everyone.
+    if (channel.presenter === subscriber) {
+        channel.presenter = null;
     }
 
     // The session ends with its last participant, so the next one starts from whoever acts first.
@@ -125,7 +133,7 @@ if (globalForStream.videoStreamPatrol !== undefined) {
 }
 
 function createChannel(videoId: string): Channel {
-    const channel: Channel = { subscribers: new Set(), state: null, stateAt: 0 };
+    const channel: Channel = { subscribers: new Set(), state: null, stateAt: 0, presenter: null };
     channels.set(videoId, channel);
     return channel;
 }
@@ -145,26 +153,54 @@ export function subscribeVideoStream(videoId: string, connectionId: string, part
     };
 }
 
-// Returns false when the server no longer has the connection.
-export function touchVideoStream(videoId: string, connectionId: string): boolean {
+function findSubscriber(videoId: string, connectionId: string): { channel: Channel; subscriber: Subscriber } | null {
     const channel = channels.get(videoId);
     const subscriber = channel && [...channel.subscribers].find((s) => s.connectionId === connectionId);
-    if (!subscriber) {
+    return channel && subscriber ? { channel, subscriber } : null;
+}
+
+// Returns false when the server no longer has the connection.
+export function touchVideoStream(videoId: string, connectionId: string): boolean {
+    const found = findSubscriber(videoId, connectionId);
+    if (!found) {
         return false;
     }
 
-    subscriber.lastSeen = Date.now();
+    found.subscriber.lastSeen = Date.now();
     return true;
 }
 
-// A state for a video nobody has open is dropped; the next session starts from whoever acts first.
-export function updateSyncState(videoId: string, state: SyncState) {
-    const channel = channels.get(videoId);
-    if (!channel) {
-        return;
+// Returns false when the connection is gone or someone else is presenting.
+export function updateSyncState(videoId: string, connectionId: string, state: SyncState): boolean {
+    const found = findSubscriber(videoId, connectionId);
+    if (!found) {
+        return false;
+    }
+
+    const { channel, subscriber } = found;
+    if (channel.presenter !== null && channel.presenter !== subscriber) {
+        return false;
     }
 
     channel.state = state;
     channel.stateAt = Date.now();
     broadcastSync(channel);
+    return true;
+}
+
+// Returns false when the connection is not in the session or someone else is presenting.
+export function updatePresenter(videoId: string, connectionId: string, presenting: boolean): boolean {
+    const found = findSubscriber(videoId, connectionId);
+    if (!found || found.subscriber.participant === null) {
+        return false;
+    }
+
+    const { channel, subscriber } = found;
+    if (channel.presenter !== null && channel.presenter !== subscriber) {
+        return false;
+    }
+
+    channel.presenter = presenting ? subscriber : null;
+    broadcastSync(channel);
+    return true;
 }

@@ -12,7 +12,8 @@ interface SyncEvent {
 function screen(videoId: string, name: string | null) {
     const seen: SyncEvent[] = [];
     const participant = name === null ? null : { name, email: null };
-    const unsubscribe = subscribeVideoStream(videoId, `screen-${++screens}`, participant, {
+    const connectionId = `screen-${++screens}`;
+    const unsubscribe = subscribeVideoStream(videoId, connectionId, participant, {
         send: (event, data) => {
             if (event === "sync") {
                 seen.push(data as SyncEvent);
@@ -22,7 +23,7 @@ function screen(videoId: string, name: string | null) {
         close: () => {},
     });
 
-    return { unsubscribe, participants: () => seen.at(-1)?.participants.map((p) => p.name), state: () => seen.at(-1)?.state };
+    return { connectionId, unsubscribe, participants: () => seen.at(-1)?.participants.map((p) => p.name), state: () => seen.at(-1)?.state };
 }
 
 describe("video stream channels", () => {
@@ -61,7 +62,7 @@ describe("video stream channels", () => {
     it("starts a new session from nothing once the last syncing screen leaves", () => {
         const watcher = screen("video-ended", null);
         const first = screen("video-ended", "first");
-        updateSyncState("video-ended", { revisionId: "rev", playing: false, time: 12, rate: 1, by: "screen" });
+        updateSyncState("video-ended", first.connectionId, { revisionId: "rev", playing: false, time: 12, rate: 1, by: "screen" });
         first.unsubscribe();
 
         // The watcher keeps the channel open, so only the cleared state stops the old position coming back.

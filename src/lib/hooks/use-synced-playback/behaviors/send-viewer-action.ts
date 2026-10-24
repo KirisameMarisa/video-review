@@ -23,6 +23,10 @@ export class SendViewerAction implements SyncBehavior {
                 if (s.timelineTime !== prev.timelineTime && s.timelineTime !== null) {
                     this.onTimeChange(s.timelineTime);
                 }
+                // Gives a locked screen somewhere to go back to before the presenter's first action.
+                if (s.presenting && !prev.presenting) {
+                    this.send({});
+                }
             }),
             useVideoPlayerStore.subscribe((s, prev) => {
                 if (s.playbackRate !== prev.playbackRate) {
@@ -113,9 +117,9 @@ export class SendViewerAction implements SyncBehavior {
             return;
         }
 
-        const current = store.getState().syncState;
+        const { syncState: current, connectionId } = store.getState();
         const selected = useVideoStore.getState().selectedRevision;
-        if (!selected) {
+        if (!selected || connectionId === null) {
             return;
         }
 
@@ -127,8 +131,8 @@ export class SendViewerAction implements SyncBehavior {
         const held: ReceivedSyncState = { ...next, by: store.getState().screenId, anchor: performance.now() };
         store.getState().setSyncState(held);
 
-        void postSyncState(videoId, next, store.getState().screenId).then((sent) => {
-            // A send that never arrived leaves the others where they were, so this screen goes back to following them.
+        void postSyncState(videoId, next, store.getState().screenId, connectionId).then((sent) => {
+            // A send the server did not take leaves the others where they were, so this screen follows them again.
             if (!sent && store.getState().syncState === held) {
                 store.getState().setSyncState(current);
             }

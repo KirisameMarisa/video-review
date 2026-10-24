@@ -31,6 +31,11 @@ interface PlaybackState {
     syncState: ReceivedSyncState | null;
     // Tags what this screen sends, so the echo of its own action is not followed.
     screenId: string;
+    // This screen's stream, from `hello`; null until it opens.
+    connectionId: string | null;
+    // Who presents in the sync session; null while this screen is not syncing.
+    presenter: Participant | null;
+    presenting: boolean;
 
     setIsPlaying: (playing: boolean) => void;
     togglePlay: () => void;
@@ -40,6 +45,8 @@ interface PlaybackState {
     setParticipants: (participants: Participant[]) => void;
     setSyncLink: (link: string | null) => void;
     setSyncState: (state: ReceivedSyncState | null) => void;
+    setConnectionId: (connectionId: string | null) => void;
+    setPresenter: (presenter: Participant | null, presenting: boolean) => void;
 }
 
 const createPlaybackStore = () => createStore<PlaybackState>()((set) => ({
@@ -52,6 +59,9 @@ const createPlaybackStore = () => createStore<PlaybackState>()((set) => ({
     syncState: null,
     // Not crypto.randomUUID: on-premise http is not a secure context.
     screenId: Math.random().toString(36).slice(2),
+    connectionId: null,
+    presenter: null,
+    presenting: false,
 
     setIsPlaying: (playing) => set({ isPlaying: playing }),
     togglePlay: () => set((s) => ({ isPlaying: !s.isPlaying })),
@@ -61,6 +71,8 @@ const createPlaybackStore = () => createStore<PlaybackState>()((set) => ({
     setParticipants: (participants) => set({ participants }),
     setSyncLink: (syncLink) => set({ syncLink }),
     setSyncState: (syncState) => set({ syncState }),
+    setConnectionId: (connectionId) => set({ connectionId }),
+    setPresenter: (presenter, presenting) => set({ presenter, presenting }),
 }));
 
 const PlaybackStoreContext = createContext<StoreApi<PlaybackState> | null>(null);

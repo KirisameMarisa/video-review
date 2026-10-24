@@ -135,6 +135,9 @@
         "originalResolution": "Original",
         "syncPlayback": "同期再生",
         "moreParticipants": "他 {count} 人",
+        "present": "発表する",
+        "stopPresenting": "発表を終える",
+        "presenting": "{name} が発表中",
         "playbackSettings": "再生設定",
         "showInBar": "バーに表示"
     },

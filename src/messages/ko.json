@@ -135,6 +135,9 @@
         "originalResolution": "원본",
         "syncPlayback": "동기 재생",
         "moreParticipants": "외 {count}명",
+        "present": "발표하기",
+        "stopPresenting": "발표 종료",
+        "presenting": "{name} 님이 발표 중",
         "playbackSettings": "재생 설정",
         "showInBar": "바에 표시"
     },
