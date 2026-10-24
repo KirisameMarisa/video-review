@@ -23,6 +23,7 @@ import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useIdle } from "@/lib/hooks/use-idle";
 import { useVideoStream } from "@/lib/hooks/use-video-stream";
 import { useSyncedPlayback } from "@/lib/hooks/use-synced-playback";
+import { useSyncing } from "@/lib/sync-session";
 import { cn } from "@/lib/utils";
 import { PortalContainerContext } from "@/lib/portal-container";
 import { Toaster } from "@/components/ui/sonner";
@@ -57,6 +58,7 @@ export default function VideoReview() {
 
     useVideoStream(selectedVideo?.id ?? null);
     useSyncedPlayback(selectedVideo?.id ?? null);
+    const syncing = useSyncing(selectedVideo?.id ?? null);
 
     const { comments, fetchComments } = useCommentStore();
     const {
@@ -157,8 +159,9 @@ export default function VideoReview() {
     }, [token]);
 
     useEffect(() => {
-        playModeRef.current = playMode;
-    }, [playMode]);
+        // A sync session plays on the normal mode, as the play mode buttons show.
+        playModeRef.current = syncing ? "normal" : playMode;
+    }, [playMode, syncing]);
 
     useEffect(() => {
         if (selectedComment && selectedComment.time !== currentTime) {

@@ -148,9 +148,12 @@ const PLAY_MODES: { mode: EPlayMode; Icon: LucideIcon }[] = [
     { mode: "next", Icon: ListVideo },
 ];
 
-export function PlayModeButtons() {
+// A sync session plays on the normal mode, so one screen's loop or next video does not carry everyone along.
+export function PlayModeButtons({ videoId }: { videoId: string | null }) {
     const t = useTranslations("video-control-panel");
-    const playMode = useVideoPlayerStore((s) => s.playMode);
+    const syncing = useSyncing(videoId);
+    const chosen = useVideoPlayerStore((s) => s.playMode);
+    const playMode = syncing ? "normal" : chosen;
     const setMode = useVideoPlayerStore((s) => s.setMode);
 
     return (
@@ -163,6 +166,7 @@ export function PlayModeButtons() {
                             size="icon-sm"
                             aria-label={t(mode)}
                             aria-pressed={playMode === mode}
+                            disabled={syncing}
                             onClick={() => setMode(mode)}
                         >
                             <Icon />

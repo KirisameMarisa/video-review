@@ -59,7 +59,7 @@ async function openSyncedPair(browser: Browser, videoId: string): Promise<Synced
     await guest.addInitScript(() => {
         const w = window as unknown as { viewerActive: boolean };
         w.viewerActive = true;
-        Object.defineProperty(navigator, "userActivation", { get: () => ({ isActive: w.viewerActive }) });
+        Object.defineProperty(navigator, "userActivation", { get: () => ({ isActive: w.viewerActive, hasBeenActive: w.viewerActive }) });
     });
     let posts = 0;
     guest.on("request", (req) => {

@@ -39,7 +39,8 @@ export function useSyncedPlayback(videoId: string | null) {
         }
 
         return () => {
-            for (const behavior of behaviors) {
+            // In reverse, so the sending stops first and nothing undone on the way out is sent.
+            for (const behavior of [...behaviors].reverse()) {
                 behavior.detach();
             }
         };

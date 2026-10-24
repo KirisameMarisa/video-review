@@ -34,7 +34,7 @@ export default function VideoControlPanel() {
             <TimeDisplay />
             <PlaybackRateSelect />
             <PlaybackResolutionSelect />
-            {!isMobile && <PlayModeButtons />}
+            {!isMobile && <PlayModeButtons videoId={selectedVideo?.id ?? null} />}
             <SyncButton videoId={selectedVideo?.id ?? null} />
 
             <div className="ml-auto flex gap-1">

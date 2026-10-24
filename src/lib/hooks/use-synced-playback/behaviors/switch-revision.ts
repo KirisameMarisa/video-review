@@ -32,6 +32,15 @@ export class SwitchRevision implements SyncBehavior {
         const target = revisions.find((r) => r.id === state.revisionId);
         if (target) {
             selectVideoRevision(target);
+            return;
         }
+
+        // A revision added after this page loaded, such as from the CLI, is fetched first.
+        void useVideoStore.getState().reloadOnDataChange().then(() => {
+            const added = useVideoStore.getState().revisions.find((r) => r.id === state.revisionId);
+            if (added && this.ctx.store.getState().syncState === state) {
+                useVideoStore.getState().selectVideoRevision(added);
+            }
+        });
     };
 }

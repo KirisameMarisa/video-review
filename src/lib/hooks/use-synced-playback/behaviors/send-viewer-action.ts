@@ -49,6 +49,10 @@ export class SendViewerAction implements SyncBehavior {
         if (!playing && video.ended) {
             return;
         }
+        // A pause right after no click or key is not the viewer's: the OS, unplugged earphones or a refused play.
+        if (!playing && !(navigator.userActivation?.isActive ?? true)) {
+            return;
+        }
 
         const state = store.getState().syncState;
         if (state && expectedPosition(state, video.duration).playing === playing) {

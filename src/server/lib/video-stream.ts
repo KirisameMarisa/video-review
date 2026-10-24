@@ -69,6 +69,11 @@ function removeSubscriber(videoId: string, channel: Channel, subscriber: Subscri
         return false;
     }
 
+    // The session ends with its last participant, so the next one starts from whoever acts first.
+    if (![...channel.subscribers].some((s) => s.participant !== null)) {
+        channel.state = null;
+    }
+
     // The first removal always finds its channel still registered, so this cannot drop a newer one.
     if (channel.subscribers.size === 0) {
         channels.delete(videoId);
