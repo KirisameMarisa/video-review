@@ -414,7 +414,7 @@ export default function VideoReview() {
                                             className="w-full h-full rounded"
                                         />
                                         <DrawingLayer />
-                                        {buffering && <Spinner className="absolute inset-0 m-auto size-10 text-primary pointer-events-none" />}
+                                        {buffering && <Spinner size="player" className="absolute inset-0 m-auto pointer-events-none" />}
                                     </div>
                                 </div>
 
