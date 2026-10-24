@@ -134,7 +134,9 @@
         "playbackResolution": "재생 해상도",
         "originalResolution": "원본",
         "syncPlayback": "동기 재생",
-        "moreParticipants": "외 {count}명"
+        "moreParticipants": "외 {count}명",
+        "playbackSettings": "재생 설정",
+        "showInBar": "바에 표시"
     },
     "video-comment-panel": {
         "title": "댓글",

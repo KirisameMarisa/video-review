@@ -38,6 +38,7 @@ test.describe("player", () => {
         await page.getByRole("button", { name: "Fullscreen" }).click();
         await expect.poll(() => page.evaluate(() => document.fullscreenElement !== null)).toBe(true);
 
+        await page.getByRole("button", { name: "Playback settings" }).click();
         await page.getByRole("combobox", { name: "Playback rate" }).click();
         const listbox = page.getByRole("listbox");
         await expect(listbox).toBeVisible();

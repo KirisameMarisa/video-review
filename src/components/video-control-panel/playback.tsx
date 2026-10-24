@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, type ReactNode } from "react";
 import { Button } from "@/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPause, faPlay, faVolumeHigh, faVolumeXmark } from "@fortawesome/free-solid-svg-icons";
@@ -13,7 +13,10 @@ import {
 import { Slider } from "@/ui/slider";
 import { ButtonGroup } from "@/ui/button-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
-import { ArrowRightToLine, ListVideo, Repeat1, Users, type LucideIcon } from "lucide-react";
+import { PopoverContent, PopoverTrigger } from "@/ui/popover";
+import { ControlRow } from "@/components/controls/control-row";
+import { Separator } from "@/ui/separator";
+import { ArrowRightToLine, ListVideo, Pin, Repeat1, Settings, Users, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { formatTime } from "@/lib/utils";
 import { usePlayback } from "@/stores/playback-store";
@@ -21,7 +24,7 @@ import { joinSync, leaveSync, useSyncing } from "@/lib/sync-session";
 import { createVideoSyncLink } from "@/lib/url";
 import { useRouter } from "next/navigation";
 import { ShareLinkDialog } from "@/components/dialog/share-link";
-import { EPlayMode, useVideoPlayerStore } from "@/stores/video-player-store";
+import { EPlayMode, useVideoPlayerStore, type PlaybackSettingId } from "@/stores/video-player-store";
 import { useConfigStore } from "@/stores/config-store";
 import { usePlaybackWidth } from "@/lib/hooks/use-playback-width";
 import { AccountAvatar } from "@/components/controls/account-avatar";
@@ -78,7 +81,7 @@ export function TimeDisplay() {
     const duration = usePlayback((s) => s.duration);
 
     return (
-        <span className="ml-2 flex items-center gap-2 text-sm text-muted-foreground w-30">
+        <span className="ml-2 flex shrink-0 items-center gap-2 whitespace-nowrap text-sm tabular-nums text-muted-foreground">
             {formatTime(currentTime)} / {formatTime(duration)}
         </span>
     );
@@ -127,7 +130,7 @@ export function PlaybackResolutionSelect() {
             value={width === null ? ORIGINAL : width.toString()}
             onValueChange={(val) => setPlaybackWidth(val === ORIGINAL ? null : parseInt(val))}
         >
-            <SelectTrigger size="sm" className="w-24" aria-label={t("playbackResolution")} title={t("playbackResolution")}>
+            <SelectTrigger size="sm" className="w-28" aria-label={t("playbackResolution")} title={t("playbackResolution")}>
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -176,6 +179,68 @@ export function PlayModeButtons({ videoId }: { videoId: string | null }) {
                 </Tooltip>
             ))}
         </ButtonGroup>
+    );
+}
+
+interface PlaybackSetting {
+    id: PlaybackSettingId;
+    label: string;
+    control: ReactNode;
+}
+
+export function usePlaybackSettings(videoId: string | null): PlaybackSetting[] {
+    const t = useTranslations("video-control-panel");
+    const hasPresets = useConfigStore((s) => s.resolutionPresets.length > 0);
+
+    return [
+        { id: "rate", label: t("playbackRate"), control: <PlaybackRateSelect /> },
+        ...(hasPresets ? [{ id: "resolution" as const, label: t("playbackResolution"), control: <PlaybackResolutionSelect /> }] : []),
+        { id: "playMode", label: t("playMode"), control: <PlayModeButtons videoId={videoId} /> },
+    ];
+}
+
+export function PlaybackSettingsMenu({ settings }: { settings: PlaybackSetting[] }) {
+    const t = useTranslations("video-control-panel");
+    const barSettings = useVideoPlayerStore((s) => s.barSettings);
+    const setBarSetting = useVideoPlayerStore((s) => s.setBarSetting);
+
+    return (
+        <>
+            <PopoverTrigger asChild>
+                <Button size="icon-sm" aria-label={t("playbackSettings")}>
+                    <Settings />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent side="top" align="end" sideOffset={8} alignOffset={8} className="w-auto min-w-96">
+                <div className="flex flex-col gap-3">
+                    {settings.map(({ id, label, control }) => {
+                        const shown = barSettings.includes(id);
+
+                        return (
+                            <React.Fragment key={id}>
+                                {ControlRow(label, () => (
+                                    <div className="flex items-center gap-3">
+                                        {control}
+                                        <div className="flex h-8 items-center gap-1">
+                                            <Separator orientation="vertical" />
+                                            <Button
+                                                variant={shown ? "accent" : "ghost"}
+                                                size="icon-sm"
+                                                aria-label={t("showInBar")}
+                                                aria-pressed={shown}
+                                                onClick={() => setBarSetting(id, !shown)}
+                                            >
+                                                <Pin />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </React.Fragment>
+                        );
+                    })}
+                </div>
+            </PopoverContent>
+        </>
     );
 }
 

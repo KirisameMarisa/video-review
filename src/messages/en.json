@@ -134,7 +134,9 @@
         "playbackResolution": "Playback resolution",
         "originalResolution": "Original",
         "syncPlayback": "Sync playback",
-        "moreParticipants": "+{count} more"
+        "moreParticipants": "+{count} more",
+        "playbackSettings": "Playback settings",
+        "showInBar": "Show in bar"
     },
     "video-comment-panel": {
         "title": "Comments",
