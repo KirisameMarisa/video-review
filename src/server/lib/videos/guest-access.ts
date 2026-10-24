@@ -1,7 +1,8 @@
 import "server-only";
 import { prisma } from "@/server/lib/db";
 import { ServerError } from "@/server/lib/server-error";
-import { authorize, roleOf, type AuthIdentity } from "@/server/lib/token";
+import type { Context } from "hono";
+import { authorize, authorizeMedia, roleOf, type AuthIdentity } from "@/server/lib/token";
 import type { VideoComment } from "@prisma/client";
 import type { Role } from "@/lib/role";
 
@@ -45,6 +46,13 @@ export async function assertRoleCanSeeVideo(videoId: string, role: Role): Promis
 // The role gate and the guest flag in one call; lint keeps guest-admitting routes about one video on it.
 export async function authorizeVideo(req: Request, roles: Role[], videoId: string): Promise<AuthIdentity> {
     const auth = await authorize(req, roles);
+    await assertRoleCanSeeVideo(videoId, roleOf(auth));
+    return auth;
+}
+
+// authorizeVideo for a route the browser reaches without a bearer header (EventSource), so the login cookie counts.
+export async function authorizeVideoMedia(c: Context, roles: Role[], videoId: string): Promise<AuthIdentity> {
+    const auth = await authorizeMedia(c, roles);
     await assertRoleCanSeeVideo(videoId, roleOf(auth));
     return auth;
 }

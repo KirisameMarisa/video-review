@@ -1,3 +1,10 @@
+// The review page's sync session lives in this query parameter, so a reload stays in it and a shared link joins it.
+export const SYNC_PARAM = "sync";
+
+export function createVideoSyncLink(baseURL: string, videoId: string): string {
+    return `${baseURL}/video-review/review/${videoId}?${SYNC_PARAM}=1`;
+}
+
 export function createVideoCommentLink(baseURL: string, videoId: string | null, commentId: string | null): string | null {
     if (videoId === null) {
         return null;

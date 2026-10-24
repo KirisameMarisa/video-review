@@ -132,7 +132,19 @@
         "fullscreen": "全画面",
         "exitFullscreen": "全画面を終了",
         "playbackResolution": "再生解像度",
-        "originalResolution": "Original"
+        "originalResolution": "Original",
+        "syncPlayback": "同期再生",
+        "moreParticipants": "他 {count} 人",
+        "present": "発表する",
+        "stopPresenting": "発表を終える",
+        "presenting": "{name} が発表中",
+        "requestHandover": "発表を代わってもらう",
+        "waitingForPresenter": "{name} の返事待ち",
+        "presenterRequest": "{name} から発表の交代リクエスト",
+        "acceptRequest": "譲る",
+        "declineRequest": "断る",
+        "playbackSettings": "再生設定",
+        "showInBar": "バーに表示"
     },
     "video-comment-panel": {
         "title": "Comments",

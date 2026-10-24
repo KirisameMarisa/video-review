@@ -63,4 +63,5 @@ Restart nginx.
 
 Open `https://<server name>/` in a browser. If the login screen appears, the setup is complete.
 
-Note: if you use a reverse proxy other than nginx, make it pass `X-Forwarded-Proto` and `X-Forwarded-Host` to VideoReview.
+Note: if you use a reverse proxy other than nginx, make it pass `X-Forwarded-Proto` and `X-Forwarded-Host` to VideoReview.  
+Also turn off response buffering there (nginx: `proxy_buffering off`), or the review screen's live stream (participant count, synced playback) is held back.

@@ -15,6 +15,9 @@ export default function VideoReviewPage() {
     const router = useRouter();
     const { videoId } = useParams();
     const searchParams = useSearchParams();
+    // Read as strings so a change to another parameter (joining sync) does not reload the video.
+    const revisionParam = searchParams.get("revision");
+    const eventContentId = searchParams.get("event");
 
     const {
         verifyAuth,
@@ -47,14 +50,12 @@ export default function VideoReviewPage() {
                 if (res.status !== 200) throw new Error("Failed to fetch video");
                 await selectVideo(await res.json());
 
-                const revisionParam = searchParams.get("revision");
                 if (revisionParam) {
                     const { revisions } = useVideoStore.getState();
                     const target = revisions.find((r) => r.id === revisionParam);
                     if (target) selectVideoRevision(target);
                 }
 
-                const eventContentId = searchParams.get("event");
                 if (eventContentId) {
                     const { selectedRevision } = useVideoStore.getState();
                     if (selectedRevision) {
@@ -70,7 +71,7 @@ export default function VideoReviewPage() {
                 console.log("not found videoId", error);
             }
         })();
-    }, [videoId, searchParams]);
+    }, [videoId, revisionParam, eventContentId]);
 
     useEffect(() => {
         if(loading) return;

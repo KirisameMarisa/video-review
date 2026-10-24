@@ -132,7 +132,19 @@
         "fullscreen": "Fullscreen",
         "exitFullscreen": "Exit fullscreen",
         "playbackResolution": "Playback resolution",
-        "originalResolution": "Original"
+        "originalResolution": "Original",
+        "syncPlayback": "Sync playback",
+        "moreParticipants": "+{count} more",
+        "present": "Present",
+        "stopPresenting": "Stop presenting",
+        "presenting": "{name} is presenting",
+        "requestHandover": "Ask {name} to hand over",
+        "waitingForPresenter": "Waiting for {name}",
+        "presenterRequest": "{name} wants to take over",
+        "acceptRequest": "Hand over",
+        "declineRequest": "Decline",
+        "playbackSettings": "Playback settings",
+        "showInBar": "Show in bar"
     },
     "video-comment-panel": {
         "title": "Comments",

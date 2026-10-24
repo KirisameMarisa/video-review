@@ -6,7 +6,7 @@ import path from "node:path";
 const ADMIN = { email: "Bocchi@example.com", password: "pass123" };
 
 // The smallest video in the repo; this test is about the upload getting through, not its size.
-const VIDEO = path.join(process.cwd(), "tests/e2e/fixtures/preview.mp4");
+const VIDEO = path.join(process.cwd(), "tests/fixtures/preview.mp4");
 
 async function loginAsAdmin(page: import("@playwright/test").Page) {
     await page.goto("/login");

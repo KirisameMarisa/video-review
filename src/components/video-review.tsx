@@ -8,7 +8,7 @@ import VideoControlPanel from "@/components/video-control-panel";
 import { useCommentStore } from "@/stores/comment-store";
 import { useVideoStore } from "@/stores/video-store";
 import VideoTitle from "@/components/video-title";
-import { VideoComment } from "@/lib/db-types";
+import { VideoComment, VideoRevision } from "@/lib/db-types";
 import { DrawingLayer } from "@/components/drawing-layer";
 import { useTranslations } from "next-intl";
 import { resolveMediaUrl } from "@/lib/media-url";
@@ -17,9 +17,13 @@ import { usePlaybackWidth } from "@/lib/hooks/use-playback-width";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { LoadingBadge } from "@/components/controls/loading-badge";
+import { Spinner } from "@/components/ui/spinner";
 import { useFullscreenSync } from "@/lib/hooks/use-fullscreen-sync";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useIdle } from "@/lib/hooks/use-idle";
+import { useVideoStream } from "@/lib/hooks/use-video-stream";
+import { useSyncedPlayback } from "@/lib/hooks/use-synced-playback";
+import { usePresenterLock, useSyncing } from "@/lib/sync-session";
 import { cn } from "@/lib/utils";
 import { PortalContainerContext } from "@/lib/portal-container";
 import { Toaster } from "@/components/ui/sonner";
@@ -36,9 +40,11 @@ export default function VideoReview() {
     const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
     // Feeds video-fit; 16/9 until loadedmetadata.
     const [videoAspect, setVideoAspect] = useState("16 / 9");
+    // Waiting for data while playing, such as after a jump to the sync session's position.
+    const [buffering, setBuffering] = useState(false);
     const playbackWidth = usePlaybackWidth();
-    // Which revision the element currently holds, to tell a resolution switch from a new video.
-    const loadedRevisionRef = useRef<string | null>(null);
+    // Which revision the element currently holds, to tell a resolution switch, a revision switch and a new video apart.
+    const loadedRevisionRef = useRef<VideoRevision | null>(null);
 
     const { token } = useAuthStore();
 
@@ -49,6 +55,10 @@ export default function VideoReview() {
         selectedRevision,
         loading,
     } = useVideoStore();
+
+    useVideoStream(selectedVideo?.id ?? null);
+    useSyncedPlayback(selectedVideo?.id ?? null);
+    const syncing = useSyncing(selectedVideo?.id ?? null);
 
     const { comments, fetchComments } = useCommentStore();
     const {
@@ -66,6 +76,7 @@ export default function VideoReview() {
     const { idle, wake } = useIdle(fullscreen || isMobile, FADE_AFTER_MS);
     const controlsRef = useRef<HTMLDivElement>(null);
     const tapWakesRef = useRef(false);
+    const locked = usePresenterLock();
 
     const {
         isPlaying,
@@ -135,7 +146,7 @@ export default function VideoReview() {
 
     // Black bars beside the picture play and pause like the picture; canvas clicks are strokes.
     const onStageClick = (e: MouseEvent<HTMLDivElement>) => {
-        if (tapWakesRef.current) {
+        if (tapWakesRef.current || locked) {
             return;
         }
         if (e.target === e.currentTarget || e.target === videoRef.current) {
@@ -149,8 +160,9 @@ export default function VideoReview() {
     }, [token]);
 
     useEffect(() => {
-        playModeRef.current = playMode;
-    }, [playMode]);
+        // A sync session plays on the normal mode, as the play mode buttons show.
+        playModeRef.current = syncing ? "normal" : playMode;
+    }, [playMode, syncing]);
 
     useEffect(() => {
         if (selectedComment && selectedComment.time !== currentTime) {
@@ -194,13 +206,27 @@ export default function VideoReview() {
         let canceled = false;
         let variantLoaded = false;
 
+        const isRevisionSwitch = (loaded: VideoRevision | null) =>
+            loaded !== null && loaded.videoId === selectedRevision.videoId && loaded.id !== selectedRevision.id;
+
+        // Paused before the store hears of it, so the sync sends where the old revision stopped.
+        if (isRevisionSwitch(loadedRevisionRef.current)) {
+            v.pause();
+            setIsPlaying(false);
+        }
+
         const swapSource = (url: string) => {
-            // Keeps the position and playing state so a resolution switch carries on where it was.
-            // A new revision starts over.
-            const holdsRevision = loadedRevisionRef.current === selectedRevision.id;
-            loadedRevisionRef.current = selectedRevision.id;
-            if (!holdsRevision) {
+            // A revision switch keeps the position, paused, so both revisions can be compared at the same moment.
+            const loaded = loadedRevisionRef.current;
+            loadedRevisionRef.current = selectedRevision;
+            // A new source starts with no data to wait for, and swapping fires no pause to clear the spinner.
+            setBuffering(false);
+            if (loaded?.videoId !== selectedRevision.videoId) {
                 resume = null;
+            } else if (isRevisionSwitch(loaded)) {
+                resume = { time: v.currentTime, playing: false };
+                // Swapping the source stops the element without a pause event.
+                setIsPlaying(false);
             } else if (v.readyState !== HTMLMediaElement.HAVE_NOTHING) {
                 // After a failed variant the element is empty; the resume taken before it is kept.
                 resume = { time: v.currentTime, playing: !v.paused };
@@ -231,14 +257,21 @@ export default function VideoReview() {
         })();
 
         const onPlay = () => setIsPlaying(true);
-        const onPause = () => setIsPlaying(false);
+        const onPause = () => {
+            setIsPlaying(false);
+            setBuffering(false);
+        };
+        const onWaiting = () => setBuffering(true);
+        const onPlaying = () => setBuffering(false);
         const onMeta = () => {
             setDuration(v.duration);
             setVideoAspect(`${v.videoWidth} / ${v.videoHeight}`);
-            v.playbackRate = playbackRate;
+            // Read now, not from this effect's render: the speed may have changed since the source was picked.
+            v.playbackRate = useVideoPlayerStore.getState().playbackRate;
             v.volume = volumeEnabled ? volume : 0.0;
             if (resume) {
-                v.currentTime = resume.time;
+                // A jump requested while a paused source loaded, such as the sync session's, wins over the kept position.
+                v.currentTime = resume.playing ? resume.time : timelineTimeRef.current ?? resume.time;
                 if (resume.playing) {
                     void v.play();
                 }
@@ -282,6 +315,8 @@ export default function VideoReview() {
         v.addEventListener("error", onError);
         v.addEventListener("play", onPlay);
         v.addEventListener("pause", onPause);
+        v.addEventListener("waiting", onWaiting);
+        v.addEventListener("playing", onPlaying);
         v.addEventListener("timeupdate", onTimeUpdate);
         v.addEventListener("ended", onEnded);
 
@@ -289,6 +324,8 @@ export default function VideoReview() {
             canceled = true;
             v.removeEventListener("play", onPlay);
             v.removeEventListener("pause", onPause);
+            v.removeEventListener("waiting", onWaiting);
+            v.removeEventListener("playing", onPlaying);
             v.removeEventListener("loadedmetadata", onMeta);
             v.removeEventListener("error", onError);
             v.removeEventListener("timeupdate", onTimeUpdate);
@@ -303,7 +340,13 @@ export default function VideoReview() {
         }
 
         if (isPlaying) {
-            v.play();
+            // The browser can refuse to start without a click, as in a tab opened from a sync link; show it as paused then.
+            // A play cut short by a new source is not a refusal; the swap resumes it.
+            v.play().catch((e: unknown) => {
+                if (e instanceof DOMException && e.name === "NotAllowedError") {
+                    setIsPlaying(false);
+                }
+            });
         } else {
             v.pause();
         }
@@ -361,7 +404,8 @@ export default function VideoReview() {
                                     onClick={onStageClick}
                                     onPointerDown={onStagePointerDown}
                                     className={cn(
-                                        "video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative cursor-pointer immersive:rounded-none immersive:mb-0",
+                                        "video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative immersive:rounded-none immersive:mb-0",
+                                        !locked && "cursor-pointer",
                                         isMobile && !fullscreen && "portrait:flex-none portrait:video-stage-mobile",
                                     )}
                                     style={{ "--video-aspect": videoAspect } as CSSProperties}
@@ -374,6 +418,7 @@ export default function VideoReview() {
                                             className="w-full h-full rounded"
                                         />
                                         <DrawingLayer />
+                                        {buffering && <Spinner size="player" className="absolute inset-0 m-auto pointer-events-none" />}
                                     </div>
                                 </div>
 
