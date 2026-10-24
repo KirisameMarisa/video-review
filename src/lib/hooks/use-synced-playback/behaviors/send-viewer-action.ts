@@ -27,6 +27,11 @@ export class SendViewerAction implements SyncBehavior {
                 if (s.presenting && !prev.presenting) {
                     this.send({});
                 }
+                // A request to hand over stops the presenter, and with it everyone, on the frame they are on.
+                if (s.presenting && s.requester !== null && prev.requester === null && s.isPlaying) {
+                    this.send({ playing: false, time: this.ctx.video.currentTime });
+                    s.setIsPlaying(false);
+                }
             }),
             useVideoPlayerStore.subscribe((s, prev) => {
                 if (s.playbackRate !== prev.playbackRate) {

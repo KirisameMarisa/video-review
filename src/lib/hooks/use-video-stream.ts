@@ -11,6 +11,8 @@ interface SyncEvent {
     state: (Omit<ReceivedSyncState, "anchor"> & { ageMs: number }) | null;
     presenter: Participant | null;
     presenting: boolean;
+    requester: Participant | null;
+    requesting: boolean;
 }
 
 // One stream per review screen, open whether or not this screen syncs.
@@ -39,8 +41,8 @@ export function useVideoStream(videoId: string | null) {
         });
 
         source.addEventListener("sync", (e) => {
-            const { participants, state, presenter, presenting } = JSON.parse(e.data) as SyncEvent;
-            const { setParticipants, setPresenter, setSyncState, syncState: current, screenId } = store.getState();
+            const { participants, state, presenter, presenting, requester, requesting } = JSON.parse(e.data) as SyncEvent;
+            const { setParticipants, setPresenter, setRequester, setSyncState, syncState: current, screenId } = store.getState();
             setParticipants(participants);
 
             // This screen already holds its own state, anchored when the change happened here.
@@ -51,6 +53,7 @@ export function useVideoStream(videoId: string | null) {
             // After the state: starting to present sends the current state at once.
             // A screen outside the session plays on its own, whoever presents.
             setPresenter(syncing ? presenter : null, presenting);
+            setRequester(syncing ? requester : null, requesting);
         });
 
         return () => {
@@ -60,6 +63,7 @@ export function useVideoStream(videoId: string | null) {
             store.getState().setSyncState(null);
             store.getState().setConnectionId(null);
             store.getState().setPresenter(null, false);
+            store.getState().setRequester(null, false);
         };
     }, [videoId, syncing, store]);
 }

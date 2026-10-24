@@ -138,6 +138,11 @@
         "present": "발표하기",
         "stopPresenting": "발표 종료",
         "presenting": "{name} 님이 발표 중",
+        "requestHandover": "{name} 님에게 발표 교대 요청",
+        "waitingForPresenter": "{name} 님의 응답 대기 중",
+        "presenterRequest": "{name} 님의 발표 교대 요청",
+        "acceptRequest": "넘기기",
+        "declineRequest": "거절",
         "playbackSettings": "재생 설정",
         "showInBar": "바에 표시"
     },

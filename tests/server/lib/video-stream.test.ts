@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { subscribeVideoStream, updateSyncState } from "@/server/lib/video-stream";
+import { subscribeVideoStream, updatePresenter, updateSyncState } from "@/server/lib/video-stream";
 
 let screens = 0;
 
 interface SyncEvent {
     participants: { name: string }[];
     state: { time: number } | null;
+    presenter: { name: string } | null;
+    presenting: boolean;
+    requesting: boolean;
 }
 
 // Records what each subscriber was last told; a null name only watches.
@@ -23,7 +26,15 @@ function screen(videoId: string, name: string | null) {
         close: () => {},
     });
 
-    return { connectionId, unsubscribe, participants: () => seen.at(-1)?.participants.map((p) => p.name), state: () => seen.at(-1)?.state };
+    return {
+        connectionId,
+        unsubscribe,
+        participants: () => seen.at(-1)?.participants.map((p) => p.name),
+        state: () => seen.at(-1)?.state,
+        presenter: () => seen.at(-1)?.presenter?.name ?? null,
+        presenting: () => seen.at(-1)?.presenting,
+        requesting: () => seen.at(-1)?.requesting,
+    };
 }
 
 describe("video stream channels", () => {
@@ -69,5 +80,28 @@ describe("video stream channels", () => {
         const next = screen("video-ended", "next");
         expect(next.state()).toBeNull();
         expect(watcher.state()).toBeNull();
+    });
+
+    it("hands over to the requester when the presenter leaves", () => {
+        const host = screen("video-handover", "host");
+        const requester = screen("video-handover", "requester");
+        updatePresenter("video-handover", host.connectionId, true);
+        updatePresenter("video-handover", requester.connectionId, true);
+        host.unsubscribe();
+
+        expect(requester.presenting()).toBe(true);
+        expect(requester.requesting()).toBe(false);
+    });
+
+    it("drops the request and keeps the presenter when the presenter declines", () => {
+        const host = screen("video-declined", "host");
+        const requester = screen("video-declined", "requester");
+        updatePresenter("video-declined", host.connectionId, true);
+        updatePresenter("video-declined", requester.connectionId, true);
+        updatePresenter("video-declined", host.connectionId, true);
+
+        expect(host.presenting()).toBe(true);
+        expect(requester.requesting()).toBe(false);
+        expect(requester.presenter()).toBe("host");
     });
 });

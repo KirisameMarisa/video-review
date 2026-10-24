@@ -138,6 +138,11 @@
         "present": "Present",
         "stopPresenting": "Stop presenting",
         "presenting": "{name} is presenting",
+        "requestHandover": "Ask {name} to hand over",
+        "waitingForPresenter": "Waiting for {name}",
+        "presenterRequest": "{name} wants to take over",
+        "acceptRequest": "Hand over",
+        "declineRequest": "Decline",
         "playbackSettings": "Playback settings",
         "showInBar": "Show in bar"
     },

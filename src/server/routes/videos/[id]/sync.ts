@@ -58,7 +58,7 @@ export const syncRouter = createRouter()
     .openapi(createRoute({
         method: "put",
         summary: "Start or stop presenting",
-        description: "While a connection in the sync session presents, only it can change the playback state. Presenting ends when it stops or its stream closes.",
+        description: "While a connection in the sync session presents, only it can change the playback state. Presenting ends when it stops or its stream closes. Sent while someone else presents, `true` requests a handover and `false` withdraws it; the presenter answers with `false` to hand over or `true` to decline. A presenter who stops or leaves hands over to the requester.",
         path: "/presenter",
         request: {
             body: {
@@ -76,7 +76,7 @@ export const syncRouter = createRouter()
             204: { description: "Accepted" },
             401: errorResponse("Unauthorized"),
             403: errorResponse("Forbidden"),
-            409: errorResponse("Someone else is presenting, or the connection is not in the sync session"),
+            409: errorResponse("Someone else is already requesting to present, or the connection is not in the sync session"),
         },
     }), async (c) => {
         const id = c.req.param("id") as string;
@@ -84,7 +84,7 @@ export const syncRouter = createRouter()
 
         const { connectionId, presenting } = c.req.valid("json");
         if (!updatePresenter(id, connectionId, presenting)) {
-            return c.json({ error: "someone else is presenting, or this connection is gone" }, 409);
+            return c.json({ error: "someone else is already requesting to present, or this connection is gone" }, 409);
         }
         return c.body(null, 204);
     });

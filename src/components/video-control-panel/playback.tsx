@@ -25,6 +25,8 @@ import { joinSync, leaveSync, putPresenter, usePresenterLock, useSyncing } from 
 import { createVideoSyncLink } from "@/lib/url";
 import { useRouter } from "next/navigation";
 import { ShareLinkDialog } from "@/components/dialog/share-link";
+import { PresenterRequestDialog } from "@/components/dialog/presenter-request-dialog";
+import { Spinner } from "@/ui/spinner";
 import { EPlayMode, useVideoPlayerStore, type PlaybackSettingId } from "@/stores/video-player-store";
 import { useConfigStore } from "@/stores/config-store";
 import { usePlaybackWidth } from "@/lib/hooks/use-playback-width";
@@ -327,6 +329,8 @@ export function PresentButton({ videoId }: { videoId: string | null }) {
     const syncing = useSyncing(videoId);
     const presenter = usePlayback((s) => s.presenter);
     const presenting = usePlayback((s) => s.presenting);
+    const requester = usePlayback((s) => s.requester);
+    const requesting = usePlayback((s) => s.requesting);
     const connectionId = usePlayback((s) => s.connectionId);
     const locked = usePresenterLock();
 
@@ -335,30 +339,36 @@ export function PresentButton({ videoId }: { videoId: string | null }) {
     }
 
     let label = t("present");
-    if (locked) {
-        label = t("presenting", { name: presenter?.name ?? "" });
+    if (requesting) {
+        label = t("waitingForPresenter", { name: presenter?.name ?? "" });
+    } else if (locked) {
+        label = t(requester === null ? "requestHandover" : "presenting", { name: presenter?.name ?? "" });
     } else if (presenting) {
         label = t("stopPresenting");
     }
 
-    const toggle = (pressed: boolean) => {
+    const sendPresenting = (pressed: boolean) => {
         if (connectionId !== null) {
             void putPresenter(videoId, connectionId, pressed);
         }
     };
 
     return (
-        <Toggle
-            variant="outline"
-            size="sm"
-            aria-label={label}
-            title={label}
-            pressed={presenting}
-            disabled={connectionId === null || locked}
-            onPressedChange={toggle}
-        >
-            <Presentation />
-            {locked && <AccountAvatar email={presenter?.email ?? null} className="size-5" />}
-        </Toggle>
+        <>
+            <Toggle
+                variant="outline"
+                size="sm"
+                aria-label={label}
+                title={label}
+                pressed={presenting || requesting}
+                disabled={connectionId === null || (requester !== null && !requesting)}
+                onPressedChange={sendPresenting}
+            >
+                <Presentation />
+                {locked && <AccountAvatar email={presenter?.email ?? null} className="size-5" />}
+                {requesting && <Spinner />}
+            </Toggle>
+            {presenting && requester !== null && <PresenterRequestDialog requester={requester} onAnswer={sendPresenting} />}
+        </>
     );
 }

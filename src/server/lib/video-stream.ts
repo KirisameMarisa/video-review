@@ -40,6 +40,8 @@ interface Channel {
     stateAt: number;
     // While set, only this connection may change the state.
     presenter: Subscriber | null;
+    // A participant requesting the presenter to hand over; takes over when the presenter stops or leaves.
+    requester: Subscriber | null;
 }
 
 // The browser pings every 20s; a hidden tab's timers can be held back to once a minute.
@@ -60,9 +62,17 @@ function broadcastSync(channel: Channel) {
     const participants = [...channel.subscribers].flatMap((s) => s.participant === null ? [] : [s.participant]);
     const state = channel.state && { ...channel.state, ageMs: Date.now() - channel.stateAt };
     const presenter = channel.presenter?.participant ?? null;
+    const requester = channel.requester?.participant ?? null;
 
     for (const s of channel.subscribers) {
-        s.connection.send("sync", { participants, state, presenter, presenting: s === channel.presenter });
+        s.connection.send("sync", {
+            participants,
+            state,
+            presenter,
+            presenting: s === channel.presenter,
+            requester,
+            requesting: s === channel.requester,
+        });
     }
 }
 
@@ -72,9 +82,14 @@ function removeSubscriber(videoId: string, channel: Channel, subscriber: Subscri
         return false;
     }
 
-    // A presenter who left hands control back to everyone.
+    if (channel.requester === subscriber) {
+        channel.requester = null;
+    }
+
+    // A presenter who left hands over to the requester, or back to everyone.
     if (channel.presenter === subscriber) {
-        channel.presenter = null;
+        channel.presenter = channel.requester;
+        channel.requester = null;
     }
 
     // The session ends with its last participant, so the next one starts from whoever acts first.
@@ -133,7 +148,7 @@ if (globalForStream.videoStreamPatrol !== undefined) {
 }
 
 function createChannel(videoId: string): Channel {
-    const channel: Channel = { subscribers: new Set(), state: null, stateAt: 0, presenter: null };
+    const channel: Channel = { subscribers: new Set(), state: null, stateAt: 0, presenter: null, requester: null };
     channels.set(videoId, channel);
     return channel;
 }
@@ -188,7 +203,8 @@ export function updateSyncState(videoId: string, connectionId: string, state: Sy
     return true;
 }
 
-// Returns false when the connection is not in the session or someone else is presenting.
+// Returns false when the connection is not in the session, or someone else is already requesting.
+// A non-presenter's `true` requests a handover and `false` withdraws it; the presenter's `false` hands over, `true` declines.
 export function updatePresenter(videoId: string, connectionId: string, presenting: boolean): boolean {
     const found = findSubscriber(videoId, connectionId);
     if (!found || found.subscriber.participant === null) {
@@ -196,11 +212,18 @@ export function updatePresenter(videoId: string, connectionId: string, presentin
     }
 
     const { channel, subscriber } = found;
-    if (channel.presenter !== null && channel.presenter !== subscriber) {
-        return false;
+    if (channel.presenter === null || channel.presenter === subscriber) {
+        channel.presenter = presenting ? subscriber : channel.requester;
+        channel.requester = null;
+    } else if (presenting) {
+        if (channel.requester !== null && channel.requester !== subscriber) {
+            return false;
+        }
+        channel.requester = subscriber;
+    } else if (channel.requester === subscriber) {
+        channel.requester = null;
     }
 
-    channel.presenter = presenting ? subscriber : null;
     broadcastSync(channel);
     return true;
 }

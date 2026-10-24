@@ -36,6 +36,9 @@ interface PlaybackState {
     // Who presents in the sync session; null while this screen is not syncing.
     presenter: Participant | null;
     presenting: boolean;
+    // Who requests the presenter to hand over; null while nobody does or this screen is not syncing.
+    requester: Participant | null;
+    requesting: boolean;
 
     setIsPlaying: (playing: boolean) => void;
     togglePlay: () => void;
@@ -47,6 +50,7 @@ interface PlaybackState {
     setSyncState: (state: ReceivedSyncState | null) => void;
     setConnectionId: (connectionId: string | null) => void;
     setPresenter: (presenter: Participant | null, presenting: boolean) => void;
+    setRequester: (requester: Participant | null, requesting: boolean) => void;
 }
 
 const createPlaybackStore = () => createStore<PlaybackState>()((set) => ({
@@ -62,6 +66,8 @@ const createPlaybackStore = () => createStore<PlaybackState>()((set) => ({
     connectionId: null,
     presenter: null,
     presenting: false,
+    requester: null,
+    requesting: false,
 
     setIsPlaying: (playing) => set({ isPlaying: playing }),
     togglePlay: () => set((s) => ({ isPlaying: !s.isPlaying })),
@@ -73,6 +79,7 @@ const createPlaybackStore = () => createStore<PlaybackState>()((set) => ({
     setSyncState: (syncState) => set({ syncState }),
     setConnectionId: (connectionId) => set({ connectionId }),
     setPresenter: (presenter, presenting) => set({ presenter, presenting }),
+    setRequester: (requester, requesting) => set({ requester, requesting }),
 }));
 
 const PlaybackStoreContext = createContext<StoreApi<PlaybackState> | null>(null);
