@@ -23,7 +23,7 @@ import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useIdle } from "@/lib/hooks/use-idle";
 import { useVideoStream } from "@/lib/hooks/use-video-stream";
 import { useSyncedPlayback } from "@/lib/hooks/use-synced-playback";
-import { useSyncing } from "@/lib/sync-session";
+import { usePresenterLock, useSyncing } from "@/lib/sync-session";
 import { cn } from "@/lib/utils";
 import { PortalContainerContext } from "@/lib/portal-container";
 import { Toaster } from "@/components/ui/sonner";
@@ -76,6 +76,7 @@ export default function VideoReview() {
     const { idle, wake } = useIdle(fullscreen || isMobile, FADE_AFTER_MS);
     const controlsRef = useRef<HTMLDivElement>(null);
     const tapWakesRef = useRef(false);
+    const locked = usePresenterLock();
 
     const {
         isPlaying,
@@ -145,7 +146,7 @@ export default function VideoReview() {
 
     // Black bars beside the picture play and pause like the picture; canvas clicks are strokes.
     const onStageClick = (e: MouseEvent<HTMLDivElement>) => {
-        if (tapWakesRef.current) {
+        if (tapWakesRef.current || locked) {
             return;
         }
         if (e.target === e.currentTarget || e.target === videoRef.current) {
@@ -399,7 +400,8 @@ export default function VideoReview() {
                                     onClick={onStageClick}
                                     onPointerDown={onStagePointerDown}
                                     className={cn(
-                                        "video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative cursor-pointer immersive:rounded-none immersive:mb-0",
+                                        "video-stage flex-1 min-h-0 flex items-center justify-center bg-black rounded mb-3 relative immersive:rounded-none immersive:mb-0",
+                                        !locked && "cursor-pointer",
                                         isMobile && !fullscreen && "portrait:flex-none portrait:video-stage-mobile",
                                     )}
                                     style={{ "--video-aspect": videoAspect } as CSSProperties}

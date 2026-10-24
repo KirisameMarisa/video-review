@@ -4,6 +4,7 @@ import { useVideoReviewStore } from "@/stores/video-review-store";
 import { usePlayback } from "@/stores/playback-store";
 import { VideoComment } from "@/lib/db-types";
 import { useCommentEditStore } from "@/stores/comment-edit-store";
+import { usePresenterLock } from "@/lib/sync-session";
 import React, { useEffect } from "react";
 import TimelineCardList from "@/components/video-side-panel/timeline-card-list";
 import type { TimelineCardState } from "@/components/video-side-panel/timeline-card";
@@ -32,9 +33,14 @@ export default function CommentCard(props: {
     const { editingComment, setEditing } = useCommentEditStore();
     const { selectedComment, setSelectComment, activeComments } = useVideoReviewStore();
     const setTimelineTime = usePlayback((s) => s.setTimelineTime);
+    const locked = usePresenterLock();
 
+    // Under a presenter the screen stays where the presenter is, and a selection would draw on that frame.
     const handleSelectComment = (comment: VideoComment) => {
-        setTimelineTime(comment.time)
+        if (locked) {
+            return;
+        }
+        setTimelineTime(comment.time);
         setSelectComment(comment);
     }
 

@@ -7,6 +7,7 @@ import { useVideoEventStore } from "@/stores/video-event-store";
 import { usePlayback } from "@/stores/playback-store";
 import EventCard from "@/components/video-side-panel/panels/video-event-panel/event-card";
 import { useVideoEventSearchStore } from "@/stores/video-event-search-store";
+import { usePresenterLock } from "@/lib/sync-session";
 
 export default function VideoEventContent(props: {
     topAreaRef: RefObject<HTMLDivElement | null>,
@@ -19,6 +20,7 @@ export default function VideoEventContent(props: {
     const { selectedRevision } = useVideoStore();
     const currentTime = usePlayback((s) => s.currentTime);
     const setTimelineTime = usePlayback((s) => s.setTimelineTime);
+    const locked = usePresenterLock();
     const { events, fetchEvents, clearEvents } = useVideoEventStore();
     const { filterText, kind, hasLink } = useVideoEventSearchStore();
 
@@ -69,6 +71,9 @@ export default function VideoEventContent(props: {
                         events={events}
                         selectedEventId={selectedEventId}
                         onSelectEvent={(event) => {
+                            if (locked) {
+                                return;
+                            }
                             setSelectedEventId(event.id);
                             setTimelineTime(event.startMs / 1000);
                         }}
