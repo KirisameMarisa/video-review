@@ -1,5 +1,5 @@
 import {
-    expectedPosition, FAR_DRIFT_SEC, othersState, watchSession,
+    expectedPosition, FAR_DRIFT_SEC, isOwn, othersState, watchSession,
     type SyncBehavior, type SyncContext,
 } from "@/lib/hooks/use-synced-playback/behaviors/behavior";
 
@@ -22,6 +22,16 @@ export class TogglePlaying implements SyncBehavior {
     }
 
     private onSessionState = () => {
+        // Sending drops the stop this screen was playing on towards, and it takes on what it sent.
+        const session = this.ctx.store.getState().syncState;
+        if (session && isOwn(this.ctx, session) && this.stopAt !== null) {
+            this.stopAt = null;
+            if (!session.playing) {
+                this.ctx.store.getState().setIsPlaying(false);
+            }
+            return;
+        }
+
         const state = othersState(this.ctx);
         if (!state) {
             return;
