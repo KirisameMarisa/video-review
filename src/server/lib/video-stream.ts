@@ -185,10 +185,10 @@ export function touchVideoStream(videoId: string, connectionId: string): boolean
     return true;
 }
 
-// Returns false when the connection is gone or someone else is presenting.
+// Returns false when the connection is not in the session or someone else is presenting.
 export function updateSyncState(videoId: string, connectionId: string, state: SyncState): boolean {
     const found = findSubscriber(videoId, connectionId);
-    if (!found) {
+    if (!found || found.subscriber.participant === null) {
         return false;
     }
 

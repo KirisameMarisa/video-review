@@ -36,7 +36,7 @@ export const syncRouter = createRouter()
             400: errorResponse("Invalid body, or a revision of another video"),
             401: errorResponse("Unauthorized"),
             403: errorResponse("Forbidden"),
-            409: errorResponse("Someone else is presenting, or the server no longer has this connection"),
+            409: errorResponse("Someone else is presenting, or the connection is not in the sync session"),
         },
     }), async (c) => {
         const id = c.req.param("id") as string;
@@ -51,7 +51,7 @@ export const syncRouter = createRouter()
 
         const { connectionId, ...syncState } = state;
         if (!updateSyncState(id, connectionId, syncState)) {
-            return c.json({ error: "someone else is presenting, or this connection is gone" }, 409);
+            return c.json({ error: "someone else is presenting, or this connection is not in the sync session" }, 409);
         }
         return c.body(null, 204);
     })
