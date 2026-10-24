@@ -135,14 +135,14 @@ test.describe("synced playback", () => {
 
         await pair.host.getByRole("button", { name: "Play", exact: true }).click();
         await expect.poll(() => player(pair.guest).evaluate((v: HTMLVideoElement) => !v.paused)).toBe(true);
-        await pair.host.waitForTimeout(1000);
+        await pair.host.waitForTimeout(4000);
         const postsBefore = pair.guestPosts();
 
-        // Past the gap that counts as a different position, so a correction mistaken for the viewer's would be sent.
+        // Past the gap a screen leaves alone, so it jumps back; a correction mistaken for the viewer's would be sent.
         await pair.setGuestActive(false);
         await player(pair.guest).evaluate((v: HTMLVideoElement) => new Promise((resolve) => {
             v.addEventListener("seeked", resolve, { once: true });
-            v.currentTime -= 0.8;
+            v.currentTime -= 3;
         }));
         await pair.setGuestActive(true);
 

@@ -17,6 +17,7 @@ import { usePlaybackWidth } from "@/lib/hooks/use-playback-width";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { LoadingBadge } from "@/components/controls/loading-badge";
+import { Spinner } from "@/components/ui/spinner";
 import { useFullscreenSync } from "@/lib/hooks/use-fullscreen-sync";
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { useIdle } from "@/lib/hooks/use-idle";
@@ -38,6 +39,8 @@ export default function VideoReview() {
     const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
     // Feeds video-fit; 16/9 until loadedmetadata.
     const [videoAspect, setVideoAspect] = useState("16 / 9");
+    // Waiting for data while playing, such as after a jump to the sync session's position.
+    const [buffering, setBuffering] = useState(false);
     const playbackWidth = usePlaybackWidth();
     // Which revision the element currently holds, to tell a resolution switch, a revision switch and a new video apart.
     const loadedRevisionRef = useRef<VideoRevision | null>(null);
@@ -213,6 +216,8 @@ export default function VideoReview() {
             // so both revisions can be compared at the same moment. A new video starts over.
             const loaded = loadedRevisionRef.current;
             loadedRevisionRef.current = selectedRevision;
+            // A new source starts with no data to wait for, and swapping fires no pause to clear the spinner.
+            setBuffering(false);
             if (loaded?.videoId !== selectedRevision.videoId) {
                 resume = null;
             } else if (isRevisionSwitch(loaded)) {
@@ -249,7 +254,12 @@ export default function VideoReview() {
         })();
 
         const onPlay = () => setIsPlaying(true);
-        const onPause = () => setIsPlaying(false);
+        const onPause = () => {
+            setIsPlaying(false);
+            setBuffering(false);
+        };
+        const onWaiting = () => setBuffering(true);
+        const onPlaying = () => setBuffering(false);
         const onMeta = () => {
             setDuration(v.duration);
             setVideoAspect(`${v.videoWidth} / ${v.videoHeight}`);
@@ -302,6 +312,8 @@ export default function VideoReview() {
         v.addEventListener("error", onError);
         v.addEventListener("play", onPlay);
         v.addEventListener("pause", onPause);
+        v.addEventListener("waiting", onWaiting);
+        v.addEventListener("playing", onPlaying);
         v.addEventListener("timeupdate", onTimeUpdate);
         v.addEventListener("ended", onEnded);
 
@@ -309,6 +321,8 @@ export default function VideoReview() {
             canceled = true;
             v.removeEventListener("play", onPlay);
             v.removeEventListener("pause", onPause);
+            v.removeEventListener("waiting", onWaiting);
+            v.removeEventListener("playing", onPlaying);
             v.removeEventListener("loadedmetadata", onMeta);
             v.removeEventListener("error", onError);
             v.removeEventListener("timeupdate", onTimeUpdate);
@@ -395,6 +409,7 @@ export default function VideoReview() {
                                             className="w-full h-full rounded"
                                         />
                                         <DrawingLayer />
+                                        {buffering && <Spinner className="absolute inset-0 m-auto size-10 text-primary pointer-events-none" />}
                                     </div>
                                 </div>
 

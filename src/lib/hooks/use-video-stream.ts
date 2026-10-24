@@ -37,8 +37,14 @@ export function useVideoStream(videoId: string | null) {
 
         source.addEventListener("sync", (e) => {
             const { participants, state } = JSON.parse(e.data) as SyncEvent;
-            const { setParticipants, setSyncState } = store.getState();
+            const { setParticipants, setSyncState, syncState: current, screenId } = store.getState();
             setParticipants(participants);
+
+            // This screen already holds its own state, anchored when the change happened here.
+            if (state?.by === screenId && current?.by === screenId) {
+                return;
+            }
+
             setSyncState(state && { ...state, anchor: performance.now() - state.ageMs });
         });
 

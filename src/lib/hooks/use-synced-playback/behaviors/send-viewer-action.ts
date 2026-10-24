@@ -3,18 +3,13 @@ import type { ReceivedSyncState } from "@/stores/playback-store";
 import { useVideoPlayerStore } from "@/stores/video-player-store";
 import { useVideoStore } from "@/stores/video-store";
 import {
-    expectedPosition, PAUSED_DRIFT_S,
+    expectedPosition, PAUSED_DRIFT_SEC, PLAYING_DRIFT_SEC,
     type SyncBehavior, type SyncContext,
 } from "@/lib/hooks/use-synced-playback/behaviors/behavior";
 
-/** Sends this viewer's play, pause, seek, speed and revision changes to the session. */
+/** Sends this viewer's play, pause, seek, speed and revision changes to the session as they happen. */
 export class SendViewerAction implements SyncBehavior {
     private unsubscribes: (() => void)[] = [];
-    private inFlight = false;
-    private queued: PlayerState | null = null;
-    // What this screen holds as the session while its send is on the way, and the state it replaced.
-    private held: ReceivedSyncState | null = null;
-    private replaced: ReceivedSyncState | null = null;
 
     constructor(private readonly ctx: SyncContext) {}
 
@@ -43,8 +38,6 @@ export class SendViewerAction implements SyncBehavior {
     }
 
     detach() {
-        this.queued = null;
-
         for (const unsubscribe of this.unsubscribes) {
             unsubscribe();
         }
@@ -61,17 +54,21 @@ export class SendViewerAction implements SyncBehavior {
         if (state && expectedPosition(state, video.duration).playing === playing) {
             return;
         }
-        // Play at the end starts over from the top, though the element still reports the end.
-        this.send(playing && video.ended ? { playing, time: 0 } : { playing });
+
+        if (playing) {
+            // Play at the end starts over from the top, though the element still reports the end.
+            this.send(video.ended ? { playing, time: 0 } : { playing });
+        } else {
+            // Everyone stops on the frame the viewer stopped on.
+            this.send({ playing, time: video.currentTime });
+        }
     }
 
     private onTimeChange(time: number) {
-        // While playing, closer than this counts as the same position.
-        const PLAYING_DRIFT_S = 0.5;
         const state = this.ctx.store.getState().syncState;
         if (state) {
             const expected = expectedPosition(state, this.ctx.video.duration);
-            if (Math.abs(time - expected.time) <= (expected.playing ? PLAYING_DRIFT_S : PAUSED_DRIFT_S)) {
+            if (Math.abs(time - expected.time) <= (expected.playing ? PLAYING_DRIFT_SEC : PAUSED_DRIFT_SEC)) {
                 return;
             }
         }
@@ -87,20 +84,22 @@ export class SendViewerAction implements SyncBehavior {
         this.send({ rate });
     }
 
-    // A new revision opens paused where this screen was.
+    // A new revision opens paused where it was.
     private onRevisionChange(revisionId: string) {
-        if (this.ctx.store.getState().syncState?.revisionId === revisionId) {
+        const { video, store } = this.ctx;
+        if (store.getState().syncState?.revisionId === revisionId) {
             return;
         }
 
-        // A playing screen is paused by the page right after the pick; onPlayingChange sends then, with where it stopped.
-        if (!this.ctx.video.paused) {
+        // The page pauses a playing screen right after the pick, and that pause sends the new revision at its stopped frame.
+        if (!video.paused) {
             return;
         }
 
         this.send({ revisionId, playing: false });
     }
 
+    // The session with the viewer's change on top, on the revision this screen shows; the first change of a session takes this screen's state.
     private send(change: Partial<PlayerState>) {
         const { video, store, videoId } = this.ctx;
         const settingUp = video.readyState < HTMLMediaElement.HAVE_METADATA;
@@ -110,51 +109,25 @@ export class SendViewerAction implements SyncBehavior {
             return;
         }
 
+        const current = store.getState().syncState;
         const selected = useVideoStore.getState().selectedRevision;
         if (!selected) {
             return;
         }
 
-        const player: PlayerState = {
-            revisionId: selected.id,
-            playing: store.getState().isPlaying,
-            time: video.currentTime,
-            // The store's rate: the element may be running nudged.
-            rate: useVideoPlayerStore.getState().playbackRate,
-            ...change,
-        };
-
-        const current = store.getState().syncState;
-        if (current !== this.held) {
-            this.replaced = current;
-        }
+        const base = current
+            ? { ...expectedPosition(current, video.duration), rate: current.rate }
+            : { playing: store.getState().isPlaying, time: video.currentTime, rate: useVideoPlayerStore.getState().playbackRate };
+        const next: PlayerState = { revisionId: selected.id, ...base, ...change };
         // Held as the session at once, so the next change is compared with it rather than with the state it replaced.
-        this.held = { ...player, by: store.getState().screenId, anchor: performance.now() };
-        store.getState().setSyncState(this.held);
+        const held: ReceivedSyncState = { ...next, by: store.getState().screenId, anchor: performance.now() };
+        store.getState().setSyncState(held);
 
-        // One request at a time; a seek drag sends only its latest position.
-        const sendState = async (next: PlayerState) => {
-            if (this.inFlight) {
-                this.queued = next;
-                return;
-            }
-
-            this.inFlight = true;
-            const sent = await postSyncState(videoId, next, store.getState().screenId);
-            this.inFlight = false;
-
+        void postSyncState(videoId, next, store.getState().screenId).then((sent) => {
             // A send that never arrived leaves the others where they were, so this screen goes back to following them.
-            if (!sent && !this.queued && store.getState().syncState === this.held) {
-                store.getState().setSyncState(this.replaced);
+            if (!sent && store.getState().syncState === held) {
+                store.getState().setSyncState(current);
             }
-
-            const queued = this.queued;
-            this.queued = null;
-            // detach clears the queue, so nothing is sent after the session ends.
-            if (queued) {
-                void sendState(queued);
-            }
-        };
-        void sendState(player);
+        });
     }
 }

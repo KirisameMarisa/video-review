@@ -1,12 +1,12 @@
 import type { ReceivedSyncState, usePlaybackStoreApi } from "@/stores/playback-store";
 import { useVideoStore } from "@/stores/video-store";
 
-// Beyond this a speed nudge would take too long, so the player seeks.
-export const SEEK_DRIFT_S = 1.5;
+// While playing, closer than this counts as the same position, for a sent seek and a received one alike.
+export const PLAYING_DRIFT_SEC = 0.5;
 // Paused review needs the exact frame.
-export const PAUSED_DRIFT_S = 0.001;
-// How often a playing screen measures its drift from the session.
-export const DRIFT_CHECK_MS = 1000;
+export const PAUSED_DRIFT_SEC = 0.001;
+// Beyond this a screen jumps to the session; closer, it plays on.
+export const FAR_DRIFT_SEC = 2;
 
 /** Everything the behaviors share for one sync session on one player. */
 export interface SyncContext {
@@ -67,22 +67,4 @@ export function othersState(ctx: SyncContext): ReceivedSyncState | null {
         return null;
     }
     return state;
-}
-
-// Where a playing screen should be now; null while it loads, seeks or pauses, or after the session's end.
-export function driftTarget(ctx: SyncContext): number | null {
-    const { video } = ctx;
-    const state = ctx.store.getState().syncState;
-    const settled = state !== null
-        && !video.paused
-        && !video.seeking
-        && video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA
-        && useVideoStore.getState().selectedRevision?.id === state.revisionId;
-    if (!settled) {
-        return null;
-    }
-
-    // Past the session's end each screen has stopped at its own end.
-    const expected = expectedPosition(state, video.duration);
-    return expected.playing ? expected.time : null;
 }

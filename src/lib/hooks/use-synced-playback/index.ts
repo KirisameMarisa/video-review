@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import { useSyncing } from "@/lib/sync-session";
 import { usePlaybackStoreApi } from "@/stores/playback-store";
-import { useVideoPlayerStore } from "@/stores/video-player-store";
 import { useVideoReviewStore } from "@/stores/video-review-store";
 import type { SyncBehavior, SyncContext } from "@/lib/hooks/use-synced-playback/behaviors/behavior";
 import { AdjustRate } from "@/lib/hooks/use-synced-playback/behaviors/adjust-rate";
@@ -27,7 +26,6 @@ export function useSyncedPlayback(videoId: string | null) {
             videoId,
             store,
         };
-        // SwitchRevision last: right after the switch the old source would pass as the new revision to the others.
         const behaviors: SyncBehavior[] = [
             new SeekPosition(ctx),
             new TogglePlaying(ctx),
@@ -44,7 +42,6 @@ export function useSyncedPlayback(videoId: string | null) {
             for (const behavior of behaviors) {
                 behavior.detach();
             }
-            video.playbackRate = useVideoPlayerStore.getState().playbackRate;
         };
     }, [syncing, video, videoId, store]);
 }
