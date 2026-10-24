@@ -216,8 +216,7 @@ export default function VideoReview() {
         }
 
         const swapSource = (url: string) => {
-            // A resolution switch carries on where it was; a revision switch keeps the position, paused,
-            // so both revisions can be compared at the same moment. A new video starts over.
+            // A revision switch keeps the position, paused, so both revisions can be compared at the same moment.
             const loaded = loadedRevisionRef.current;
             loadedRevisionRef.current = selectedRevision;
             // A new source starts with no data to wait for, and swapping fires no pause to clear the spinner.
@@ -341,7 +340,7 @@ export default function VideoReview() {
         }
 
         if (isPlaying) {
-            // The browser can refuse to start without a click (a sync link opened in a fresh tab); show it as paused then.
+            // The browser can refuse to start without a click, as in a tab opened from a sync link; show it as paused then.
             // A play cut short by a new source is not a refusal; the swap resumes it.
             v.play().catch((e: unknown) => {
                 if (e instanceof DOMException && e.name === "NotAllowedError") {

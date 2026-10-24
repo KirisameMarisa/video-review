@@ -50,7 +50,7 @@ export function useVideoStream(videoId: string | null) {
                 setSyncState(state && { ...state, anchor: performance.now() - state.ageMs });
             }
 
-            // After the state: starting to present sends the current state at once.
+            // After the state, so a screen that starts presenting sends the one just received.
             // A screen outside the session plays on its own, whoever presents.
             setPresenter(syncing ? presenter : null, presenting);
             setRequester(syncing ? requester : null, requesting);

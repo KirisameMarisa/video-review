@@ -61,7 +61,7 @@ export class SendViewerAction implements SyncBehavior {
         if (!playing && video.ended) {
             return;
         }
-        // A pause right after no click or key is not the viewer's: the OS, unplugged earphones or a refused play.
+        // A pause with no recent click or key is not the viewer's, such as one the OS makes.
         if (!playing && !(navigator.userActivation?.isActive ?? true)) {
             return;
         }
@@ -107,7 +107,7 @@ export class SendViewerAction implements SyncBehavior {
             return;
         }
 
-        // The page pauses a playing screen right after the pick, and that pause sends the new revision at its stopped frame.
+        // A playing screen sends the revision with the pause the page makes right after the pick.
         if (!video.paused) {
             return;
         }
@@ -115,7 +115,7 @@ export class SendViewerAction implements SyncBehavior {
         this.send({ revisionId, playing: false });
     }
 
-    // The session with the viewer's change on top, on the revision this screen shows; the first change of a session takes this screen's state.
+    // The session with the viewer's change on top; the first change of a session starts from this screen.
     private send(change: Partial<PlayerState>) {
         const { video, store, videoId } = this.ctx;
         const settingUp = video.readyState < HTMLMediaElement.HAVE_METADATA;
