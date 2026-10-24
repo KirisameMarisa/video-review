@@ -63,4 +63,6 @@ nginx を再起動します
 
 ブラウザで `https://<サーバー名>/` を開き、ログイン画面が出れば完了です
 
-※ nginx 以外の逆 proxy を使う場合は、`X-Forwarded-Proto` と `X-Forwarded-Host` を VideoReview に渡してください
+※ nginx 以外の逆 proxy を使う場合は、`X-Forwarded-Proto` と `X-Forwarded-Host` を VideoReview に渡してください  
+※ 応答のバッファリングは切ってください（nginx なら `proxy_buffering off`）
+切らないとレビュー画面の stream（参加人数・同期再生）が届きません
